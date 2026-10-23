@@ -4,6 +4,11 @@
 [ext_resource type="Script" path="res://player/camera_rig.gd" id="2_rig"]
 [ext_resource type="Resource" path="res://data/player/movement_tuning.tres" id="3_move"]
 [ext_resource type="Resource" path="res://data/player/camera_tuning.tres" id="4_cam"]
+[ext_resource type="Script" path="res://weapons/weapon_holder.gd" id="5_holder"]
+[ext_resource type="Resource" path="res://data/weapons/kestrel.tres" id="6_kestrel"]
+[ext_resource type="Resource" path="res://data/weapons/hammerhead.tres" id="7_hammerhead"]
+[ext_resource type="Resource" path="res://data/weapons/vanta.tres" id="8_vanta"]
+[ext_resource type="Resource" path="res://data/weapons/view_model_tuning.tres" id="9_view"]
 
 [sub_resource type="CapsuleShape3D" id="Capsule"]
 radius = 0.3
@@ -41,7 +46,12 @@ script = ExtResource("2_rig")
 [node name="Camera3D" type="Camera3D" parent="Head/CameraRig"]
 current = true
 fov = 65.0
-near = 0.05
+near = 0.02
+
+[node name="WeaponHolder" type="Node3D" parent="Head/CameraRig/Camera3D"]
+script = ExtResource("5_holder")
+loadout = [ExtResource("6_kestrel"), ExtResource("7_hammerhead"), ExtResource("8_vanta")]
+view_tuning = ExtResource("9_view")
 
 [node name="LegsPlaceholder" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.18)

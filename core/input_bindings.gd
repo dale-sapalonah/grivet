@@ -14,12 +14,19 @@ const KEYS := {
 	"prone": [KEY_Z],
 	"lean_left": [KEY_Q],
 	"lean_right": [KEY_E],
+	"reload": [KEY_R],
+	"inspect": [KEY_T],
+	"weapon_1": [KEY_1],
+	"weapon_2": [KEY_2],
+	"weapon_3": [KEY_3],
 	"pause": [KEY_ESCAPE],
 	"toggle_console": [KEY_QUOTELEFT],
 }
 const MOUSE_BUTTONS := {
 	"aim": [MOUSE_BUTTON_RIGHT],
 	"fire": [MOUSE_BUTTON_LEFT],
+	"next_weapon": [MOUSE_BUTTON_WHEEL_DOWN],
+	"previous_weapon": [MOUSE_BUTTON_WHEEL_UP],
 }
 
 

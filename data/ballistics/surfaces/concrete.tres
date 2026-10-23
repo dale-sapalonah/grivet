@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SurfaceMaterial" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ballistics/surface_material.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "concrete"
+acoustic_type = 2
+density = 2400.0
+penetration_cost_per_metre = 1000.0
+max_thickness = 1.0
+damage_retention = 0.5
+velocity_retention = 0.6
+ricochet_max_angle_degrees = 10.0
+ricochet_speed_retention = 0.5
+ricochet_damage_retention = 0.5
+impact_color = Color(0.7, 0.7, 0.68, 1)
+dust_color = Color(0.72, 0.71, 0.68, 0.55)
+impact_volume_db = -4.0
+areal_density_thick = 240.0
+crumble_grains_light = 12
+crumble_grains_heavy = 60
+crumble_seconds_light = 0.15
+crumble_seconds_heavy = 0.6
+chunk_count = 6
+casing_brightness = 1.0

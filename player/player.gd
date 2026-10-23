@@ -50,6 +50,36 @@ func _ready() -> void:
 	_register_debug_commands()
 
 
+func camera_rig() -> CameraRig:
+	return _rig
+
+
+## Where shots come from and point: the eye, along the head's look direction
+## (camera-only effects like visual kick and lean roll don't move the aim).
+func aim_transform() -> Transform3D:
+	return Transform3D(_head.global_basis, _rig.camera.global_position)
+
+
+## Moves the aim; weapons call this with each shot's recoil kick.
+func add_recoil(up_degrees: float, right_degrees: float) -> void:
+	var limit := deg_to_rad(camera_tuning.pitch_limit_degrees)
+	_pitch = clampf(_pitch + deg_to_rad(up_degrees), -limit, limit)
+	_head.rotation.x = _pitch
+	rotate_y(-deg_to_rad(right_degrees))
+
+
+## Points the view: yaw around up, pitch up positive (radians).
+func set_look(yaw: float, pitch: float) -> void:
+	rotation.y = yaw
+	var limit := deg_to_rad(camera_tuning.pitch_limit_degrees)
+	_pitch = clampf(pitch, -limit, limit)
+	_head.rotation.x = _pitch
+
+
+func look_pitch() -> float:
+	return _pitch
+
+
 func _exit_tree() -> void:
 	for command in ["noclip", "speed", "tp", "pos", "movement.show"]:
 		Debug.unregister(command)

@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="BallisticsSettings" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://ballistics/ballistics_settings.gd" id="1"]
+[ext_resource type="Resource" path="res://data/ballistics/surfaces/wood.tres" id="2_wood"]
+[ext_resource type="Resource" path="res://data/ballistics/surfaces/steel.tres" id="3_metal"]
+[ext_resource type="Resource" path="res://data/ballistics/surfaces/concrete.tres" id="4_concrete"]
+[ext_resource type="Resource" path="res://data/ballistics/surfaces/flesh.tres" id="5_flesh"]
+
+[resource]
+script = ExtResource("1")
+gravity = 9.81
+max_bullets = 512
+max_surface_events = 4
+surface_epsilon = 0.01
+tracer_length = 3.0
+tracer_color = Color(1, 0.85, 0.5, 0.9)
+trace_persist_seconds = 4.0
+ricochet_light_angle_multiplier = 1.5
+ricochet_heavy_angle_multiplier = 0.75
+hole_size = 0.05
+crater_max_scale = 2.2
+hole_pool_size = 200
+debris_pool_size = 20
+dust_pool_size = 10
+spark_count = 10
+spark_lifetime = 0.35
+spark_speed_min = 1.5
+spark_speed_max = 4.5
+splinter_count = 14
+splinter_lifetime = 0.7
+chip_count_heavy = 18
+dust_lifetime = 1.4
+speed_of_sound = 343.0
+impact_sound_pool_size = 24
+impact_sound_variants = 2
+impact_sound_step = 0.25
+impact_sound_unit_size = 8.0
+impact_sound_max_distance = 150.0
+impact_sound_window = 0.03
+impact_sounds_per_window = 2
+ricochet_volume_db = -6.0
+light_round_volume_db = -8.0
+light_round_pitch = 0.9
+heavy_round_pitch = 1.08
+default_surface = ExtResource("4_concrete")
+surfaces = {
+"concrete": ExtResource("4_concrete"),
+"flesh": ExtResource("5_flesh"),
+"steel": ExtResource("3_metal"),
+"wood": ExtResource("2_wood")
+}

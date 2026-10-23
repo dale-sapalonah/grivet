@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="ViewModelTuning" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://weapons/view_model_tuning.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+pose_blend_speed = 14.0
+kick_spring = 260.0
+kick_damping = 24.0
+kick_impulse = 30.0
+equip_drop = 0.3
+reload_tilt_degrees = 28.0
+reload_magazine_drop = 0.25
+inspect_yaw_degrees = 50.0
+inspect_roll_degrees = 35.0
+pump_travel = 0.09
+magazine_out_start = 0.15
+magazine_out_end = 0.45
+magazine_in_start = 0.6
+magazine_in_end = 0.85
+bolt_release_at = 0.92
+pump_back_end = 0.4
+pump_forward_start = 0.55
+pump_forward_end = 0.88
+flash_time = 0.05
+flash_energy = 4.0
+flash_range = 6.0
+flash_size = 0.14
+sight_post_height = 0.02
+sight_line_fraction = 0.85

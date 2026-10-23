@@ -10,6 +10,12 @@ func assert_true(condition: bool, message: String = "expected true") -> void:
 		failures.append(message)
 
 
+func assert_approx(actual: float, expected: float, tolerance: float = 1e-4, message: String = "") -> void:
+	if absf(actual - expected) > tolerance:
+		failures.append("%sexpected <%s> ± %s, got <%s>" % [
+			message + ": " if message else "", expected, tolerance, actual])
+
+
 func assert_eq(actual: Variant, expected: Variant, message: String = "") -> void:
 	if actual != expected:
 		failures.append("%sexpected <%s>, got <%s>" % [

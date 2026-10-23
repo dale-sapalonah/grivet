@@ -3,6 +3,7 @@
 [ext_resource type="Shader" path="res://levels/greybox/grid.gdshader" id="1_grid"]
 [ext_resource type="PackedScene" path="res://player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://ui/debug_overlay.tscn" id="3_overlay"]
+[ext_resource type="PackedScene" path="res://ui/hud.tscn" id="4_hud"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
 sky_top_color = Color(0.32, 0.42, 0.55, 1)
@@ -65,6 +66,8 @@ directional_shadow_max_distance = 60.0
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 6)
+
+[node name="HUD" parent="." instance=ExtResource("4_hud")]
 
 [node name="DebugOverlay" parent="." instance=ExtResource("3_overlay")]
 

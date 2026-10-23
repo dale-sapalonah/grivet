@@ -5,6 +5,8 @@ extends Node3D
 ## walls), strafe roll, landing dip and sprint/slide/ADS field of view.
 
 var tuning: CameraTuning
+## The held weapon's aim zoom; below zero falls back to CameraTuning's.
+var ads_fov_multiplier := -1.0
 
 var _body: CollisionObject3D
 var _bob_phase := 0.0
@@ -12,6 +14,8 @@ var _bob_weight := 0.0
 var _dip := 0.0
 var _dip_velocity := 0.0
 var _roll := 0.0
+var _kick := 0.0
+var _kick_velocity := 0.0
 
 @onready var camera: Camera3D = $Camera3D
 
@@ -26,6 +30,11 @@ func add_landing(impact_speed: float) -> void:
 	if impact_speed < tuning.landing_min_speed:
 		return
 	_dip_velocity -= minf(impact_speed, tuning.landing_max_speed) * tuning.landing_kick
+
+
+## Camera-only upward kick (degrees) that springs back; does not move the aim.
+func add_kick(degrees: float) -> void:
+	_kick_velocity += deg_to_rad(degrees) * tuning.kick_impulse
 
 
 func update_rig(delta: float, model: MovementModel, intent: MovementModel.Intent,
@@ -43,6 +52,10 @@ func update_rig(delta: float, model: MovementModel, intent: MovementModel.Intent
 			- intent.move.x * deg_to_rad(tuning.strafe_roll_degrees)
 	_roll = lerpf(_roll, target_roll, 1.0 - exp(-tuning.roll_blend_speed * delta))
 	rotation.z = _roll
+
+	_kick_velocity += (-tuning.kick_spring * _kick - tuning.kick_damping * _kick_velocity) * delta
+	_kick += _kick_velocity * delta
+	rotation.x = _kick
 
 	camera.fov = lerpf(camera.fov, _target_fov(model),
 			1.0 - exp(-tuning.fov_blend_speed * delta))
@@ -99,5 +112,5 @@ func _target_fov(model: MovementModel) -> float:
 		MovementModel.Gait.SLIDE:
 			fov += tuning.slide_fov_add
 	if model.aiming:
-		fov *= tuning.ads_fov_multiplier
+		fov *= ads_fov_multiplier if ads_fov_multiplier > 0.0 else tuning.ads_fov_multiplier
 	return fov

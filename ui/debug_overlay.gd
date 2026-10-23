@@ -2,6 +2,11 @@ extends CanvasLayer
 ## FPS counter, optional watch readout and the ` (backtick) console that
 ## runs commands registered on the Debug autoload.
 
+const MAPS := {
+	"range": "res://levels/greybox/firing_range.tscn",
+	"course": "res://levels/greybox/movement_course.tscn",
+}
+
 var _mouse_mode_before := Input.MOUSE_MODE_CAPTURED
 
 @onready var _stats: Label = $Stats
@@ -14,6 +19,25 @@ func _ready() -> void:
 	_console.hide()
 	_command_line.text_submitted.connect(_on_submitted)
 	_log.add_text("Type 'help' for commands.\n")
+	Debug.logged.connect(_on_logged)
+	Debug.register("map", _cmd_map, "map <%s>: load a level." % "|".join(MAPS.keys()))
+
+
+func _exit_tree() -> void:
+	Debug.unregister("map")
+	Debug.logged.disconnect(_on_logged)
+
+
+func _on_logged(line: String) -> void:
+	_log.add_text(line + "\n")
+
+
+func _cmd_map(args: PackedStringArray) -> String:
+	if args.size() != 1 or not MAPS.has(args[0]):
+		return "usage: map <%s>" % "|".join(MAPS.keys())
+	_set_console_open(false)
+	get_tree().change_scene_to_file.call_deferred(MAPS[args[0]])
+	return "loading %s" % args[0]
 
 
 func _input(event: InputEvent) -> void:

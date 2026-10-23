@@ -1,0 +1,290 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://levels/greybox/firing_range.gd" id="1_range"]
+[ext_resource type="Shader" path="res://levels/greybox/grid.gdshader" id="2_grid"]
+[ext_resource type="PackedScene" path="res://player/player.tscn" id="3_player"]
+[ext_resource type="Script" path="res://damage/target_dummy.gd" id="4_target"]
+[ext_resource type="PackedScene" path="res://ui/debug_overlay.tscn" id="5_overlay"]
+[ext_resource type="PackedScene" path="res://ui/hud.tscn" id="6_hud"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
+sky_top_color = Color(0.32, 0.42, 0.55, 1)
+sky_horizon_color = Color(0.62, 0.64, 0.66, 1)
+ground_horizon_color = Color(0.62, 0.64, 0.66, 1)
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMaterial")
+
+[sub_resource type="Environment" id="Environment"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 3
+tonemap_mode = 2
+
+[sub_resource type="ShaderMaterial" id="Floor"]
+shader = ExtResource("2_grid")
+shader_parameter/base_color = Color(0.42, 0.42, 0.42, 1)
+shader_parameter/line_color = Color(0.3, 0.3, 0.3, 1)
+
+[sub_resource type="ShaderMaterial" id="Concrete"]
+shader = ExtResource("2_grid")
+shader_parameter/base_color = Color(0.68, 0.68, 0.66, 1)
+shader_parameter/line_color = Color(0.48, 0.48, 0.46, 1)
+
+[sub_resource type="StandardMaterial3D" id="Wood"]
+albedo_color = Color(0.6, 0.43, 0.26, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Bark"]
+albedo_color = Color(0.3, 0.22, 0.15, 1)
+roughness = 1.0
+
+[sub_resource type="StandardMaterial3D" id="Steel"]
+albedo_color = Color(0.45, 0.47, 0.5, 1)
+metallic = 0.8
+roughness = 0.4
+
+[node name="FiringRange" type="Node3D"]
+script = ExtResource("1_range")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.383, 0.3215, 0, 0.643, 0.766, -0.5, -0.663, 0.557, 0, 10, 0)
+shadow_enabled = true
+directional_shadow_mode = 1
+directional_shadow_max_distance = 60.0
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+
+[node name="HUD" parent="." instance=ExtResource("6_hud")]
+
+[node name="DebugOverlay" parent="." instance=ExtResource("5_overlay")]
+
+[node name="Floor" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -60)
+use_collision = true
+size = Vector3(50, 1, 140)
+material = SubResource("Floor")
+metadata/surface = "concrete"
+
+[node name="Backstop" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -125)
+use_collision = true
+size = Vector3(40, 8, 1)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="RicochetPlate" type="CSGBox3D" parent="."]
+transform = Transform3D(0.9711, 0, -0.2385, 0, 1, 0, 0.2385, 0, 0.9711, 8, 1.65, -20)
+use_collision = true
+size = Vector3(0.02, 2, 4)
+material = SubResource("Steel")
+metadata/surface = "steel"
+
+[node name="RicochetLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3, -20)
+pixel_size = 0.01
+billboard = 1
+text = "ricochet plate (steel, ~8° to the shot)"
+
+[node name="Target10" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.9, -10)
+use_collision = true
+size = Vector3(0.5, 1.8, 0.3)
+script = ExtResource("4_target")
+
+[node name="Target10Label" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2.3, -10)
+pixel_size = 0.01
+billboard = 1
+text = "10 m"
+
+[node name="Target25" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -25)
+use_collision = true
+size = Vector3(0.5, 1.8, 0.3)
+script = ExtResource("4_target")
+
+[node name="Target25Label" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, -25)
+pixel_size = 0.01
+billboard = 1
+text = "25 m"
+
+[node name="Target50" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.9, -50)
+use_collision = true
+size = Vector3(0.5, 1.8, 0.3)
+script = ExtResource("4_target")
+
+[node name="Target50Label" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 2.3, -50)
+pixel_size = 0.01
+billboard = 1
+text = "50 m"
+
+[node name="Target100" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.9, -100)
+use_collision = true
+size = Vector3(0.5, 1.8, 0.3)
+script = ExtResource("4_target")
+
+[node name="Target100Label" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 2.3, -100)
+pixel_size = 0.01
+billboard = 1
+text = "100 m"
+
+[node name="Wood5cm" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 1, -15)
+use_collision = true
+size = Vector3(1.5, 2, 0.05)
+material = SubResource("Wood")
+metadata/surface = "wood"
+
+[node name="Wood5cmLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 2.35, -15)
+pixel_size = 0.01
+billboard = 1
+text = "wood 5 cm"
+
+[node name="Wood20cm" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 1, -15)
+use_collision = true
+size = Vector3(1.5, 2, 0.2)
+material = SubResource("Wood")
+metadata/surface = "wood"
+
+[node name="Wood20cmLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 2.35, -15)
+pixel_size = 0.01
+billboard = 1
+text = "wood 20 cm"
+
+[node name="Steel5mm" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1, -15)
+use_collision = true
+size = Vector3(1.5, 2, 0.005)
+material = SubResource("Steel")
+metadata/surface = "steel"
+
+[node name="Steel5mmLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2.35, -15)
+pixel_size = 0.01
+billboard = 1
+text = "steel 5 mm"
+
+[node name="Concrete30cm" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 1, -15)
+use_collision = true
+size = Vector3(1.5, 2, 0.3)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Concrete30cmLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 2.35, -15)
+pixel_size = 0.01
+billboard = 1
+text = "concrete 30 cm"
+
+[node name="BehindWood5cm" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0.9, -18)
+use_collision = true
+size = Vector3(0.5, 1.8, 0.3)
+script = ExtResource("4_target")
+
+[node name="BehindWood5cmLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 2.3, -18)
+pixel_size = 0.01
+billboard = 1
+text = "behind wood 5 cm"
+
+[node name="BehindWood20cm" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 0.9, -18)
+use_collision = true
+size = Vector3(0.5, 1.8, 0.3)
+script = ExtResource("4_target")
+
+[node name="BehindWood20cmLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 2.3, -18)
+pixel_size = 0.01
+billboard = 1
+text = "behind wood 20 cm"
+
+[node name="BehindSteel5mm" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.9, -18)
+use_collision = true
+size = Vector3(0.5, 1.8, 0.3)
+script = ExtResource("4_target")
+
+[node name="BehindSteel5mmLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2.3, -18)
+pixel_size = 0.01
+billboard = 1
+text = "behind steel 5 mm"
+
+[node name="BehindConcrete30cm" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.9, -18)
+use_collision = true
+size = Vector3(0.5, 1.8, 0.3)
+script = ExtResource("4_target")
+
+[node name="BehindConcrete30cmLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 2.3, -18)
+pixel_size = 0.01
+billboard = 1
+text = "behind concrete 30 cm"
+
+[node name="Steel20mm" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 1, -15)
+use_collision = true
+size = Vector3(1.5, 2, 0.02)
+material = SubResource("Steel")
+metadata/surface = "steel"
+
+[node name="Steel20mmLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 2.35, -15)
+pixel_size = 0.01
+billboard = 1
+text = "steel 20 mm"
+
+[node name="TreeTrunk" type="CSGCylinder3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 2, -15)
+use_collision = true
+radius = 0.25
+height = 4.0
+sides = 16
+material = SubResource("Bark")
+metadata/surface = "wood"
+
+[node name="TreeTrunkLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 4.3, -15)
+pixel_size = 0.01
+billboard = 1
+text = "tree trunk 50 cm"
+
+[node name="BehindSteel20mm" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 0.9, -18)
+use_collision = true
+size = Vector3(0.5, 1.8, 0.3)
+script = ExtResource("4_target")
+
+[node name="BehindSteel20mmLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 2.3, -18)
+pixel_size = 0.01
+billboard = 1
+text = "behind steel 20 mm"
+
+[node name="BehindTreeTrunk" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 0.9, -18)
+use_collision = true
+size = Vector3(0.5, 1.8, 0.3)
+script = ExtResource("4_target")
+
+[node name="BehindTreeTrunkLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 2.3, -18)
+pixel_size = 0.01
+billboard = 1
+text = "behind tree trunk"

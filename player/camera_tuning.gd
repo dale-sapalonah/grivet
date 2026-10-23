@@ -37,6 +37,12 @@ extends Resource
 @export var strafe_roll_degrees := 1.2
 @export var roll_blend_speed := 8.0
 
+@export_group("Weapon kick (camera only)")
+@export var kick_spring := 220.0
+@export var kick_damping := 22.0
+## Converts a weapon's visual_kick_degrees into spring velocity.
+@export var kick_impulse := 33.0
+
 @export_group("Landing dip")
 @export var landing_min_speed := 4.0
 @export var landing_max_speed := 14.0

@@ -58,6 +58,11 @@ func update(intent: Intent, world: World, delta: float) -> void:
 	_update_lean(intent, delta)
 
 
+## Drops out of sprint (e.g. when firing), starting tac-sprint cooldown if needed.
+func interrupt_sprint() -> void:
+	_stop_sprint()
+
+
 func is_sprinting() -> bool:
 	return gait == Gait.SPRINT or gait == Gait.TAC_SPRINT
 

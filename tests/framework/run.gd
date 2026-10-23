@@ -7,7 +7,24 @@ extends SceneTree
 const TEST_ROOT := "res://tests"
 
 
+## Collects engine and script errors so a test that crashes halfway (a null
+## call, a missing resource) fails instead of silently returning early.
+class ErrorCatcher:
+	extends Logger
+
+	var errors := PackedStringArray()
+
+	func _log_error(_function: String, file: String, line: int, code: String, rationale: String,
+			_editor_notify: bool, _error_type: int, _script_backtraces: Array[ScriptBacktrace]) -> void:
+		errors.append("%s (%s:%d)" % [rationale if not rationale.is_empty() else code, file, line])
+
+	func _log_message(_message: String, _error: bool) -> void:
+		pass
+
+
 func _initialize() -> void:
+	var catcher := ErrorCatcher.new()
+	OS.add_logger(catcher)
 	var passed := 0
 	var failed := 0
 	for path in _find_test_files(TEST_ROOT):
@@ -21,7 +38,10 @@ func _initialize() -> void:
 			if not test_name.begins_with("test_"):
 				continue
 			var suite: Object = script.new()
+			catcher.errors.clear()
 			suite.call(test_name)
+			for error in catcher.errors:
+				suite.failures.append("engine error: " + error)
 			if suite.failures.is_empty():
 				passed += 1
 				print("PASS %s::%s" % [path.get_file(), test_name])
