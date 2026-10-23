@@ -1,0 +1,288 @@
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="Shader" path="res://levels/greybox/grid.gdshader" id="1_grid"]
+[ext_resource type="PackedScene" path="res://player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://ui/debug_overlay.tscn" id="3_overlay"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
+sky_top_color = Color(0.32, 0.42, 0.55, 1)
+sky_horizon_color = Color(0.62, 0.64, 0.66, 1)
+ground_horizon_color = Color(0.62, 0.64, 0.66, 1)
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMaterial")
+
+[sub_resource type="Environment" id="Environment"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 3
+tonemap_mode = 2
+
+[sub_resource type="ShaderMaterial" id="Floor"]
+shader = ExtResource("1_grid")
+shader_parameter/base_color = Color(0.42, 0.42, 0.42, 1)
+shader_parameter/line_color = Color(0.3, 0.3, 0.3, 1)
+
+[sub_resource type="ShaderMaterial" id="Steps"]
+shader = ExtResource("1_grid")
+shader_parameter/base_color = Color(0.3, 0.45, 0.7, 1)
+shader_parameter/line_color = Color(0.18, 0.28, 0.45, 1)
+
+[sub_resource type="ShaderMaterial" id="Mantle"]
+shader = ExtResource("1_grid")
+shader_parameter/base_color = Color(0.78, 0.48, 0.2, 1)
+shader_parameter/line_color = Color(0.5, 0.3, 0.12, 1)
+
+[sub_resource type="ShaderMaterial" id="Low"]
+shader = ExtResource("1_grid")
+shader_parameter/base_color = Color(0.5, 0.34, 0.6, 1)
+shader_parameter/line_color = Color(0.32, 0.2, 0.4, 1)
+
+[sub_resource type="ShaderMaterial" id="Wall"]
+shader = ExtResource("1_grid")
+shader_parameter/base_color = Color(0.68, 0.68, 0.66, 1)
+shader_parameter/line_color = Color(0.48, 0.48, 0.46, 1)
+
+[sub_resource type="ShaderMaterial" id="Container"]
+shader = ExtResource("1_grid")
+shader_parameter/base_color = Color(0.22, 0.38, 0.32, 1)
+shader_parameter/line_color = Color(0.14, 0.25, 0.2, 1)
+
+[sub_resource type="ShaderMaterial" id="Target"]
+shader = ExtResource("1_grid")
+shader_parameter/base_color = Color(0.75, 0.2, 0.18, 1)
+shader_parameter/line_color = Color(0.45, 0.1, 0.1, 1)
+
+[node name="MovementCourse" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.383, 0.3215, 0, 0.643, 0.766, -0.5, -0.663, 0.557, 0, 10, 0)
+shadow_enabled = true
+directional_shadow_max_distance = 60.0
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 6)
+
+[node name="DebugOverlay" parent="." instance=ExtResource("3_overlay")]
+
+[node name="Floor" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -20)
+use_collision = true
+size = Vector3(80, 1, 80)
+material = SubResource("Floor")
+
+[node name="StairsLane" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0, 0)
+
+[node name="Step1" type="CSGBox3D" parent="StairsLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, -4.175)
+use_collision = true
+size = Vector3(3, 0.2, 0.35)
+material = SubResource("Steps")
+
+[node name="Step2" type="CSGBox3D" parent="StairsLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, -4.525)
+use_collision = true
+size = Vector3(3, 0.4, 0.35)
+material = SubResource("Steps")
+
+[node name="Step3" type="CSGBox3D" parent="StairsLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -4.875)
+use_collision = true
+size = Vector3(3, 0.6, 0.35)
+material = SubResource("Steps")
+
+[node name="Step4" type="CSGBox3D" parent="StairsLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, -5.225)
+use_collision = true
+size = Vector3(3, 0.8, 0.35)
+material = SubResource("Steps")
+
+[node name="Step5" type="CSGBox3D" parent="StairsLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -5.575)
+use_collision = true
+size = Vector3(3, 1, 0.35)
+material = SubResource("Steps")
+
+[node name="Step6" type="CSGBox3D" parent="StairsLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, -5.925)
+use_collision = true
+size = Vector3(3, 1.2, 0.35)
+material = SubResource("Steps")
+
+[node name="Landing" type="CSGBox3D" parent="StairsLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, -8.1)
+use_collision = true
+size = Vector3(3, 1.2, 4)
+material = SubResource("Steps")
+
+[node name="DropTower" type="CSGBox3D" parent="StairsLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 2, -14)
+use_collision = true
+size = Vector3(3, 4, 3)
+material = SubResource("Wall")
+
+[node name="MantleLane" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, 0)
+
+[node name="Crate060" type="CSGBox3D" parent="MantleLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -6)
+use_collision = true
+size = Vector3(3, 0.6, 1.2)
+material = SubResource("Mantle")
+
+[node name="Crate100" type="CSGBox3D" parent="MantleLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -12)
+use_collision = true
+size = Vector3(3, 1, 1.2)
+material = SubResource("Mantle")
+
+[node name="Crate140" type="CSGBox3D" parent="MantleLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, -18)
+use_collision = true
+size = Vector3(3, 1.4, 1.2)
+material = SubResource("Mantle")
+
+[node name="Crate180" type="CSGBox3D" parent="MantleLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -24)
+use_collision = true
+size = Vector3(3, 1.8, 1.2)
+material = SubResource("Mantle")
+
+[node name="Wall300TooHigh" type="CSGBox3D" parent="MantleLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -30)
+use_collision = true
+size = Vector3(3, 3, 1.2)
+material = SubResource("Wall")
+
+[node name="LowLane" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 0)
+
+[node name="Curb1" type="CSGBox3D" parent="LowLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.075, -4)
+use_collision = true
+size = Vector3(3, 0.15, 0.3)
+material = SubResource("Steps")
+
+[node name="Curb2" type="CSGBox3D" parent="LowLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, -5.5)
+use_collision = true
+size = Vector3(3, 0.3, 0.3)
+material = SubResource("Steps")
+
+[node name="CrouchTunnelRoof" type="CSGBox3D" parent="LowLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, -14)
+use_collision = true
+size = Vector3(3.6, 0.6, 4)
+material = SubResource("Low")
+
+[node name="CrouchTunnelLeft" type="CSGBox3D" parent="LowLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65, 0.675, -14)
+use_collision = true
+size = Vector3(0.3, 1.35, 4)
+material = SubResource("Low")
+
+[node name="CrouchTunnelRight" type="CSGBox3D" parent="LowLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.65, 0.675, -14)
+use_collision = true
+size = Vector3(0.3, 1.35, 4)
+material = SubResource("Low")
+
+[node name="CrawlRoof" type="CSGBox3D" parent="LowLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, -24)
+use_collision = true
+size = Vector3(3.6, 1.2, 3)
+material = SubResource("Low")
+
+[node name="CrawlLeft" type="CSGBox3D" parent="LowLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65, 0.4, -24)
+use_collision = true
+size = Vector3(0.3, 0.8, 3)
+material = SubResource("Low")
+
+[node name="CrawlRight" type="CSGBox3D" parent="LowLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.65, 0.4, -24)
+use_collision = true
+size = Vector3(0.3, 0.8, 3)
+material = SubResource("Low")
+
+[node name="LeanLane" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 0)
+
+[node name="CoverLeft" type="CSGBox3D" parent="LeanLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 1.5, -10)
+use_collision = true
+size = Vector3(3, 3, 0.3)
+material = SubResource("Wall")
+
+[node name="TargetBehindLeft" type="CSGBox3D" parent="LeanLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.9, -14)
+use_collision = true
+size = Vector3(0.5, 1.8, 0.5)
+material = SubResource("Target")
+
+[node name="CoverRight" type="CSGBox3D" parent="LeanLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, -18)
+use_collision = true
+size = Vector3(3, 3, 0.3)
+material = SubResource("Wall")
+
+[node name="TargetBehindRight" type="CSGBox3D" parent="LeanLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.9, -22)
+use_collision = true
+size = Vector3(0.5, 1.8, 0.5)
+material = SubResource("Target")
+
+[node name="ContainerLane" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 0)
+
+[node name="Crate130" type="CSGBox3D" parent="ContainerLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, -4.3)
+use_collision = true
+size = Vector3(1.2, 1.3, 1.2)
+material = SubResource("Mantle")
+
+[node name="Container1" type="CSGBox3D" parent="ContainerLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, -8)
+use_collision = true
+size = Vector3(2.44, 2.6, 6.1)
+material = SubResource("Container")
+
+[node name="Container2" type="CSGBox3D" parent="ContainerLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 1.3, -8)
+use_collision = true
+size = Vector3(2.44, 2.6, 6.1)
+material = SubResource("Container")
+
+[node name="Container3Stacked" type="CSGBox3D" parent="ContainerLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 3.9, -8.5)
+use_collision = true
+size = Vector3(2.44, 2.6, 6.1)
+material = SubResource("Container")
+
+[node name="Ramp20" type="CSGBox3D" parent="ContainerLane"]
+transform = Transform3D(1, 0, 0, 0, 0.9397, -0.342, 0, 0.342, 0.9397, 7, 1.2, -8)
+use_collision = true
+size = Vector3(3, 0.3, 8)
+material = SubResource("Steps")
+
+[node name="Ramp55TooSteep" type="CSGBox3D" parent="ContainerLane"]
+transform = Transform3D(1, 0, 0, 0, 0.5736, -0.8192, 0, 0.8192, 0.5736, 11, 1.8, -8)
+use_collision = true
+size = Vector3(3, 0.3, 5)
+material = SubResource("Wall")
+
+[node name="GapNear" type="CSGBox3D" parent="ContainerLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.5, -20)
+use_collision = true
+size = Vector3(3, 1, 3)
+material = SubResource("Mantle")
+
+[node name="GapFar" type="CSGBox3D" parent="ContainerLane"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.5, -25)
+use_collision = true
+size = Vector3(3, 1, 3)
+material = SubResource("Mantle")

@@ -22,6 +22,10 @@ data/ — tuning Resources   levels/ — scenes   assets/ — imported art/audio
 - Import/check scripts: `$GODOT --headless --path . --import`
 - Tests: `$GODOT --headless --path . -s res://tests/framework/run.gd` (exit code 0 = pass)
 - Smoke-run main scene: `$GODOT --headless --path . --quit-after 120`
+- Movement traversal probe (drives the player through the greybox): `$GODOT --headless --path . res://tests/probes/movement_course.tscn` (prints PASS/FAIL per route; set PROBE_TRACE=1 for a per-frame trace)
+- GPU frame time + screenshot: `$GODOT --path . res://tests/probes/frame_capture.tscn -- <out.png>`
+- Probes run as scenes, not `-s`: scripts that reference autoloads (Debug) don't compile under `-s`.
+- Scene files store Transform3D row by row: `Transform3D(xx, yx, zx, xy, yy, zy, xz, yz, zz, ox, oy, oz)` in basis-column terms.
 - Editor: `D:\Tools\Godot\Godot_v4.7.2-stable_win64.exe --path . -e`
 
 ## Milestones

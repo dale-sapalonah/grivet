@@ -12,11 +12,12 @@ config_version=5
 
 config/name="Meridian"
 config/description="Grounded near-future military FPS. Vertical slice: night raid on a coastal port."
-run/main_scene="res://levels/boot/boot.tscn"
+run/main_scene="res://levels/greybox/movement_course.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 
 [autoload]
 
+InputBindings="*res://core/input_bindings.gd"
 Debug="*res://core/debug_commands.gd"
 
 [display]

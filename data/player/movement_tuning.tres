@@ -1,0 +1,49 @@
+[gd_resource type="Resource" script_class="MovementTuning" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://player/movement_tuning.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+walk_speed = 4.0
+sprint_speed = 6.4
+tac_sprint_speed = 8.0
+crouch_speed = 2.4
+prone_speed = 0.9
+ads_speed_multiplier = 0.6
+sprint_forward_threshold = 0.5
+ground_acceleration = 45.0
+ground_deceleration = 35.0
+air_acceleration = 6.0
+gravity = 18.0
+jump_velocity = 5.2
+tac_sprint_duration = 2.5
+tac_sprint_cooldown = 4.0
+slide_min_speed = 5.5
+slide_boost = 1.8
+slide_friction = 5.0
+slide_duration = 0.9
+slide_end_speed = 2.5
+slide_cooldown = 0.5
+radius = 0.3
+stand_height = 1.8
+crouch_height = 1.2
+prone_height = 0.6
+stand_eye_height = 1.65
+crouch_eye_height = 1.05
+prone_eye_height = 0.42
+stance_blend_speed = 10.0
+step_height = 0.35
+floor_snap = 0.3
+max_slope_degrees = 46.0
+probe_margin = 0.05
+mantle_min_height = 0.5
+mantle_max_height = 1.9
+mantle_reach = 0.8
+mantle_duration = 0.45
+mantle_rise_fraction = 0.7
+mantle_min_ledge_flatness = 0.7
+lean_speed = 6.0
+hard_landing_speed = 9.0
+hard_landing_slow_time = 0.35
+hard_landing_speed_multiplier = 0.5
+noclip_speed = 12.0
