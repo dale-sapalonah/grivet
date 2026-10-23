@@ -1,0 +1,15 @@
+# Godot 4 caches and imports (regenerated on open)
+.godot/
+/android/
+
+# Exports
+/build/
+*.pck
+*.exe
+
+# Editor / OS
+.vscode/
+.idea/
+*.tmp
+Thumbs.db
+desktop.ini

@@ -1,0 +1,56 @@
+[gd_scene load_steps=5 format=3]
+
+[sub_resource type="ProceduralSkyMaterial" id="Sky_mat"]
+sky_top_color = Color(0.02, 0.03, 0.06, 1)
+sky_horizon_color = Color(0.12, 0.09, 0.07, 1)
+ground_bottom_color = Color(0.02, 0.02, 0.02, 1)
+ground_horizon_color = Color(0.12, 0.09, 0.07, 1)
+
+[sub_resource type="Sky" id="Sky_1"]
+sky_material = SubResource("Sky_mat")
+
+[sub_resource type="Environment" id="Env_1"]
+background_mode = 2
+sky = SubResource("Sky_1")
+tonemap_mode = 3
+ssao_enabled = true
+fog_enabled = true
+fog_light_color = Color(0.35, 0.28, 0.2, 1)
+fog_density = 0.02
+
+[sub_resource type="StandardMaterial3D" id="Concrete"]
+albedo_color = Color(0.32, 0.31, 0.3, 1)
+roughness = 0.9
+
+[node name="Boot" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_1")
+
+[node name="SodiumLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 5, -2)
+light_color = Color(1, 0.62, 0.28, 1)
+light_energy = 4.0
+shadow_enabled = true
+omni_range = 18.0
+
+[node name="Floor" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+use_collision = true
+size = Vector3(40, 1, 40)
+material = SubResource("Concrete")
+
+[node name="Container" type="CSGBox3D" parent="."]
+transform = Transform3D(0.94, 0, 0.34, 0, 1, 0, -0.34, 0, 0.94, 0, 1.3, -6)
+use_collision = true
+size = Vector3(6.1, 2.6, 2.44)
+material = SubResource("Concrete")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.97, 0.24, 0, -0.24, 0.97, 0, 2.2, 4)
+fov = 70.0
+
+[node name="Label" type="Label" parent="."]
+offset_left = 24.0
+offset_top = 24.0
+text = "MERIDIAN — Milestone 0 boot scene"
