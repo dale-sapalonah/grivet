@@ -27,17 +27,19 @@ func reset() -> void:
 	dead = false
 
 
-## Applies `amount` of raw damage to `zone`. Returns what happened:
+## Applies `amount` of raw damage to `zone`. `on_plate`: the round struck
+## the plate itself (a torso hit beside it, e.g. the flank, goes straight to
+## health). A stopped round still passes blunt trauma. Returns what happened:
 ## {"multiplier", "armor_damage", "health_damage", "killed"}.
-func apply(amount: float, zone: Zone) -> Dictionary:
+func apply(amount: float, zone: Zone, on_plate: bool = true) -> Dictionary:
 	var result := {"multiplier": multiplier(zone), "armor_damage": 0.0, "health_damage": 0.0, "killed": false}
 	if dead or amount <= 0.0:
 		return result
 	var damage: float = amount * result.multiplier
-	if armor > 0.0 and covers(zone):
+	if armor > 0.0 and covers(zone) and on_plate:
 		var absorbed := minf(armor, damage)
 		armor -= absorbed
-		damage -= absorbed
+		damage -= absorbed * (1.0 - profile.blunt_trauma)
 		result.armor_damage = absorbed
 	health -= damage
 	result.health_damage = damage

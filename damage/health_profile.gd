@@ -17,6 +17,9 @@ extends Resource
 @export var plate_insert_time := 1.0
 ## Headshots go straight to health.
 @export var headshots_bypass_armor := true
+## Fraction of a round stopped by a plate that still reaches health (blunt
+## trauma: bruising, cracked ribs). Rounds that miss the plate do full damage.
+@export var blunt_trauma := 0.0
 
 @export_group("Hit zone damage multipliers")
 @export var head_multiplier := 2.5

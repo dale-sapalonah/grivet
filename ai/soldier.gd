@@ -40,6 +40,8 @@ var _peek_timer := 0.0
 var _peek_position := Vector3.INF
 var _crouch := 0.0
 var _want_crouch := false
+var _advancing_low := false  # set each frame by the action
+var _muzzle_flash: MuzzleFlash
 var _aim_pitch := 0.0
 var _move_target := Vector3.INF
 var _requested_target := Vector3.INF
@@ -89,8 +91,13 @@ func _ready() -> void:
 		zone.shape = mannequin.shapes[part_name][0]
 		zone.set_meta("zone", Mannequin.PARTS[part_name][1])
 		zone.set_meta("part", part_name)
+		if Mannequin.PLATES.has(part_name):
+			zone.set_meta("plate", Mannequin.PLATES[part_name])
 		hitbox.add_child(zone)
 		_zone_shapes[part_name] = zone
+	_muzzle_flash = MuzzleFlash.new()
+	mannequin.muzzle.add_child(_muzzle_flash)
+	_muzzle_flash.setup(_settings.flash_energy, _settings.flash_range, _settings.flash_time, _settings.flash_size)
 	collision_layer = PhysicsLayers.ENEMIES
 	collision_mask = PhysicsLayers.ENEMY_MOVEMENT
 	_perception_interval = 1.0 / _settings.perception_hz
@@ -138,6 +145,7 @@ func _physics_process(delta: float) -> void:
 	_update_facts()
 	var action := brain.decide(_facts, profile, delta)
 	_fire_mode = 0
+	_advancing_low = false
 	_act(action, delta, target)
 	_update_weapon(delta, target)
 	_move(delta)
@@ -208,7 +216,7 @@ func hear(position: Vector3, radius: float, source: Node) -> void:
 		noise_position = position
 		return
 	if distance < reach * _settings.hearing_precise_fraction:
-		awareness = maxf(awareness, 1.0)
+		_alert()
 		if not target_visible:
 			last_known = position
 			time_since_seen = minf(time_since_seen, 0.5)
@@ -218,11 +226,19 @@ func hear(position: Vector3, radius: float, source: Node) -> void:
 		noise_position = position + Vector3(_rng.randf_range(-error, error), 0, _rng.randf_range(-error, error))
 
 
+## Into the fight: fully aware, and wary from now on (awareness never sinks
+## below suspicious again). Sight, a squadmate's report, close gunfire, being
+## shot at or hit all lead here.
+func _alert() -> void:
+	awareness = maxf(awareness, 1.0)
+	_alerted = true
+
+
 ## An ally saw the target at `position`.
 func receive_report(position: Vector3) -> void:
 	if dead:
 		return
-	awareness = maxf(awareness, 1.0)
+	_alert()
 	if not target_visible:
 		last_known = position
 		time_since_seen = minf(time_since_seen, 1.0)
@@ -233,7 +249,7 @@ func suppress(amount: float, shooter_position: Vector3) -> void:
 	if dead:
 		return
 	suppression = minf(1.0, suppression + amount)
-	awareness = maxf(awareness, 1.0)
+	_alert()
 	_take_fire()
 	if not target_visible and time_since_seen > 1.0:
 		last_known = shooter_position
@@ -345,6 +361,8 @@ func _go_to_cover(mode: String, _delta: float) -> bool:
 	_want_crouch = false
 	if profile.role == EnemyProfile.Role.RUSHER and target_visible:
 		_fire_mode = 1  # rushers fire on the move
+	# In sight of the target: move low, cover to cover, instead of strolling upright.
+	_advancing_low = target_visible and profile.advance_crouch > 0.0
 	return false
 
 
@@ -541,7 +559,25 @@ func _shoot(aim_at: Vector3, target: Player) -> void:
 	_shot_audio.volume_db = weapon.definition.shot_volume_db
 	_shot_audio.pitch_scale = _rng.randf_range(0.96, 1.04)
 	_shot_audio.play()
+	_muzzle_flash.flash()
+	_eject_casing()
 	mannequin.flinch(-global_basis.z, 0.6)
+
+
+## Spent case out of the right side of the receiver; pump guns kick theirs
+## out when the pump comes back.
+func _eject_casing() -> void:
+	var definition := weapon.definition
+	if not definition.casing_ejects:
+		return
+	if definition.casing_eject_on_pump:
+		await get_tree().create_timer(definition.pump_time * 0.4).timeout
+		if not is_instance_valid(self) or mannequin.gun == null:
+			return
+	var gun := mannequin.gun.global_transform
+	var port := Transform3D(gun.basis, gun * Vector3(0.03, 0.02, -0.06))
+	var jitter := Vector3(randf_range(0.85, 1.15), randf_range(0.85, 1.15), randf_range(0.7, 1.3))
+	AI.casings.eject(definition, port, port.basis * (definition.casing_eject_velocity * jitter) + velocity)
 
 
 func _facing(point: Vector3) -> bool:
@@ -638,7 +674,8 @@ func _give_up_on_destination() -> void:
 
 
 func _pose(delta: float, target: Player) -> void:
-	_crouch = move_toward(_crouch, 1.0 if _want_crouch else 0.0, delta * 4.0)
+	var crouch_goal := 1.0 if _want_crouch else (profile.advance_crouch if _advancing_low else 0.0)
+	_crouch = move_toward(_crouch, crouch_goal, delta * 4.0)
 	# Hiding at half cover: fold into a hunched kneel so the head is below the top.
 	var hide := _want_crouch and cover != null and _at_cover() and not _peeking
 	_hunker = move_toward(_hunker, 1.0 if hide else 0.0, delta * 5.0)
@@ -675,7 +712,7 @@ func _on_damaged(info: Dictionary) -> void:
 	var direction: Vector3 = info.get("direction", Vector3.ZERO)
 	mannequin.flinch(direction, 3.0)
 	suppression = minf(1.0, suppression + _settings.hit_suppression)
-	awareness = maxf(awareness, 1.0)
+	_alert()
 	_take_fire()
 	var shooter: Object = info.get("shooter")
 	if shooter is Node3D and not target_visible:

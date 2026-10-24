@@ -99,3 +99,10 @@ extends Resource
 @export var stuck_seconds := 2.5
 ## A cover point someone failed to reach is skipped for this long (s).
 @export var blocked_cover_seconds := 10.0
+
+@export_group("Muzzle flash")
+## Enemy muzzle flashes light up their surroundings: a give-away at dusk.
+@export var flash_energy := 10.0
+@export var flash_range := 10.0
+@export var flash_time := 0.05
+@export var flash_size := 0.4

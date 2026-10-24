@@ -58,3 +58,7 @@ grenade_cooldown = 8.0
 max_corpses = 10
 stuck_seconds = 2.5
 blocked_cover_seconds = 10.0
+flash_energy = 10.0
+flash_range = 10.0
+flash_time = 0.05
+flash_size = 0.4

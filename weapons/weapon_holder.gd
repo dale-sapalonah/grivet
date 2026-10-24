@@ -54,6 +54,7 @@ func _ready() -> void:
 		_add_weapon(definition)
 	if not weapons.is_empty():
 		equip(0)
+	_casings.prewarm(loadout)
 	grenades_left = grenade.player_carry if grenade != null else 0
 	add_to_group("player_weapons")
 	_register_debug_commands()

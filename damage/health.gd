@@ -33,7 +33,7 @@ func setup(health_profile: HealthProfile) -> void:
 func take_hit(amount: float, zone: DamageModel.Zone, info: Dictionary = {}) -> void:
 	if model.dead:
 		return
-	var result := model.apply(0.0 if invulnerable else amount, zone)
+	var result := model.apply(0.0 if invulnerable else amount, zone, info.get("on_plate", true))
 	_since_damage = 0.0
 	last_hit = info.duplicate()
 	last_hit.merge({"zone": zone, "health_damage": result.health_damage,

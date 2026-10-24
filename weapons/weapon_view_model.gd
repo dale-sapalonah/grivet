@@ -12,7 +12,14 @@ extends Node3D
 ## Poses: hip / aim / sprint, plus equip, reload, pump and inspect motion,
 ## mouse sway and a kick spring. Contact points (magazine seated, pump at the
 ## rear stop) use ViewModelTuning timings the WeaponHolder also uses for sound.
-## Real meshes and animations replace this in the art pass (Milestone 4).
+## Gloved hands and forearms (ViewArms) hold it: right hand on the grip with
+## the finger on the trigger, left hand on the handguard, the pump (riding with
+## it) or cupping the pistol grip, reaching for the magazine during reloads.
+
+## Support hand under a barrel-axis part (handguard, pump): palm below (hand
+## +X = gun down), hand axis along the barrel (+Y = gun back), fingers round
+## the right side, thumb over the top.
+const SUPPORT_BASIS := Basis(Vector3(0, -1, 0), Vector3(0, 0, 1), Vector3(-1, 0, 0))
 
 var tuning: ViewModelTuning
 
@@ -24,6 +31,7 @@ var _pump: Node3D
 var _pump_rest := Vector3.ZERO
 var _port := Node3D.new()
 var _flash_light: OmniLight3D
+var _flash_strength := 1.0
 var _flash_mesh: MeshInstance3D
 var _ads_position := Vector3.ZERO
 var _pose_position := Vector3.ZERO
@@ -38,6 +46,16 @@ var _flash_left := 0.0
 ## compiles while equipping rather than on the first shot.
 var _prewarm_flash_frames := 0
 
+var _arms := ViewArms.new()
+## Hand holds in the gun's frame (the left one in the pump's when it rides it),
+## and the support hand's hold on the magazine / at the loading port.
+var _right_hold := Transform3D.IDENTITY
+var _left_hold := Transform3D.IDENTITY
+var _left_on_pump := false
+var _grips: Array[ViewArms.Grip] = []
+var _magazine_hold := Transform3D.IDENTITY
+var _loading_hold := Transform3D.IDENTITY
+
 var _metal: StandardMaterial3D
 var _dark: StandardMaterial3D
 var _furniture: StandardMaterial3D
@@ -45,6 +63,8 @@ var _furniture: StandardMaterial3D
 
 func _ready() -> void:
 	add_child(_gun)
+	_arms.tuning = tuning
+	add_child(_arms)
 
 
 func build(definition: WeaponDefinition) -> void:
@@ -72,6 +92,7 @@ func build(definition: WeaponDefinition) -> void:
 	if _pump != null:
 		_pump_rest = _pump.position
 	_build_flash(muzzle)
+	_arms.build(_grips[0], _grips[1])
 
 	_pose_position = definition.hip_offset + Vector3.DOWN * tuning.equip_drop
 	_pose_rotation = Vector3.ZERO
@@ -90,6 +111,10 @@ func kick() -> void:
 
 func flash() -> void:
 	_flash_left = tuning.flash_time
+	var strength := randf_range(0.8, 1.2)
+	_flash_light.light_energy = tuning.flash_energy * strength
+	_flash_mesh.rotation.z = randf() * TAU
+	_flash_strength = strength
 
 
 func update_pose(delta: float, weapon: WeaponModel, aim_blend: float, sprinting: bool,
@@ -144,10 +169,33 @@ func update_pose(delta: float, weapon: WeaponModel, aim_blend: float, sprinting:
 	_flash_left -= delta
 	var flashing := _flash_left > 0.0
 	_flash_mesh.visible = flashing or _prewarm_flash_frames > 0
-	_flash_mesh.scale = Vector3.ONE * (1.0 if flashing else 0.001)
+	_flash_mesh.scale = Vector3.ONE * (_flash_strength if flashing else 0.001)
 	_prewarm_flash_frames = maxi(_prewarm_flash_frames - 1, 0)
 	# Hidden, not just dimmed: a zero-energy light still costs every nearby pixel.
 	_flash_light.visible = flashing
+	_place_arms(weapon, progress)
+
+
+func _place_arms(weapon: WeaponModel, progress: float) -> void:
+	var right := _gun.transform * _right_hold
+	var left := _gun.transform * ((_pump.transform * _left_hold) if _left_on_pump and _pump != null else _left_hold)
+	if weapon.state == WeaponModel.State.RELOADING:
+		var reach := 0.0
+		var target := left
+		if _definition.reload_mode == WeaponDefinition.ReloadMode.MAGAZINE:
+			reach = smoothstep(tuning.magazine_out_start - tuning.reload_hand_lead, tuning.magazine_out_start, progress) \
+					* (1.0 - smoothstep(tuning.magazine_in_end, tuning.magazine_in_end + tuning.reload_hand_lead, progress))
+			target = _gun.transform * _magazine.transform * _magazine_hold
+		else:
+			reach = sin(PI * progress)  # a shell into the loading port
+			target = _gun.transform * _loading_hold
+		left = left.interpolate_with(target, reach)
+	_arms.place(0, right, right * _arms_wrist(0) + _definition.right_elbow_offset)
+	_arms.place(1, left, left * _arms_wrist(1) + _definition.left_elbow_offset)
+
+
+func _arms_wrist(i: int) -> Vector3:
+	return _grips[i].wrist
 
 
 # --- Styles: each returns the muzzle point and fills _magazine, _pump, _port,
@@ -208,6 +256,13 @@ func _build_rifle(definition: WeaponDefinition) -> Vector3:
 	_box(_gun, Vector3(receiver.x * 0.7, 0.1, 0.035),
 			Vector3(0, lower_bottom - 0.045, back - receiver.z * 0.3), _furniture, Vector3(-18, 0, 0))
 	_trigger_group(Vector3(0, lower_bottom - 0.012, receiver.z * 0.04))
+	_right_hold = Transform3D(Basis.from_euler(Vector3(deg_to_rad(-18.0), 0, 0)),
+			Vector3(0, lower_bottom - 0.04, back - receiver.z * 0.3))
+	_left_hold = Transform3D(SUPPORT_BASIS, Vector3(0, bore_y - 0.004, front - handguard_length * 0.45))
+	_left_on_pump = false
+	_magazine_hold = Transform3D(Basis(Vector3.UP, PI), Vector3(0, -magazine.y * 0.55, -0.01))
+	_grips = [ViewArms.Grip.new(0.018, Vector3(0.03, -0.075, 0.03), false, true),
+			ViewArms.Grip.new(receiver.x * 0.62, Vector3(receiver.x * 0.62 + 0.03, 0.05, 0.0))]
 
 	# Stock: buffer tube, cheek riser, butt.
 	_cylinder(_gun, 0.014, 0.16, Vector3(0, bore_y - 0.01, back + 0.08), _dark)
@@ -278,6 +333,14 @@ func _build_shotgun(definition: WeaponDefinition) -> Vector3:
 		_cylinder(_pump, 0.0245, 0.005, Vector3(0, 0, -pump_length * 0.4 + i * pump_length * 0.2), _dark, 10)
 
 	_trigger_group(Vector3(0, box_bottom - 0.012, 0.03))
+	# Right hand round the stock's wrist (axis along it, thumb over the top);
+	# left hand on the pump, riding it when racking.
+	_right_hold = Transform3D(Basis.from_euler(Vector3(deg_to_rad(-76.0), 0, 0)), Vector3(0, box_y - 0.016, back + 0.05))
+	_left_hold = Transform3D(SUPPORT_BASIS, Vector3.ZERO)
+	_left_on_pump = true
+	_loading_hold = Transform3D(SUPPORT_BASIS, Vector3(0, box_bottom - 0.03, front + 0.04))
+	_grips = [ViewArms.Grip.new(0.024, Vector3(0.03, -0.078, -0.022)),
+			ViewArms.Grip.new(0.026, Vector3(0.056, 0.05, 0.0))]
 
 	# Wooden wrist and stock dropping toward the butt, with a dark pad.
 	_box(_gun, Vector3(receiver.x * 0.8, 0.05, 0.1), Vector3(0, box_y - 0.012, back + 0.045), _furniture, Vector3(14, 0, 0))
@@ -327,6 +390,14 @@ func _build_pistol(definition: WeaponDefinition) -> Vector3:
 	_box(_magazine, Vector3(receiver.x * 0.9, 0.008, 0.046), Vector3(0, -0.0525 - 0.004, 0), _dark)
 
 	_trigger_group(Vector3(0, -frame_height - 0.01, front + receiver.z * 0.42))
+	# Two hands: the support hand cups the shooting hand from the left.
+	var grip_basis := Basis.from_euler(grip_tilt * (PI / 180.0))
+	_right_hold = Transform3D(grip_basis, grip_center + Vector3(0, 0.008, 0))
+	_left_hold = Transform3D(grip_basis, grip_center + Vector3(-0.004, -0.006, -0.008))
+	_left_on_pump = false
+	_magazine_hold = Transform3D(Basis(Vector3.UP, PI), Vector3(0, -0.075, 0))
+	_grips = [ViewArms.Grip.new(0.02, Vector3(0.028, -0.075, 0.03), false, true),
+			ViewArms.Grip.new(0.034, Vector3(-0.058, -0.07, 0.012), true)]
 
 	# Notch rear sight and front post; the post tip sits on the sight line.
 	var rear_z := back - 0.012
@@ -352,6 +423,7 @@ func _build_flash(muzzle: Vector3) -> void:
 	_flash_light.light_color = Color(1.0, 0.75, 0.4)
 	_flash_light.omni_range = tuning.flash_range
 	_flash_light.light_energy = tuning.flash_energy
+	_flash_light.omni_attenuation = 1.4
 	_flash_light.visible = false
 	_flash_light.position = muzzle
 	_gun.add_child(_flash_light)

@@ -6,7 +6,8 @@ extends Node
 ## damage, death and respawn, and the AI frame-time budget.
 ## Exit code 0 = all passed.
 ##
-##   $GODOT --headless --path . res://tests/probes/combat_arena.tscn
+##   $GODOT --headless --path . res://tests/probes/combat_arena.tscn [-- level=res://levels/port/port_yard.tscn]
+##   (any level built on the arena's layout and script; default the greybox arena)
 
 const ARENA := "res://levels/greybox/arena.tscn"
 const WATCHDOG_SECONDS := 240.0
@@ -29,7 +30,12 @@ var _reached_cover: Dictionary = {}  # soldiers that have been in cover (or char
 
 
 func _ready() -> void:
-	arena = load(ARENA).instantiate()
+	var level := ARENA
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("level="):
+			level = arg.trim_prefix("level=")
+	print("level: %s" % level)
+	arena = load(level).instantiate()
 	add_child(arena)
 	player = arena.get_node("Player")
 	get_tree().create_timer(WATCHDOG_SECONDS).timeout.connect(func() -> void:
@@ -50,8 +56,13 @@ func _run() -> void:
 		return "" if ok else "polygons %d, cover %d, soldiers %d" % [polygons, arena.cover_points, AI.soldiers.size()])
 
 	await _check("soldiers spot a player standing in the open", func() -> String:
-		var aware := await _watch(8.0, func() -> bool: return _count(func(s: Soldier) -> bool: return s.awareness >= 1.0) >= 3)
-		return "" if aware else "only %d aware" % _count(func(s: Soldier) -> bool: return s.awareness >= 1.0))
+		# Spotted = alerted (awareness reached 1, by sight or a squadmate's report).
+		# Awareness itself sags below 1 whenever a soldier moving up loses sight
+		# behind cover, so sampling it once a second missed soldiers mid-advance.
+		var aware := await _watch(8.0, func() -> bool: return _count(func(s: Soldier) -> bool: return s._alerted) >= 3)
+		if not aware:
+			_explain_spotting()
+		return "" if aware else "only %d alerted" % _count(func(s: Soldier) -> bool: return s._alerted))
 
 	await _check("every soldier gets to cover (or charges in)", func() -> String:
 		var settled := await _watch(25.0, func() -> bool:
@@ -106,19 +117,24 @@ func _run() -> void:
 		for second in 15:
 			await get_tree().create_timer(0.5).timeout
 			for soldier in AI.soldiers:
-				if soldier._peeking:
+				# Peeking and actually out of cover: a soldier still stepping out
+				# from behind a container cannot be near-missed.
+				if soldier._peeking and _exposed_to_player(soldier):
 					peeker = soldier
 			if peeker != null:
 				break
 		if peeker == null:
-			return "nobody peeked"
+			return "nobody peeked into the open"
 		var head: Vector3 = peeker.mannequin.parts.head.global_position
 		var beside := head + peeker.global_basis.x * 0.6 + Vector3.UP * 0.3
 		var kestrel := load("res://data/weapons/kestrel.tres") as WeaponDefinition
-		Ballistics.fire(player.head_point(), (beside - player.head_point()).normalized(), kestrel, player, player.bullet_exclude())
+		var shot_from := player.head_point()
+		Ballistics.fire(shot_from, (beside - shot_from).normalized(), kestrel, player, player.bullet_exclude())
 		await get_tree().create_timer(0.25).timeout
 		if not is_instance_valid(peeker):
 			return "peeker vanished"
+		if peeker._peeking:
+			_explain_near_miss(peeker, shot_from, beside)
 		return "" if not peeker._peeking else "still peeking (suppression %.2f)" % peeker.suppression)
 
 	await _check("a soldier flanked in its cover moves", func() -> String:
@@ -162,8 +178,9 @@ func _run() -> void:
 		var soldier := AI.soldiers[0]
 		AI.frozen = true
 		var head: Vector3 = soldier.mannequin.parts.head.global_position + Vector3.UP * 0.12
-		# From behind: soldiers face the player with cover in between.
-		var from := head + soldier.global_basis.z * 3.0 + Vector3.UP * 0.2
+		# From wherever is open: soldiers face the player with cover in between,
+		# and often back up against a container too.
+		var from := _clear_shot_at(head, soldier)
 		var kestrel := load("res://data/weapons/kestrel.tres") as WeaponDefinition
 		for round in 3:
 			if is_instance_valid(soldier) and not soldier.dead:
@@ -171,6 +188,13 @@ func _run() -> void:
 				await get_tree().create_timer(0.1).timeout
 		AI.frozen = false
 		if is_instance_valid(soldier) and not soldier.dead:
+			var query := PhysicsRayQueryParameters3D.create(from, head + (head - from).normalized() * 0.5,
+					PhysicsLayers.BULLETS, player.bullet_exclude())
+			var hit := player.get_world_3d().direct_space_state.intersect_ray(query)
+			print("  %s at %s, health %.0f; the shot from %s first hits %s" % [soldier.profile.display_name,
+					soldier.global_position.snapped(Vector3.ONE * 0.1), soldier.health.model.health, from.snapped(Vector3.ONE * 0.1),
+					"nothing" if hit.is_empty() else "%s (%s) at %s" % [(hit.collider as Node).name,
+					(hit.collider as Node).get_parent().name, (hit.position as Vector3).snapped(Vector3.ONE * 0.01)]])
 			return "still alive after 3 headshots"
 		var ragdoll: Ragdoll = null
 		for node in arena.get_children():
@@ -213,16 +237,73 @@ func _run() -> void:
 
 	await _check("the player dies and respawns at the start", func() -> String:
 		player.health.invulnerable = false
+		AI.frozen = true  # respawn is under test, not the squad: no rounds in flight at the new player
 		Debug.execute("kill")
 		if not player.dead:
 			return "kill did not kill"
 		await get_tree().create_timer(player.tuning.respawn_delay + 0.5).timeout
+		AI.frozen = false
 		var home := player.global_position.distance_to(Vector3(0, 0, 26))
 		var ok := not player.dead and is_equal_approx(player.health.fraction(), 1.0) and home < 1.0
 		return "" if ok else "dead %s, health %.2f, %.1f m from spawn" % [player.dead, player.health.fraction(), home])
 
 	print("\n%s: %d check(s) failed" % ["FAIL" if failures else "PASS", failures])
 	get_tree().quit(1 if failures else 0)
+
+
+## A firing point 3 m from `target` in open air with a clear line to it:
+## behind the soldier, either side, in front, or straight above.
+func _clear_shot_at(target: Vector3, soldier: Soldier) -> Vector3:
+	var space := player.get_world_3d().direct_space_state
+	var basis := soldier.global_basis
+	for direction in [basis.z, basis.x, -basis.x, -basis.z, Vector3.UP]:
+		var from: Vector3 = target + direction * 3.0 + Vector3.UP * 0.2
+		var inside := PhysicsPointQueryParameters3D.new()
+		inside.position = from
+		inside.collision_mask = PhysicsLayers.WORLD
+		if not space.intersect_point(inside).is_empty():
+			continue
+		if space.intersect_ray(PhysicsRayQueryParameters3D.create(from, target, PhysicsLayers.WORLD)).is_empty():
+			return from
+	return target + Vector3.UP * 3.0
+
+
+## The player has a clear line to the soldier's head.
+func _exposed_to_player(soldier: Soldier) -> bool:
+	var head: Vector3 = soldier.mannequin.parts.head.global_position
+	var query := PhysicsRayQueryParameters3D.create(player.head_point(), head, PhysicsLayers.WORLD)
+	return player.get_world_3d().direct_space_state.intersect_ray(query).is_empty()
+
+
+## Why soldiers have not spotted the player: each one's awareness, distance,
+## view angle and what (if anything) blocks its eye line.
+func _explain_spotting() -> void:
+	var space := player.get_world_3d().direct_space_state
+	for soldier in AI.soldiers:
+		var blocked := "clear"
+		for point in [player.head_point(), player.aim_point()]:
+			var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(soldier.eye_point(), point, PhysicsLayers.WORLD))
+			blocked = "clear" if hit.is_empty() else "blocked by %s at %s" % [(hit.collider as Node).name, (hit.position as Vector3).snapped(Vector3.ONE * 0.1)]
+			if hit.is_empty():
+				break
+		var offset := player.global_position - soldier.global_position
+		var forward := -soldier.global_basis.z
+		var angle := rad_to_deg(Vector2(forward.x, forward.z).angle_to(Vector2(offset.x, offset.z)))
+		print("  %s at %s: alerted %s, awareness %.2f, %.1f m, %.0f deg off its facing, %s, action %s" % [soldier.profile.display_name,
+				soldier.global_position.snapped(Vector3.ONE * 0.1), soldier._alerted, soldier.awareness, offset.length(), angle, blocked,
+				SoldierBrain.Action.keys()[soldier.brain.action]])
+
+
+## Why a near miss did not make the peeker duck: where the shot went.
+func _explain_near_miss(peeker: Soldier, from: Vector3, beside: Vector3) -> void:
+	var space := player.get_world_3d().direct_space_state
+	var query := PhysicsRayQueryParameters3D.create(from, from + (beside - from).normalized() * 200.0,
+			PhysicsLayers.BULLETS, player.bullet_exclude())
+	var hit := space.intersect_ray(query)
+	var what := "nothing" if hit.is_empty() else "%s at %s (%.1f m short of the peeker)" % [(hit.collider as Node).name,
+			(hit.position as Vector3).snapped(Vector3.ONE * 0.1), from.distance_to(beside) - from.distance_to(hit.position)]
+	print("  peeker %s at %s, %.1f m away, suppression %.2f; the shot first hits %s" % [peeker.profile.display_name,
+			peeker.global_position.snapped(Vector3.ONE * 0.1), from.distance_to(beside), peeker.suppression, what])
 
 
 ## Steps one second at a time for up to `seconds`, sampling AI cost, flanks

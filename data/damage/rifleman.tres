@@ -12,6 +12,7 @@ plate_points = 50.0
 plates_start = 1
 plates_carried = 0
 headshots_bypass_armor = true
+blunt_trauma = 0.25
 head_multiplier = 2.5
 torso_multiplier = 1.0
 arms_multiplier = 0.75

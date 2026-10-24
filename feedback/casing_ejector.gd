@@ -3,7 +3,7 @@ extends Node3D
 ## Spent casings: thrown from the ejection port, tumbling under gravity,
 ## bouncing off whatever they hit with a clink that depends on the surface
 ## (bright on steel, softer on concrete, dull on wood, silent on dirt or
-## bodies), then lying there for a while. Simulated with rays, not rigid
+## bodies; hollow tocks for plastic shotgun hulls), then lying there for a while. Simulated with rays, not rigid
 ## bodies, so dozens cost almost nothing. Pooled, oldest reused first.
 
 ## Emitted on every bounce, for probes. `bounce` counts from 0.
@@ -18,8 +18,10 @@ signal casing_landed(surface: String, bounce: int)
 @export var rest_speed := 0.5
 @export var spin_degrees_per_second := 1400.0
 @export var bounce_volume_drop_db := 7.0
-@export var sound_unit_size := 3.0
-@export var sound_players := 6
+@export var sound_unit_size := 5.0
+@export var sound_players := 8
+## Takes per weapon and surface, picked at random.
+@export var clink_variants := 4
 ## Lift off a surface after a bounce so the next ray does not re-hit it (m).
 @export var surface_offset := 0.004
 
@@ -41,6 +43,7 @@ var _casings: Array[Casing] = []
 var _next := 0
 var _meshes: Dictionary = {}  # weapon id -> CylinderMesh
 var _players: Array[AudioStreamPlayer3D] = []
+var _prewarm_task := -1  # WorkerThreadPool task id, waited on before we go
 var _next_player := 0
 
 
@@ -122,10 +125,50 @@ func _bounce(casing: Casing, hit: Dictionary) -> void:
 				casing.node.global_position + normal * casing.weapon.casing_radius)
 
 
+## Builds every clink for these weapons on every surface on a worker thread,
+## so no casing ever builds a sound mid-fight. Clinks not built yet are skipped.
+func prewarm(weapons: Array) -> void:
+	var jobs: Array = []
+	for weapon: WeaponDefinition in weapons:
+		if weapon == null or not weapon.casing_ejects:
+			continue
+		for surface: SurfaceMaterial in Ballistics.settings.surfaces.values():
+			for variant in clink_variants:
+				if not ProceduralAudio.has(_clink_key(weapon, surface, variant)):
+					jobs.append([weapon, surface, variant])
+	if not jobs.is_empty():
+		_finish_prewarm()
+		_prewarm_task = WorkerThreadPool.add_task(CasingEjector._build_clinks.bind(jobs), false, "casing clinks")
+
+
+func _exit_tree() -> void:
+	_finish_prewarm()
+
+
+## Every pool task must be waited on (an unwaited one crashes the engine at
+## exit), and the build must not outlive this node.
+func _finish_prewarm() -> void:
+	if _prewarm_task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_prewarm_task)
+		_prewarm_task = -1
+
+
+## Worker thread: static, so it never touches a node that may be gone; hands
+## each sound to the main thread's cache.
+static func _build_clinks(jobs: Array) -> void:
+	for job in jobs:
+		var stream := ProceduralAudio.casing_clink(job[0], job[1], job[2])
+		ProceduralAudio.store.call_deferred(_clink_key(job[0], job[1], job[2]), stream)
+
+
+static func _clink_key(weapon: WeaponDefinition, surface: SurfaceMaterial, variant: int) -> String:
+	return "casing:%s:%s:%d" % [weapon.id, surface.id, variant]
+
+
 func _play_clink(casing: Casing, surface: SurfaceMaterial, position: Vector3) -> void:
 	var weapon := casing.weapon
-	var stream := ProceduralAudio.cached("casing:%s:%s" % [weapon.id, surface.id],
-			func() -> AudioStreamWAV: return ProceduralAudio.casing_clink(weapon, surface))
+	var key := _clink_key(weapon, surface, randi() % clink_variants)
+	var stream := ProceduralAudio.fetch(key)
 	if stream == null:
 		return
 	var player := _players[_next_player]

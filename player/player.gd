@@ -117,7 +117,7 @@ func is_plating() -> bool:
 
 
 func _exit_tree() -> void:
-	for command in ["noclip", "speed", "tp", "pos", "movement.show", "god", "kill", "damage", "plates"]:
+	for command in ["noclip", "speed", "tp", "pos", "look", "movement.show", "god", "kill", "damage", "plates"]:
 		Debug.unregister(command)
 
 
@@ -396,6 +396,7 @@ func _register_debug_commands() -> void:
 	Debug.register("speed", _cmd_speed, "speed <multiplier>: scale movement speed.")
 	Debug.register("tp", _cmd_tp, "tp <x> <y> <z>: teleport the player.")
 	Debug.register("pos", _cmd_pos, "Print the player's position.")
+	Debug.register("look", _cmd_look, "look <yaw degrees> [pitch degrees]: point the view (yaw 0 = north, 90 = west).")
 	Debug.register("movement.show", _cmd_movement_show, "Toggle movement state readout.")
 	Debug.register("god", _cmd_god, "Toggle player invulnerability.")
 	Debug.register("kill", _cmd_kill, "Kill the player (tests death and respawn).")
@@ -446,6 +447,13 @@ func _cmd_tp(args: PackedStringArray) -> String:
 	global_position = Vector3(args[0].to_float(), args[1].to_float(), args[2].to_float())
 	velocity = Vector3.ZERO
 	return _cmd_pos(args)
+
+
+func _cmd_look(args: PackedStringArray) -> String:
+	if args.is_empty() or not args[0].is_valid_float() or (args.size() > 1 and not args[1].is_valid_float()):
+		return "usage: look <yaw degrees> [pitch degrees]"
+	set_look(deg_to_rad(args[0].to_float()), deg_to_rad(args[1].to_float()) if args.size() > 1 else 0.0)
+	return "looking %s" % args[0]
 
 
 func _cmd_pos(_args: PackedStringArray) -> String:

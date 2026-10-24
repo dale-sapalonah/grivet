@@ -79,6 +79,9 @@ enum ViewStyle { RIFLE, SHOTGUN, PISTOL }
 ## How far in front of the eye the rear sight sits when aiming.
 @export var ads_distance := 0.2
 @export var sprint_offset := Vector3(0.08, -0.22, -0.28)
+## Elbows, from each wrist, in view space: where the forearms run to.
+@export var right_elbow_offset := Vector3(0.06, -0.2, 0.26)
+@export var left_elbow_offset := Vector3(-0.14, -0.22, 0.22)
 @export var sprint_rotation_degrees := Vector3(-12.0, 35.0, 10.0)
 @export var receiver_size := Vector3(0.05, 0.08, 0.36)
 @export var barrel_length := 0.3
@@ -104,6 +107,9 @@ enum ViewStyle { RIFLE, SHOTGUN, PISTOL }
 ## Ring of the case itself; brass is bright, plastic hulls are low.
 @export var casing_clink_hz := 4200.0
 @export var casing_volume_db := -16.0
+## Plastic shotgun hull (hollow tock with a brass-base tick) instead of a
+## ringing brass case.
+@export var casing_hollow := false
 
 @export_group("Placeholder audio")
 @export var shot_sound_length := 0.25

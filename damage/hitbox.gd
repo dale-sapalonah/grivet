@@ -28,7 +28,21 @@ func apply_damage(hit: Dictionary) -> void:
 	var shooter: Object = hit.get("shooter")
 	if body is Player and shooter is Soldier:
 		damage *= (shooter as Soldier).profile.damage_multiplier
-	health.take_hit(damage, zone_of(hit.get("shape", -1)), hit)
+	var info := hit.duplicate()
+	info["on_plate"] = on_plate(hit.get("shape", -1), hit.get("position", Vector3.INF))
+	health.take_hit(damage, zone_of(hit.get("shape", -1)), info)
+
+
+## Whether a hit lands on the armour plate. Shapes carrying metadata
+## `plate` (Rect2 in the shape's local X/Y: the plate's outline seen from the
+## front or back) only count hits inside it; shapes without it (the player's)
+## count every hit.
+func on_plate(shape_index: int, position: Vector3) -> bool:
+	var node := shape_node(shape_index) as Node3D
+	if node == null or not node.has_meta("plate") or not position.is_finite():
+		return true
+	var local := node.global_transform.affine_inverse() * position
+	return (node.get_meta("plate") as Rect2).has_point(Vector2(local.x, local.y))
 
 
 ## The node for a struck shape index (for its metadata, e.g. "part").

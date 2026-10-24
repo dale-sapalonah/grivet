@@ -1,0 +1,671 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://levels/port/port_yard.gd" id="1_level"]
+[ext_resource type="PackedScene" path="res://player/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://ui/debug_overlay.tscn" id="4_overlay"]
+[ext_resource type="PackedScene" path="res://ui/hud.tscn" id="5_hud"]
+[ext_resource type="Texture2D" path="res://levels/port/materials/noise.tres" id="6_noise"]
+[ext_resource type="Shader" path="res://levels/port/materials/asphalt.gdshader" id="shader_asphalt"]
+[ext_resource type="Shader" path="res://levels/port/materials/container.gdshader" id="shader_container"]
+[ext_resource type="Shader" path="res://levels/port/materials/crate.gdshader" id="shader_crate"]
+[ext_resource type="Shader" path="res://levels/port/materials/concrete.gdshader" id="shader_concrete"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
+sky_top_color = Color(0.045, 0.06, 0.15, 1)
+sky_horizon_color = Color(0.6, 0.33, 0.22, 1)
+sky_curve = 0.09
+ground_bottom_color = Color(0.02, 0.02, 0.025, 1)
+ground_horizon_color = Color(0.3, 0.19, 0.15, 1)
+sun_angle_max = 12.0
+sun_curve = 0.06
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMaterial")
+
+[sub_resource type="Environment" id="Environment"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.36, 0.36, 0.48, 1)
+ambient_light_sky_contribution = 0.55
+ambient_light_energy = 1.9
+tonemap_mode = 2
+tonemap_exposure = 1.15
+fog_enabled = true
+fog_light_color = Color(0.32, 0.26, 0.28, 1)
+fog_density = 0.009
+fog_sun_scatter = 0.35
+fog_aerial_perspective = 0.6
+fog_sky_affect = 0.25
+adjustment_enabled = true
+adjustment_saturation = 1.08
+
+[sub_resource type="NavigationMesh" id="NavMesh"]
+cell_size = 0.125
+cell_height = 0.125
+agent_height = 1.75
+agent_radius = 0.375
+agent_max_climb = 0.25
+agent_max_slope = 46.0
+geometry_parsed_geometry_type = 1
+geometry_collision_mask = 1
+
+[sub_resource type="ShaderMaterial" id="Asphalt"]
+shader = ExtResource("shader_asphalt")
+shader_parameter/noise_tex = ExtResource("6_noise")
+
+[sub_resource type="ShaderMaterial" id="Container"]
+shader = ExtResource("shader_container")
+shader_parameter/noise_tex = ExtResource("6_noise")
+
+[sub_resource type="ShaderMaterial" id="Crate"]
+shader = ExtResource("shader_crate")
+shader_parameter/noise_tex = ExtResource("6_noise")
+
+[sub_resource type="ShaderMaterial" id="Building"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.56, 0.54, 0.5, 1)
+
+[sub_resource type="BoxShape3D" id="ShapeLowWallSW"]
+size = Vector3(3, 1, 0.4)
+
+[sub_resource type="BoxShape3D" id="ShapeLowWallSE"]
+size = Vector3(3, 1, 0.4)
+
+[sub_resource type="BoxShape3D" id="ShapeLowWallMid1"]
+size = Vector3(4, 1, 0.4)
+
+[sub_resource type="BoxShape3D" id="ShapeLowWallMid2"]
+size = Vector3(4, 1, 0.4)
+
+[sub_resource type="BoxShape3D" id="ShapeLowWallMid3"]
+size = Vector3(0.4, 1, 4)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeBarrierMid1"]
+points = PackedVector3Array(-1, -0.55, -0.3, -1, -0.55, 0.3, -1, -0.47, 0.3, -1, -0.25, 0.16, -1, 0.55, 0.09, -1, 0.55, -0.09, -1, -0.25, -0.16, -1, -0.47, -0.3, 1, -0.55, -0.3, 1, -0.55, 0.3, 1, -0.47, 0.3, 1, -0.25, 0.16, 1, 0.55, 0.09, 1, 0.55, -0.09, 1, -0.25, -0.16, 1, -0.47, -0.3)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeBarrierMid2"]
+points = PackedVector3Array(-1, -0.55, -0.3, -1, -0.55, 0.3, -1, -0.47, 0.3, -1, -0.25, 0.16, -1, 0.55, 0.09, -1, 0.55, -0.09, -1, -0.25, -0.16, -1, -0.47, -0.3, 1, -0.55, -0.3, 1, -0.55, 0.3, 1, -0.47, 0.3, 1, -0.25, 0.16, 1, 0.55, 0.09, 1, 0.55, -0.09, 1, -0.25, -0.16, 1, -0.47, -0.3)
+
+[sub_resource type="BoxShape3D" id="ShapeLowWallN"]
+size = Vector3(4, 1, 0.4)
+
+[sub_resource type="BoxShape3D" id="BusShape"]
+size = Vector3(2.05, 2.5, 7)
+
+[sub_resource type="StandardMaterial3D" id="PoleSteel"]
+albedo_color = Color(0.32, 0.33, 0.34, 1)
+metallic = 0.6
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Drum0"]
+albedo_color = Color(0.12, 0.22, 0.42, 1)
+metallic = 0.4
+roughness = 0.55
+
+[sub_resource type="StandardMaterial3D" id="Drum1"]
+albedo_color = Color(0.5, 0.12, 0.08, 1)
+metallic = 0.4
+roughness = 0.55
+
+[sub_resource type="StandardMaterial3D" id="Drum2"]
+albedo_color = Color(0.62, 0.48, 0.1, 1)
+metallic = 0.4
+roughness = 0.55
+
+[node name="PortYard" type="Node3D"]
+script = ExtResource("1_level")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.4717, 0.1856, -0.8620, -0.0000, 0.9776, 0.2105, 0.8818, -0.0993, 0.4611, 0, 20, 0)
+light_color = Color(1, 0.58, 0.34, 1)
+light_energy = 1.25
+shadow_enabled = true
+shadow_bias = 0.04
+shadow_normal_bias = 1.5
+directional_shadow_mode = 1
+directional_shadow_max_distance = 60.0
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 26)
+
+[node name="HUD" parent="." instance=ExtResource("5_hud")]
+
+[node name="DebugOverlay" parent="." instance=ExtResource("4_overlay")]
+
+[node name="Navigation" type="NavigationRegion3D" parent="."]
+navigation_mesh = SubResource("NavMesh")
+
+[node name="Floor" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+use_collision = true
+size = Vector3(64, 1, 64)
+material = SubResource("Asphalt")
+metadata/surface = "concrete"
+
+[node name="WallNorth" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, -32.22)
+instance_shader_parameters/box_size = Vector3(67.1, 5.2, 2.44)
+instance_shader_parameters/cells = Vector3(11, 2, 1)
+instance_shader_parameters/seed = 1
+use_collision = true
+size = Vector3(67.1, 5.2, 2.44)
+material = SubResource("Container")
+metadata/surface = "steel"
+
+[node name="WallSouth" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, 32.22)
+instance_shader_parameters/box_size = Vector3(67.1, 5.2, 2.44)
+instance_shader_parameters/cells = Vector3(11, 2, 1)
+instance_shader_parameters/seed = 2
+use_collision = true
+size = Vector3(67.1, 5.2, 2.44)
+material = SubResource("Container")
+metadata/surface = "steel"
+
+[node name="WallWest" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.22, 2.6, 0)
+instance_shader_parameters/box_size = Vector3(2.44, 5.2, 67.1)
+instance_shader_parameters/cells = Vector3(1, 2, 11)
+instance_shader_parameters/seed = 3
+use_collision = true
+size = Vector3(2.44, 5.2, 67.1)
+material = SubResource("Container")
+metadata/surface = "steel"
+
+[node name="WallEast" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.22, 2.6, 0)
+instance_shader_parameters/box_size = Vector3(2.44, 5.2, 67.1)
+instance_shader_parameters/cells = Vector3(1, 2, 11)
+instance_shader_parameters/seed = 4
+use_collision = true
+size = Vector3(2.44, 5.2, 67.1)
+material = SubResource("Container")
+metadata/surface = "steel"
+
+[node name="LowWallSW" type="StaticBody3D" parent="Navigation" groups=["sandbag_wall"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.5, 18)
+metadata/surface = "sandbag"
+metadata/size = Vector3(3, 1, 0.4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/LowWallSW"]
+shape = SubResource("ShapeLowWallSW")
+
+[node name="LowWallSE" type="StaticBody3D" parent="Navigation" groups=["sandbag_wall"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.5, 16)
+metadata/surface = "sandbag"
+metadata/size = Vector3(3, 1, 0.4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/LowWallSE"]
+shape = SubResource("ShapeLowWallSE")
+
+[node name="CrateSW" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0.6, 20)
+instance_shader_parameters/box_size = Vector3(1.2, 1.2, 1.2)
+instance_shader_parameters/seed = 1
+use_collision = true
+size = Vector3(1.2, 1.2, 1.2)
+material = SubResource("Crate")
+metadata/surface = "wood"
+
+[node name="CrateSE" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0.6, 21)
+instance_shader_parameters/box_size = Vector3(1.2, 1.2, 1.2)
+instance_shader_parameters/seed = 2
+use_collision = true
+size = Vector3(1.2, 1.2, 1.2)
+material = SubResource("Crate")
+metadata/surface = "wood"
+
+[node name="ContainerSW" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 1.3, 12)
+instance_shader_parameters/box_size = Vector3(2.44, 2.6, 6.1)
+instance_shader_parameters/cells = Vector3(1, 1, 1)
+instance_shader_parameters/seed = 11
+use_collision = true
+size = Vector3(2.44, 2.6, 6.1)
+material = SubResource("Container")
+metadata/surface = "steel"
+
+[node name="ContainerMidW" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1.3, 2)
+instance_shader_parameters/box_size = Vector3(6.1, 2.6, 2.44)
+instance_shader_parameters/cells = Vector3(1, 1, 1)
+instance_shader_parameters/seed = 12
+use_collision = true
+size = Vector3(6.1, 2.6, 2.44)
+material = SubResource("Container")
+metadata/surface = "steel"
+
+[node name="ContainerMidE" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1.3, -2)
+instance_shader_parameters/box_size = Vector3(2.44, 2.6, 6.1)
+instance_shader_parameters/cells = Vector3(1, 1, 1)
+instance_shader_parameters/seed = 13
+use_collision = true
+size = Vector3(2.44, 2.6, 6.1)
+material = SubResource("Container")
+metadata/surface = "steel"
+
+[node name="LowWallMid1" type="StaticBody3D" parent="Navigation" groups=["sandbag_wall"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 6)
+metadata/surface = "sandbag"
+metadata/size = Vector3(4, 1, 0.4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/LowWallMid1"]
+shape = SubResource("ShapeLowWallMid1")
+
+[node name="LowWallMid2" type="StaticBody3D" parent="Navigation" groups=["sandbag_wall"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.5, -6)
+metadata/surface = "sandbag"
+metadata/size = Vector3(4, 1, 0.4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/LowWallMid2"]
+shape = SubResource("ShapeLowWallMid2")
+
+[node name="LowWallMid3" type="StaticBody3D" parent="Navigation" groups=["sandbag_wall"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0.5, 8)
+metadata/surface = "sandbag"
+metadata/size = Vector3(0.4, 1, 4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/LowWallMid3"]
+shape = SubResource("ShapeLowWallMid3")
+
+[node name="BarrierMid1" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.55, -10)
+metadata/surface = "concrete"
+metadata/size = Vector3(2, 1.1, 0.6)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/BarrierMid1"]
+shape = SubResource("ShapeBarrierMid1")
+
+[node name="BarrierMid2" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0.55, -6)
+metadata/surface = "concrete"
+metadata/size = Vector3(2, 1.1, 0.6)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/BarrierMid2"]
+shape = SubResource("ShapeBarrierMid2")
+
+[node name="CrateStackLow" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 0.6, -2)
+instance_shader_parameters/box_size = Vector3(1.2, 1.2, 1.2)
+instance_shader_parameters/seed = 3
+use_collision = true
+size = Vector3(1.2, 1.2, 1.2)
+material = SubResource("Crate")
+metadata/surface = "wood"
+
+[node name="CrateStackHigh" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 1.8, -2)
+instance_shader_parameters/box_size = Vector3(1.2, 1.2, 1.2)
+instance_shader_parameters/seed = 4
+use_collision = true
+size = Vector3(1.2, 1.2, 1.2)
+material = SubResource("Crate")
+metadata/surface = "wood"
+
+[node name="ContainerNW" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 1.3, -18)
+instance_shader_parameters/box_size = Vector3(6.1, 2.6, 2.44)
+instance_shader_parameters/cells = Vector3(1, 1, 1)
+instance_shader_parameters/seed = 14
+use_collision = true
+size = Vector3(6.1, 2.6, 2.44)
+material = SubResource("Container")
+metadata/surface = "steel"
+
+[node name="ContainerNWTop" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 3.9, -18)
+instance_shader_parameters/box_size = Vector3(6.1, 2.6, 2.44)
+instance_shader_parameters/cells = Vector3(1, 1, 1)
+instance_shader_parameters/seed = 15
+use_collision = true
+size = Vector3(6.1, 2.6, 2.44)
+material = SubResource("Container")
+metadata/surface = "steel"
+
+[node name="CrateN1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.6, -22)
+instance_shader_parameters/box_size = Vector3(1.2, 1.2, 1.2)
+instance_shader_parameters/seed = 5
+use_collision = true
+size = Vector3(1.2, 1.2, 1.2)
+material = SubResource("Crate")
+metadata/surface = "wood"
+
+[node name="CrateN2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.6, 0.6, -22)
+instance_shader_parameters/box_size = Vector3(1.2, 1.2, 1.2)
+instance_shader_parameters/seed = 6
+use_collision = true
+size = Vector3(1.2, 1.2, 1.2)
+material = SubResource("Crate")
+metadata/surface = "wood"
+
+[node name="LowWallN" type="StaticBody3D" parent="Navigation" groups=["sandbag_wall"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.5, -20)
+metadata/surface = "sandbag"
+metadata/size = Vector3(4, 1, 0.4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/LowWallN"]
+shape = SubResource("ShapeLowWallN")
+
+[node name="BldgSouthA" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.05, 1.5, -14)
+use_collision = true
+size = Vector3(4.1, 3, 0.3)
+material = SubResource("Building")
+metadata/surface = "concrete"
+
+[node name="BldgSouthB" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 1.5, -14)
+use_collision = true
+size = Vector3(2, 3, 0.3)
+material = SubResource("Building")
+metadata/surface = "concrete"
+
+[node name="BldgSouthSill" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0.5, -14)
+use_collision = true
+size = Vector3(2, 1, 0.3)
+material = SubResource("Building")
+metadata/surface = "concrete"
+
+[node name="BldgSouthHeader" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 2.6, -14)
+use_collision = true
+size = Vector3(2, 0.8, 0.3)
+material = SubResource("Building")
+metadata/surface = "concrete"
+
+[node name="BldgSouthC" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 1.5, -14)
+use_collision = true
+size = Vector3(2, 3, 0.3)
+material = SubResource("Building")
+metadata/surface = "concrete"
+
+[node name="BldgNorth" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 1.5, -24)
+use_collision = true
+size = Vector3(12.3, 3, 0.3)
+material = SubResource("Building")
+metadata/surface = "concrete"
+
+[node name="BldgWestA" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.5, -22.2)
+use_collision = true
+size = Vector3(0.3, 3, 3.6)
+material = SubResource("Building")
+metadata/surface = "concrete"
+
+[node name="BldgWestB" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.5, -16.2)
+use_collision = true
+size = Vector3(0.3, 3, 4.4)
+material = SubResource("Building")
+metadata/surface = "concrete"
+
+[node name="BldgEastA" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 1.5, -22.5)
+use_collision = true
+size = Vector3(0.3, 3, 3)
+material = SubResource("Building")
+metadata/surface = "concrete"
+
+[node name="BldgEastSill" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.5, -20)
+use_collision = true
+size = Vector3(0.3, 1, 2)
+material = SubResource("Building")
+metadata/surface = "concrete"
+
+[node name="BldgEastHeader" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 2.6, -20)
+use_collision = true
+size = Vector3(0.3, 0.8, 2)
+material = SubResource("Building")
+metadata/surface = "concrete"
+
+[node name="BldgEastB" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 1.5, -16.5)
+use_collision = true
+size = Vector3(0.3, 3, 5)
+material = SubResource("Building")
+metadata/surface = "concrete"
+
+[node name="BldgDividerA" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 1.5, -22)
+use_collision = true
+size = Vector3(0.3, 3, 4)
+material = SubResource("Building")
+metadata/surface = "concrete"
+
+[node name="BldgDividerB" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 1.5, -16)
+use_collision = true
+size = Vector3(0.3, 3, 4)
+material = SubResource("Building")
+metadata/surface = "concrete"
+
+[node name="BldgCrateW" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.6, -20)
+instance_shader_parameters/box_size = Vector3(1.2, 1.2, 1.2)
+instance_shader_parameters/seed = 7
+use_collision = true
+size = Vector3(1.2, 1.2, 1.2)
+material = SubResource("Crate")
+metadata/surface = "wood"
+
+[node name="BldgCrateE" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0.6, -22)
+instance_shader_parameters/box_size = Vector3(1.2, 1.2, 1.2)
+instance_shader_parameters/seed = 8
+use_collision = true
+size = Vector3(1.2, 1.2, 1.2)
+material = SubResource("Crate")
+metadata/surface = "wood"
+
+[node name="PoleNW" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 4, -28)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="PoleN" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -29.6)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="PoleNE" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 4, -28)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="PoleW" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29.6, 4, 8)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="PoleE" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.6, 4, 6)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="PoleSW" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 4, 29.6)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="PoleSE" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 4, 29.6)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="DrumSW1" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.44, 16)
+use_collision = true
+radius = 0.29
+height = 0.88
+sides = 14
+material = SubResource("Drum0")
+metadata/surface = "steel"
+
+[node name="DrumSW2" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.35, 0.44, 16.3)
+use_collision = true
+radius = 0.29
+height = 0.88
+sides = 14
+material = SubResource("Drum0")
+metadata/surface = "steel"
+
+[node name="DrumSW3" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.7, 0.44, 15.6)
+use_collision = true
+radius = 0.29
+height = 0.88
+sides = 14
+material = SubResource("Drum0")
+metadata/surface = "steel"
+
+[node name="DrumE1" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0.44, -6)
+use_collision = true
+radius = 0.29
+height = 0.88
+sides = 14
+material = SubResource("Drum1")
+metadata/surface = "steel"
+
+[node name="DrumE2" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.62, 0.44, -6.3)
+use_collision = true
+radius = 0.29
+height = 0.88
+sides = 14
+material = SubResource("Drum1")
+metadata/surface = "steel"
+
+[node name="DrumW1" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27, 0.44, -14)
+use_collision = true
+radius = 0.29
+height = 0.88
+sides = 14
+material = SubResource("Drum2")
+metadata/surface = "steel"
+
+[node name="DrumW2" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.4, 0.44, -14.25)
+use_collision = true
+radius = 0.29
+height = 0.88
+sides = 14
+material = SubResource("Drum2")
+metadata/surface = "steel"
+
+[node name="DrumW3" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.75, 0.44, -13.6)
+use_collision = true
+radius = 0.29
+height = 0.88
+sides = 14
+material = SubResource("Drum2")
+metadata/surface = "steel"
+
+[node name="DrumN1" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.44, -27)
+use_collision = true
+radius = 0.29
+height = 0.88
+sides = 14
+material = SubResource("Drum0")
+metadata/surface = "steel"
+
+[node name="DrumN2" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.62, 0.44, -27.2)
+use_collision = true
+radius = 0.29
+height = 0.88
+sides = 14
+material = SubResource("Drum1")
+metadata/surface = "steel"
+
+[node name="PmvRoute17" type="StaticBody3D" parent="Navigation" groups=["pmv_bus"]]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -22, 0, 27)
+metadata/surface = "vehicle"
+metadata/livery = Color(0.16, 0.6, 0.6, 1)
+metadata/route = "17"
+metadata/plate = "P 4172"
+metadata/headlights = true
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/PmvRoute17"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("BusShape")
+
+[node name="PmvRoute4" type="StaticBody3D" parent="Navigation" groups=["pmv_bus"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0, 18)
+metadata/surface = "vehicle"
+metadata/livery = Color(0.52, 0.52, 0.82, 1)
+metadata/route = "4"
+metadata/plate = "P 3908"
+metadata/headlights = false
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/PmvRoute4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("BusShape")
+
+[node name="EnemySpawns" type="Node3D" parent="."]
+
+[node name="RiflemanWest" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -10, 0, -21)
+metadata/enemy = "rifleman"
+
+[node name="RiflemanCentre" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2, 0, -24)
+metadata/enemy = "rifleman"
+
+[node name="RiflemanBuilding" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 16, 0, -18)
+metadata/enemy = "rifleman"
+
+[node name="RusherWest" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -22, 0, -24)
+metadata/enemy = "rusher"
+
+[node name="RusherEast" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 25, 0, -10)
+metadata/enemy = "rusher"

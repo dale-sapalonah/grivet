@@ -20,6 +20,11 @@ static func cached(key: String, builder: Callable) -> AudioStreamWAV:
 	return _cache[key]
 
 
+## A stored sound, or null if it has not been built.
+static func fetch(key: String) -> AudioStreamWAV:
+	return _cache.get(key)
+
+
 static func has(key: String) -> bool:
 	return _cache.has(key)
 
@@ -249,13 +254,17 @@ static func shell_insert(weapon: WeaponDefinition) -> AudioStreamWAV:
 	return to_stream(buffer)
 
 
-## A spent case landing on `surface`: a few bouncing tinks, or null when the
-## surface swallows the sound (casing_brightness 0, e.g. dirt or bodies).
-static func casing_clink(weapon: WeaponDefinition, surface: SurfaceMaterial) -> AudioStreamWAV:
+## A spent case landing on `surface`: a few bouncing tinks (brass) or hollow
+## tocks (plastic hulls), or null when the surface swallows the sound
+## (casing_brightness 0, e.g. dirt or bodies). `variant` picks one of several
+## takes so a string of casings never repeats the same sound.
+static func casing_clink(weapon: WeaponDefinition, surface: SurfaceMaterial, variant: int = 0) -> AudioStreamWAV:
 	if surface.casing_brightness <= 0.0:
 		return null
-	var rng := _rng("casing:%s:%s" % [weapon.id, surface.id])
+	var rng := _rng("casing:%s:%s:%d" % [weapon.id, surface.id, variant])
 	var brightness := surface.casing_brightness
+	if weapon.casing_hollow:
+		return _hull_tock(weapon, brightness, rng)
 	var hz := weapon.casing_clink_hz * lerpf(0.6, 1.0, minf(brightness, 1.0))
 	var decay := 0.05 * brightness
 	var buffer := _buffer(0.4)
@@ -267,6 +276,25 @@ static func casing_clink(weapon: WeaponDefinition, surface: SurfaceMaterial) -> 
 		hz *= rng.randf_range(0.99, 1.02)
 		at += rng.randf_range(0.07, 0.11) * (1.0 - bounce * 0.3)
 		amplitude *= 0.45
+	# Then it rolls a little: a faint rattle of tiny contacts.
+	add_grains(buffer, at, rng.randf_range(0.12, 0.25), rng.randi_range(4, 9), 0.002, 0.006,
+			hz * 0.5, hz * 1.5, 0.04 * brightness, 0.12 * brightness, rng)
+	return to_stream(buffer)
+
+
+## A plastic 12-gauge hull: a hollow, woody tock (the tube) with a short tick
+## from the brass head, bouncing two or three times.
+static func _hull_tock(weapon: WeaponDefinition, brightness: float, rng: RandomNumberGenerator) -> AudioStreamWAV:
+	var buffer := _buffer(0.45)
+	var at := 0.0
+	var amplitude := 1.0
+	var hz := weapon.casing_clink_hz * rng.randf_range(0.92, 1.08)
+	for bounce in rng.randi_range(2, 3):
+		add_thump(buffer, at, hz * 0.45, 0.012, amplitude * 0.9)
+		add_noise(buffer, at, 0.006, amplitude * 0.35, 3500.0, 600.0, rng)
+		add_ring(buffer, at, PackedFloat32Array([hz * 2.1, hz * 3.3]), 0.012 * brightness, amplitude * 0.25)
+		at += rng.randf_range(0.08, 0.13) * (1.0 - bounce * 0.25)
+		amplitude *= 0.5
 	return to_stream(buffer)
 
 

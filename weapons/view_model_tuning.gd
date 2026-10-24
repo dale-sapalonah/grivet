@@ -36,6 +36,17 @@ extends Resource
 @export var flash_energy := 4.0
 @export var flash_range := 6.0
 @export var flash_size := 0.14
+@export_group("Arms")
+@export var glove_color := Color(0.55, 0.45, 0.32)
+@export var glove_pad_color := Color(0.36, 0.3, 0.21)
+@export var skin_color := Color(0.55, 0.4, 0.31)
+@export var sleeve_camo_a := Color(0.47, 0.42, 0.33)
+@export var sleeve_camo_b := Color(0.32, 0.3, 0.22)
+@export var sleeve_camo_c := Color(0.58, 0.53, 0.42)
+## The support hand leaves the weapon for the magazine this long before the
+## magazine starts out, and returns after it is seated (share of the reload).
+@export var reload_hand_lead := 0.12
+
 @export_group("Iron sights (m)")
 @export var sight_post_height := 0.02
 ## Fraction of the post height that sits below the sight line.

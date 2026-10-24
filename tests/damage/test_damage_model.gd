@@ -15,14 +15,36 @@ func test_zone_multipliers() -> void:
 	assert_approx(legs.health, RIFLEMAN.max_health - 10.0 * RIFLEMAN.legs_multiplier, 1e-4, "legs")
 
 
-func test_plates_soak_torso_hits_until_broken() -> void:
+func test_plates_stop_torso_hits_until_broken() -> void:
 	var model := DamageModel.new(RIFLEMAN)
+	var trauma := RIFLEMAN.blunt_trauma
 	var result := model.apply(30.0, Zone.TORSO)
-	assert_eq(result.health_damage, 0.0, "plate takes it all")
+	assert_approx(result.health_damage, 30.0 * trauma, 1e-4, "plate stops it: only blunt trauma")
 	assert_approx(model.armor, RIFLEMAN.plate_points - 30.0, 1e-4, "plate worn")
 	result = model.apply(30.0, Zone.TORSO)
-	assert_approx(result.armor_damage, RIFLEMAN.plate_points - 30.0, 1e-4, "plate breaks")
-	assert_approx(result.health_damage, 30.0 - (RIFLEMAN.plate_points - 30.0), 1e-4, "overflow to health")
+	var left := RIFLEMAN.plate_points - 30.0
+	assert_approx(result.armor_damage, left, 1e-4, "plate breaks")
+	assert_approx(result.health_damage, 30.0 - left * (1.0 - trauma), 1e-4, "overflow to health, plus trauma")
+
+
+func test_torso_hits_beside_the_plate_do_full_damage() -> void:
+	var model := DamageModel.new(RIFLEMAN)
+	var result := model.apply(30.0, Zone.TORSO, false)
+	assert_eq(result.armor_damage, 0.0, "plate untouched")
+	assert_approx(result.health_damage, 30.0, 1e-4, "full damage")
+
+
+func test_rusher_drops_to_a_few_rifle_hits() -> void:
+	# Mixed centre-mass hits: two land on the plate, the rest beside it.
+	var kestrel := preload("res://data/weapons/kestrel.tres")
+	var model := DamageModel.new(preload("res://data/damage/rusher.tres"))
+	var on_plate := [true, false, true, false, false, false]
+	var hits := 0
+	while not model.dead and hits < on_plate.size():
+		model.apply(kestrel.damage, Zone.TORSO, on_plate[hits])
+		hits += 1
+	assert_true(model.dead, "rusher down")
+	assert_true(hits <= 5, "within five rifle hits (took %d)" % hits)
 
 
 func test_abdomen_is_not_armoured() -> void:

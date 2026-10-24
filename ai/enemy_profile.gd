@@ -15,11 +15,19 @@ enum Role {
 @export var health: HealthProfile
 @export var uniform_color := Color(0.33, 0.36, 0.28)
 @export var gear_color := Color(0.14, 0.15, 0.13)
+## Second and third camouflage colours (uniform_color is the first).
+@export var camo_b := Color(0.22, 0.24, 0.17)
+@export var camo_c := Color(0.45, 0.42, 0.32)
+## Face covered (gear colour) instead of bare skin.
+@export var balaclava := false
 
 @export_group("Movement (m/s)")
 @export var walk_speed := 2.0
 @export var run_speed := 4.6
 @export var crouch_speed := 1.5
+## Moving between cover with the target in sight: advance this low (0 = upright,
+## 1 = full crouch) at crouch_speed instead of walking upright. 0 = never.
+@export var advance_crouch := 0.0
 @export var turn_speed_degrees := 300.0
 
 @export_group("Perception")

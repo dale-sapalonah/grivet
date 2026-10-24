@@ -15,6 +15,8 @@ const GRENADE := "res://data/grenades/frag.tres"
 
 var settings: AiSettings = SETTINGS
 var soldiers: Array[Soldier] = []
+## Spent casings from every soldier's weapon (one shared pool).
+var casings := CasingEjector.new()
 var cover: CoverMap = null
 var nav_map := RID()
 var grenade_definition: GrenadeDefinition
@@ -39,9 +41,15 @@ func _ready() -> void:
 	process_priority = -10  # read last frame's AI time before soldiers add this frame's
 	process_physics_priority = -10
 	grenade_definition = load(GRENADE)
+	casings.max_casings = 60
+	add_child(casings)
+	var enemy_weapons: Array[WeaponDefinition] = []
+	for path: String in PROFILES.values():
+		enemy_weapons.append((load(path) as EnemyProfile).weapon)
+	casings.prewarm(enemy_weapons)
 	Ballistics.bullet_moved.connect(_on_bullet_moved)
 	Ballistics.impact.connect(_on_impact)
-	Debug.register("spawn", _cmd_spawn, "spawn <rifleman|rusher> [count]: spawn enemies ahead of you.")
+	Debug.register("spawn", _cmd_spawn, "spawn <rifleman|rusher> [count] [distance]: spawn enemies ahead of you (default 20 m).")
 	Debug.register("ai.show", _cmd_show, "Toggle AI state labels above enemies.")
 	Debug.register("ai.freeze", _cmd_freeze, "Freeze / unfreeze all enemies.")
 	Debug.register("ai.kill", _cmd_kill, "Kill every enemy.")
@@ -324,16 +332,17 @@ func _on_impact(info: Dictionary) -> void:
 
 func _cmd_spawn(args: PackedStringArray) -> String:
 	if args.is_empty() or not PROFILES.has(args[0]):
-		return "usage: spawn <%s> [count]" % "|".join(PROFILES.keys())
+		return "usage: spawn <%s> [count] [distance]" % "|".join(PROFILES.keys())
 	var player := _player
 	if player == null:
 		return "no player"
 	var count := args[1].to_int() if args.size() > 1 and args[1].is_valid_int() else 1
+	var distance := args[2].to_float() if args.size() > 2 and args[2].is_valid_float() else 20.0
 	var forward := -player.global_basis.z
 	forward.y = 0.0
 	forward = forward.normalized()
 	for i in count:
-		var spot := player.global_position + forward * (20.0 + 3.0 * i) + forward.cross(Vector3.UP) * (i - count * 0.5) * 2.0
+		var spot := player.global_position + forward * (distance + 3.0 * i) + forward.cross(Vector3.UP) * (i - count * 0.5) * 2.0
 		if nav_map.is_valid():
 			spot = NavigationServer3D.map_get_closest_point(nav_map, spot)
 		var facing := Transform3D(Basis.looking_at(-forward), spot)
