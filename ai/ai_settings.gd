@@ -5,6 +5,13 @@ extends Resource
 @export_group("Perception")
 ## Sight checks per second per soldier (staggered across soldiers).
 @export var perception_hz := 8.0
+## Decisions (facts, brain, the action's plan) per second. Movement and the
+## trigger still run every physics tick; thinking doesn't need 120 Hz.
+@export var think_hz := 30.0
+## Beyond this (m) from the player a soldier is posed every other frame.
+@export var pose_lod_distance := 40.0
+## Beyond this (m) a soldier casts no shadow (a shadow pass per soldier part).
+@export var shadow_lod_distance := 25.0
 ## Allies within this distance learn what a spotter sees.
 @export var share_radius := 30.0
 @export var stance_visibility_stand := 1.0

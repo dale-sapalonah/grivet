@@ -91,6 +91,73 @@ static func torus(inner: float, outer: float) -> TorusMesh:
 	return mesh
 
 
+## A smooth body of revolution around Y: `profile` is (y, radius) points from
+## bottom to top; radii are interpolated with a smooth curve (`steps` rings
+## between points) and normals follow the surface, so limbs swell and taper
+## like muscle instead of stepping between cylinders. Ends with a radius above
+## zero are closed with a rounded cap. Scale X and Z in `add` for an oval
+## cross-section.
+static func lathe(profile: PackedVector2Array, segments: int = 12, steps: int = 3) -> ArrayMesh:
+	# Resample the profile with Catmull-Rom so the outline is smooth.
+	var rings := PackedVector2Array()
+	for i in profile.size() - 1:
+		var p0 := profile[maxi(i - 1, 0)]
+		var p1 := profile[i]
+		var p2 := profile[i + 1]
+		var p3 := profile[mini(i + 2, profile.size() - 1)]
+		for s in steps:
+			var t := float(s) / steps
+			rings.append(_catmull_rom(p0, p1, p2, p3, t))
+	rings.append(profile[profile.size() - 1])
+	var vertices := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var indices := PackedInt32Array()
+	for i in rings.size():
+		var below := rings[maxi(i - 1, 0)]
+		var above := rings[mini(i + 1, rings.size() - 1)]
+		var slope := (above.y - below.y) / maxf(above.x - below.x, 1e-5)  # dr/dy
+		for k in segments + 1:
+			var angle := TAU * k / segments
+			var around := Vector3(cos(angle), 0.0, sin(angle))
+			vertices.append(Vector3(around.x * rings[i].y, rings[i].x, around.z * rings[i].y))
+			normals.append((around - Vector3.UP * slope).normalized())
+	var width := segments + 1
+	for i in rings.size() - 1:
+		for k in segments:
+			var a := i * width + k
+			var b := a + width
+			indices.append_array([a, a + 1, b, a + 1, b + 1, b])
+	# Rounded caps: a pole a little beyond each open end.
+	for end: int in [0, rings.size() - 1]:
+		var ring: Vector2 = rings[end]
+		if ring.y <= 1e-4:
+			continue
+		var direction := -1.0 if end == 0 else 1.0
+		var pole := vertices.size()
+		vertices.append(Vector3(0.0, ring.x + direction * ring.y * 0.45, 0.0))
+		normals.append(Vector3.UP * direction)
+		for k in segments:
+			var a := end * width + k
+			if end == 0:
+				indices.append_array([pole, a + 1, a])
+			else:
+				indices.append_array([pole, a, a + 1])
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertices
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_INDEX] = indices
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+static func _catmull_rom(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float) -> Vector2:
+	var t2 := t * t
+	var t3 := t2 * t
+	return 0.5 * ((2.0 * p1) + (-p0 + p2) * t + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t2 + (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * t3)
+
+
 ## A prism: `profile` (a convex or simple polygon in X/Y, counter-clockwise)
 ## extruded `length` along Z, centred. Flat-shaded sides, capped ends.
 static func prism(profile: PackedVector2Array, length: float) -> ArrayMesh:
@@ -108,7 +175,7 @@ static func prism(profile: PackedVector2Array, length: float) -> ArrayMesh:
 		for corner in [Vector3(a.x, a.y, half), Vector3(b.x, b.y, half), Vector3(b.x, b.y, -half), Vector3(a.x, a.y, -half)]:
 			vertices.append(corner)
 			normals.append(normal)
-		indices.append_array([base, base + 2, base + 1, base, base + 3, base + 2])
+		indices.append_array([base, base + 1, base + 2, base, base + 2, base + 3])
 	var triangles := Geometry2D.triangulate_polygon(profile)
 	for z in [half, -half]:
 		var base := vertices.size()

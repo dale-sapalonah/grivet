@@ -6,6 +6,8 @@ extends Resource
 ## Radians of rotation per mouse pixel.
 @export var mouse_sensitivity := 0.0022
 @export var ads_sensitivity_multiplier := 0.7
+## Mouse up looks down (set from Settings).
+@export var invert_y := false
 @export var pitch_limit_degrees := 88.0
 
 @export_group("Field of view (vertical degrees)")

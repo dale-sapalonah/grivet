@@ -74,6 +74,8 @@ func build(definition: WeaponDefinition) -> void:
 		child.queue_free()
 	_metal = _material(definition.body_color, 0.6, 0.45)
 	_dark = _material(definition.body_color.darkened(0.45), 0.5, 0.5)
+	PbrLibrary.apply_standard(_metal, "weapon_metal")  # authored maps, if present
+	PbrLibrary.apply_standard(_dark, "weapon_metal")
 	_furniture = _material(definition.furniture_color, 0.0, 0.8)
 	_magazine = Node3D.new()
 	_gun.add_child(_magazine)

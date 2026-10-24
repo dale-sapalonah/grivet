@@ -235,7 +235,7 @@ func _run() -> void:
 		print("  blast took %.0f of %.0f" % [before - after, before])
 		return "" if after < before - 50.0 else "only %.0f damage" % (before - after))
 
-	await _check("the player dies and respawns at the start", func() -> String:
+	await _check("the player dies and respawns somewhere safe, protected", func() -> String:
 		player.health.invulnerable = false
 		AI.frozen = true  # respawn is under test, not the squad: no rounds in flight at the new player
 		Debug.execute("kill")
@@ -243,9 +243,13 @@ func _run() -> void:
 			return "kill did not kill"
 		await get_tree().create_timer(player.tuning.respawn_delay + 0.5).timeout
 		AI.frozen = false
+		var nearest := INF
+		for soldier in AI.soldiers:
+			nearest = minf(nearest, CoverScoring.flat_distance(soldier.global_position, player.global_position))
 		var home := player.global_position.distance_to(Vector3(0, 0, 26))
-		var ok := not player.dead and is_equal_approx(player.health.fraction(), 1.0) and home < 1.0
-		return "" if ok else "dead %s, health %.2f, %.1f m from spawn" % [player.dead, player.health.fraction(), home])
+		var safe := home < 1.0 or nearest >= 15.0
+		var ok := not player.dead and is_equal_approx(player.health.fraction(), 1.0) and safe and player.health.protected_left > 0.0
+		return "" if ok else "dead %s, health %.2f, nearest enemy %.1f m, protected %.1f s" % [player.dead, player.health.fraction(), nearest, player.health.protected_left])
 
 	print("\n%s: %d check(s) failed" % ["FAIL" if failures else "PASS", failures])
 	get_tree().quit(1 if failures else 0)

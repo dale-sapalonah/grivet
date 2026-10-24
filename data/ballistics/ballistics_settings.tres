@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BallisticsSettings" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="BallisticsSettings" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://ballistics/ballistics_settings.gd" id="1"]
 [ext_resource type="Resource" path="res://data/ballistics/surfaces/wood.tres" id="2_wood"]
@@ -7,6 +7,7 @@
 [ext_resource type="Resource" path="res://data/ballistics/surfaces/flesh.tres" id="5_flesh"]
 [ext_resource type="Resource" path="res://data/ballistics/surfaces/sandbag.tres" id="6_sandbag"]
 [ext_resource type="Resource" path="res://data/ballistics/surfaces/vehicle.tres" id="7_vehicle"]
+[ext_resource type="Resource" path="res://data/ballistics/surfaces/dirt.tres" id="8_dirt"]
 
 [resource]
 script = ExtResource("1")
@@ -53,6 +54,7 @@ heavy_round_pitch = 1.08
 default_surface = ExtResource("4_concrete")
 surfaces = {
 "concrete": ExtResource("4_concrete"),
+"dirt": ExtResource("8_dirt"),
 "flesh": ExtResource("5_flesh"),
 "sandbag": ExtResource("6_sandbag"),
 "steel": ExtResource("3_metal"),

@@ -3,6 +3,7 @@ extends "res://tests/framework/suite.gd"
 const SETTINGS := preload("res://data/ai/ai_settings.tres")
 const RIFLEMAN := preload("res://data/ai/rifleman.tres")
 const RUSHER := preload("res://data/ai/rusher.tres")
+const MACHETE := preload("res://data/ai/machete.tres")
 const Action := SoldierBrain.Action
 
 
@@ -181,3 +182,25 @@ func test_decisions_commit_but_danger_is_immediate() -> void:
 	facts.in_cover = false
 	brain.decide(facts, RIFLEMAN, 0.01)
 	assert_eq(brain.action, Action.TAKE_COVER, "exposure switches at once")
+
+
+func test_machete_charges_from_any_range() -> void:
+	var facts := fighting()
+	for distance in [40.0, 12.0, 2.0]:
+		facts.distance = distance
+		assert_eq(wanted(facts, MACHETE), Action.CHARGE, "charges at %.0f m" % distance)
+	facts.ammo_fraction = 0.0
+	assert_eq(wanted(facts, MACHETE), Action.CHARGE, "a blade never reloads")
+
+
+func test_pinned_machete_ducks_only_when_far() -> void:
+	var facts := fighting()
+	facts.suppression = MACHETE.suppression_tolerance + 0.1
+	facts.in_cover = false
+	facts.distance = 25.0
+	assert_eq(wanted(facts, MACHETE), Action.TAKE_COVER, "pinned far out: duck")
+	facts.in_cover = true
+	assert_eq(wanted(facts, MACHETE), Action.ENGAGE, "in cover: hold until the fire lets up")
+	facts.in_cover = false
+	facts.distance = SETTINGS.point_blank_range
+	assert_eq(wanted(facts, MACHETE), Action.CHARGE, "close: commit")

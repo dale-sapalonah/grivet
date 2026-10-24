@@ -12,6 +12,7 @@ weapon = ExtResource("2_weapon")
 health = ExtResource("3_health")
 uniform_color = Color(0.33, 0.36, 0.26, 1)
 gear_color = Color(0.14, 0.15, 0.13, 1)
+skin_color = Color(0.33, 0.22, 0.16, 1)
 camo_b = Color(0.22, 0.24, 0.17, 1)
 camo_c = Color(0.45, 0.42, 0.32, 1)
 walk_speed = 2.0

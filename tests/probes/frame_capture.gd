@@ -7,11 +7,12 @@ extends Node
 ##
 ## Every option is named (positional arguments shift silently when a shell
 ## drops an empty one, which once overwrote a scene with a PNG). Defaults to
-## the main scene and no screenshot. `fire` holds the trigger with infinite
+## the port level (not the title menu) and no screenshot. `fire` holds the trigger with infinite
 ## ammo (worst case: flash, tracers, impacts); `aim` holds ADS; `hide_gun`
 ## hides the view model to isolate its cost. Screenshots are refused inside
 ## the project (res:// or a relative path).
 
+const DEFAULT_SCENE := "res://levels/port/port_yard.tscn"  # the game, not the title menu
 const WARMUP_FRAMES := 60
 const MAX_WARMUP_FRAMES := 1200
 const MEASURE_FRAMES := 480
@@ -29,6 +30,8 @@ class InputSink:
 
 var _frame := 0
 var _times: PackedFloat32Array = []
+var _cpu_process := 0.0  # summed engine timers (s), for the CPU share of a frame
+var _cpu_physics := 0.0
 var _screenshot := ""
 var _fire := false
 var _weapon := ""
@@ -44,7 +47,7 @@ func _ready() -> void:
 	for action in InputMap.get_actions():
 		InputMap.action_erase_events(action)
 	get_tree().root.add_child.call_deferred(InputSink.new())
-	var scene_path: String = ProjectSettings.get_setting("application/run/main_scene")
+	var scene_path := DEFAULT_SCENE
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("shot="):
 			_screenshot = arg.trim_prefix("shot=")
@@ -94,6 +97,8 @@ func _process(delta: float) -> void:
 				Input.action_press("fire")
 		return
 	_times.append(delta)
+	_cpu_process += Performance.get_monitor(Performance.TIME_PROCESS)
+	_cpu_physics += Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS)
 	if _times.size() < MEASURE_FRAMES:
 		return
 	var total := 0.0
@@ -102,8 +107,9 @@ func _process(delta: float) -> void:
 		total += t
 		worst = maxf(worst, t)
 	var average := total / _times.size()
-	print("frames=%d avg=%.2f ms (%.0f fps) worst=%.2f ms bullets_in_flight=%d draw_calls=%d objects=%d primitives=%d" % [
-			_times.size(), average * 1000.0, 1.0 / average, worst * 1000.0, Ballistics.active_bullets(),
+	print("frames=%d avg=%.2f ms (%.0f fps) worst=%.2f ms cpu_process=%.2f ms cpu_physics=%.2f ms bullets_in_flight=%d draw_calls=%d objects=%d primitives=%d" % [
+			_times.size(), average * 1000.0, 1.0 / average, worst * 1000.0, _cpu_process / _times.size() * 1000.0,
+			_cpu_physics / _times.size() * 1000.0, Ballistics.active_bullets(),
 			RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME),
 			RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME),
 			RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)])

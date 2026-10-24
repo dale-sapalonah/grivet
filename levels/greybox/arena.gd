@@ -55,7 +55,8 @@ func _on_baked() -> void:
 
 func spawn_squad() -> void:
 	for marker: Node3D in get_tree().get_nodes_in_group("enemy_spawn"):
-		if is_ancestor_of(marker):
+		# Levels with several stages tag markers with `level`; the arena squad is level 1.
+		if is_ancestor_of(marker) and int(marker.get_meta("level", 1)) == 1:
 			AI.spawn(str(marker.get_meta("enemy", "rifleman")), marker.global_transform, self)
 
 

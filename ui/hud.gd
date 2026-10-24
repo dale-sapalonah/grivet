@@ -19,9 +19,9 @@ extends Control
 @export var vitals_origin := Vector2(32, -64)
 @export var health_bar_size := Vector2(220, 10)
 @export var plate_gap := 4.0
-@export var health_color := Color(0.92, 0.92, 0.88, 0.9)
-@export var health_low_color := Color(0.95, 0.3, 0.25, 0.95)
-@export var armor_color := Color(0.45, 0.7, 0.95, 0.9)
+@export var health_color := Color(0.78, 0.12, 0.08, 0.95)
+@export var health_low_color := Color(1.0, 0.3, 0.18, 1.0)
+@export var armor_color := Color(0.92, 0.92, 0.9, 0.95)
 @export var bar_back_color := Color(0, 0, 0, 0.45)
 ## Red screen edges from this health share down.
 @export var vignette_from := 0.5
@@ -43,6 +43,13 @@ var _holder: WeaponHolder
 var _player: Player
 var _hit_left := 0.0
 var _damage_markers: Array[Dictionary] = []  # {"from": Vector3, "left": float}
+## Every line announced, in order (for probes).
+var shout_log: PackedStringArray = []
+var _shouts: Array[Dictionary] = []  # queued: {"text", "subtitle", "color", "seconds"}
+var _shout_left := 0.0
+var _shout_label: Label
+var _shout_subtitle: Label
+var _heavy: SystemFont
 
 @onready var _ammo: Label = $Ammo
 @onready var _weapon_name: Label = $WeaponName
@@ -52,9 +59,77 @@ var _damage_markers: Array[Dictionary] = []  # {"from": Vector3, "left": float}
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	Ballistics.target_hit.connect(_on_target_hit)
+	add_to_group("hud")
+	Debug.register("announce", _cmd_announce, "announce <text>: show a big centred line for 30 s (look check).")
+	# Grivet's house style: fat outlined capitals, hard drop shadows.
+	_heavy = GrivetStyle.heavy()
+	_shout_label = _centred_label(_heavy, 128, 18)
+	_shout_subtitle = _centred_label(_heavy, 38, 8)
+	for readout: Label in [_ammo, _weapon_name, _status]:
+		GrivetStyle.style(readout, _heavy, readout.get_theme_font_size("font_size") + 8, GrivetStyle.WHITE, 6)
+
+
+func _exit_tree() -> void:
+	Debug.unregister("announce")
+
+
+func _cmd_announce(args: PackedStringArray) -> String:
+	announce(" ".join(args), Color(1.0, 0.8, 0.1), 30.0, "Subtitle goes here")
+	return "announced"
+
+
+## Queues a big centred line (with an optional smaller one under it): stage
+## titles, "KLIN CHOL!", "WARAA!". Each pops in, holds and fades.
+func announce(text: String, color: Color, seconds: float = 1.6, subtitle: String = "") -> void:
+	_shouts.append({"text": text, "subtitle": subtitle, "color": color, "seconds": seconds})
+	shout_log.append(text)
+
+
+func _centred_label(font: Font, size: int, outline: int) -> Label:
+	var label := Label.new()
+	GrivetStyle.style(label, font, size, GrivetStyle.WHITE, outline)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.visible = false
+	add_child(label)
+	return label
+
+
+func _update_shouts(delta: float) -> void:
+	if _shout_left <= 0.0:
+		_shout_label.visible = false
+		_shout_subtitle.visible = false
+		if _shouts.is_empty():
+			return
+		var shout: Dictionary = _shouts.pop_front()
+		_shout_label.text = shout.text
+		_shout_label.add_theme_color_override("font_color", shout.color)
+		_shout_subtitle.text = "
+
+
+
+" + str(shout.subtitle)
+		_shout_subtitle.add_theme_color_override("font_color", GrivetStyle.WHITE)
+		_shout_left = shout.seconds
+		_shout_label.set_meta("seconds", shout.seconds)
+	_shout_left -= delta
+	var total: float = _shout_label.get_meta("seconds", 1.0)
+	var age := total - _shout_left
+	# Pop: overshoot then settle; fade in the last quarter second.
+	var pop := 1.0 + 0.35 * exp(-age * 9.0) * cos(age * 18.0)
+	var fade := clampf(_shout_left / 0.25, 0.0, 1.0)
+	_shout_label.pivot_offset = _shout_label.size * 0.5
+	_shout_label.scale = Vector2.ONE * pop
+	_shout_label.modulate.a = fade
+	_shout_subtitle.modulate.a = fade
+	_shout_label.visible = true
+	_shout_subtitle.visible = _shout_subtitle.text.strip_edges() != ""
 
 
 func _process(delta: float) -> void:
+	_update_shouts(delta)
 	if not is_instance_valid(_holder):
 		_holder = get_tree().get_first_node_in_group("player_weapons") as WeaponHolder
 	if not is_instance_valid(_player):
@@ -169,6 +244,7 @@ func _draw_vitals() -> void:
 	var health := _player.health
 	var origin := Vector2(vitals_origin.x, size.y + vitals_origin.y)
 	var fraction := clampf(health.fraction(), 0.0, 1.0)
+	draw_rect(Rect2(origin - Vector2(2, 2), health_bar_size + Vector2(4, 4)), GrivetStyle.INK)  # outlined bars
 	draw_rect(Rect2(origin, health_bar_size), bar_back_color)
 	var color := health_low_color if fraction < vignette_from else health_color
 	draw_rect(Rect2(origin, Vector2(health_bar_size.x * fraction, health_bar_size.y)), color)
@@ -178,12 +254,13 @@ func _draw_vitals() -> void:
 	var plates := health.model.plates()
 	for i in slots:
 		var at := origin + Vector2(i * (segment + plate_gap), -health_bar_size.y - plate_gap)
+		draw_rect(Rect2(at - Vector2(2, 2), Vector2(segment, health_bar_size.y) + Vector2(4, 4)), GrivetStyle.INK)
 		draw_rect(Rect2(at, Vector2(segment, health_bar_size.y)), bar_back_color)
 		var fill := clampf(plates - i, 0.0, 1.0)
 		draw_rect(Rect2(at, Vector2(segment * fill, health_bar_size.y)), armor_color)
-	var font := ThemeDB.fallback_font
-	var line := "plates +%d   grenades %d" % [health.plates_carried, _holder.grenades_left if _holder != null else 0]
-	draw_string(font, origin + Vector2(0, health_bar_size.y + 18), line, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, health_color)
+	var line := "PLATES +%d    GRENADES %d" % [health.plates_carried, _holder.grenades_left if _holder != null else 0]
+	draw_string_outline(_heavy, origin + Vector2(0, health_bar_size.y + 22), line, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, 5, GrivetStyle.INK)
+	draw_string(_heavy, origin + Vector2(0, health_bar_size.y + 22), line, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, GrivetStyle.WHITE)
 	if _player.plate_progress > 0.0:
 		var bar := Vector2(160, 6)
 		var at := size * 0.5 + Vector2(-bar.x * 0.5, 90)

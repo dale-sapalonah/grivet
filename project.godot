@@ -10,9 +10,9 @@ config_version=5
 
 [application]
 
-config/name="Meridian"
-config/description="Grounded near-future military FPS. Vertical slice: night raid on a coastal port."
-run/main_scene="res://levels/port/port_yard.tscn"
+config/name="Grivet"
+config/description="Grivet: a grounded military FPS set in Port Moresby, Papua New Guinea."
+run/main_scene="res://ui/main_menu.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 
 [autoload]
@@ -21,6 +21,8 @@ InputBindings="*res://core/input_bindings.gd"
 Debug="*res://core/debug_commands.gd"
 Ballistics="*res://ballistics/bullet_simulator.gd"
 AI="*res://ai/ai_director.gd"
+Settings="*res://core/settings.gd"
+MusicPlayer="*res://feedback/music_player.gd"
 
 [display]
 
@@ -53,3 +55,5 @@ anti_aliasing/quality/screen_space_aa=1
 scaling_3d/mode=0
 scaling_3d/scale=0.75
 lights_and_shadows/directional_shadow/size=2048
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=4
+lights_and_shadows/positional_shadow/soft_shadow_filter_quality=4

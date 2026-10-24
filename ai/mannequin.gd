@@ -45,9 +45,16 @@ var parts: Dictionary = {}  # part name -> Node3D holding its meshes
 ## Collision shape per part, centred in the part's frame (hitbox and ragdoll).
 var shapes: Dictionary = {}  # part name -> [Shape3D, Transform3D]
 var gun: Node3D
+## Holding a blade, not a gun: no two-handed grip; `swing` (s since the
+## strike began, below zero when not striking) drives the slash.
+var melee := false
+var swing := -1.0
+var swing_windup := 0.3
 var muzzle: Node3D
 
 var _material: ShaderMaterial
+var _instances: Array[MeshInstance3D] = []
+var _shadows_on := true
 var _grip := Vector3.ZERO  # hand holds, in the gun's frame
 var _support := Vector3.ZERO
 var _walk_phase := 0.0
@@ -55,19 +62,27 @@ var _flinch := Vector2.ZERO
 var _flinch_velocity := Vector2.ZERO
 
 
-func build(profile: EnemyProfile) -> void:
+func build(profile: EnemyProfile, variant: int = 0) -> void:
 	_material = ShaderMaterial.new()
 	_material.shader = BODY_SHADER
 	_material.set_shader_parameter("camo_a", profile.uniform_color)
 	_material.set_shader_parameter("camo_b", profile.camo_b)
 	_material.set_shader_parameter("camo_c", profile.camo_c)
-	var cloth := Color(1, 1, 1, 1)  # alpha 1: camo pattern
+	var civilian := profile.outfit == EnemyProfile.Outfit.CIVILIAN
+	melee = profile.weapon != null and profile.weapon.melee_damage > 0.0
+	# Vertex alpha: 1 = camouflage cloth, 0.5 = plain cloth, 0 = everything else.
+	var cloth := Color(1, 1, 1, 1)
+	if civilian:
+		var shirts := profile.shirt_colors
+		cloth = Color(shirts[variant % shirts.size()] if not shirts.is_empty() else profile.uniform_color, 0.5)
+	var legs := Color(profile.shorts_color, 0.5) if civilian else cloth
 	var gear := Color(profile.gear_color, 0.0)
 	var gear_dark := Color(profile.gear_color.darkened(0.35), 0.0)
-	var skin := Color(0.62, 0.47, 0.38, 0.0)
+	var skin := Color(profile.skin_color, 0.0)
 	var face := Color(profile.gear_color.darkened(0.3), 0.0) if profile.balaclava else skin
 	var boots := Color(0.13, 0.1, 0.08, 0.0)
 	var gloves := Color(0.07, 0.07, 0.07, 0.0)
+	var hands := skin if civilian else gloves
 	var B := MeshBaker
 
 	var hips := _pivot("hips", self, Vector3(0, HIP_HEIGHT, 0))
@@ -76,42 +91,68 @@ func build(profile: EnemyProfile) -> void:
 
 	_part("pelvis", hips, BoxShape3D.new(), Vector3(0.32, 0.18, 0.2), Vector3.ZERO)
 	var pelvis := MeshBaker.new()
-	pelvis.add(B.sphere(1.0, 14), B.at(Vector3(0, -0.01, 0), Vector3.ZERO, Vector3(0.17, 0.12, 0.12)), cloth)
-	pelvis.add(B.cylinder(0.165, 0.165, 0.05, 14), B.at(Vector3(0, 0.08, 0), Vector3.ZERO, Vector3(1, 1, 0.78)), gear_dark)  # belt
-	pelvis.add(B.box(Vector3(0.05, 0.04, 0.02)), B.at(Vector3(0, 0.08, -0.135)), Color(0.35, 0.33, 0.28, 0))  # buckle
-	for side in [-1.0, 1.0]:
-		pelvis.add(B.box(Vector3(0.05, 0.09, 0.07)), B.at(Vector3(side * 0.16, 0.02, 0.03)), gear)  # belt pouches
+	pelvis.add(B.lathe(_profile([-0.13, 0.12, -0.07, 0.16, 0.02, 0.172, 0.1, 0.158]), 16), B.at(Vector3.ZERO, Vector3.ZERO, Vector3(1, 1, 0.74)), legs)
+	if civilian:
+		_bilum_bag(pelvis, Vector3(0.2, -0.06, 0.03), variant)
+	else:
+		pelvis.add(B.cylinder(0.165, 0.165, 0.05, 14), B.at(Vector3(0, 0.08, 0), Vector3.ZERO, Vector3(1, 1, 0.78)), gear_dark)  # belt
+		pelvis.add(B.box(Vector3(0.05, 0.04, 0.02)), B.at(Vector3(0, 0.08, -0.135)), Color(0.35, 0.33, 0.28, 0))  # buckle
+		for side in [-1.0, 1.0]:
+			pelvis.add(B.box(Vector3(0.05, 0.09, 0.07)), B.at(Vector3(side * 0.16, 0.02, 0.03)), gear)  # belt pouches
 	_bake(parts.pelvis, pelvis)
 
 	_part("torso", spine, CapsuleShape3D.new(), Vector3(0.17, 0.55, 0), Vector3(0, 0.32, 0))
 	var torso := MeshBaker.new()
-	torso.add(B.cylinder(0.15, 0.14, 0.24, 14), B.at(Vector3(0, 0.12, 0), Vector3.ZERO, Vector3(1, 1, 0.78)), cloth)  # abdomen
-	torso.add(B.sphere(1.0, 16), B.at(Vector3(0, 0.37, 0), Vector3.ZERO, Vector3(0.19, 0.21, 0.13)), cloth)  # chest
+	# Waist, ribcage and chest in one smooth shell, flattened front to back.
+	torso.add(B.lathe(_profile([-0.02, 0.15, 0.1, 0.145, 0.22, 0.162, 0.34, 0.19, 0.44, 0.2, 0.5, 0.18, 0.55, 0.11, 0.58, 0.06]), 18),
+			B.at(Vector3.ZERO, Vector3.ZERO, Vector3(1, 1, 0.68)), cloth)
 	torso.add(B.capsule(0.07, 0.42, 10), B.at(Vector3(0, 0.47, 0), Vector3(0, 0, 90), Vector3(1, 1, 0.8)), cloth)  # shoulders
-	torso.add(B.box(Vector3(0.3, 0.3, 0.05)), B.at(Vector3(0, 0.36, -0.115)), gear)  # front plate
-	torso.add(B.box(Vector3(0.3, 0.32, 0.05)), B.at(Vector3(0, 0.37, 0.115)), gear)  # back plate
-	torso.add(B.cylinder(0.165, 0.16, 0.11, 14), B.at(Vector3(0, 0.25, 0), Vector3.ZERO, Vector3(1, 1, 0.82)), gear)  # cummerbund
-	for x in [-0.085, 0.0, 0.085]:
-		torso.add(B.box(Vector3(0.065, 0.11, 0.045)), B.at(Vector3(x, 0.29, -0.155)), gear_dark)  # magazine pouches
-	for side in [-1.0, 1.0]:
-		torso.add(B.box(Vector3(0.06, 0.03, 0.27)), B.at(Vector3(side * 0.11, 0.52, 0)), gear)  # shoulder straps
-	torso.add(B.box(Vector3(0.08, 0.16, 0.05)), B.at(Vector3(-0.09, 0.4, 0.165)), gear_dark)  # radio
-	torso.add(B.cylinder(0.006, 0.006, 0.22, 4), B.at(Vector3(-0.11, 0.56, 0.17)), gloves)  # antenna
+	if civilian:
+		# Bilum strap from the left shoulder across the chest and back to the right hip.
+		var strap := Color(0.75, 0.6, 0.12, 0.0)
+		for depth in [-1.0, 1.0]:
+			var from := Vector3(-0.13, 0.53, depth * 0.06)
+			var to := Vector3(0.17, -0.06, depth * 0.12)
+			torso.add(B.box(Vector3(0.035, from.distance_to(to), 0.012)), Transform3D(_along(to - from), (from + to) * 0.5), strap)
+	else:
+		torso.add(B.box(Vector3(0.3, 0.3, 0.05)), B.at(Vector3(0, 0.36, -0.115)), gear)  # front plate
+		torso.add(B.box(Vector3(0.3, 0.32, 0.05)), B.at(Vector3(0, 0.37, 0.115)), gear)  # back plate
+		torso.add(B.cylinder(0.165, 0.16, 0.11, 14), B.at(Vector3(0, 0.25, 0), Vector3.ZERO, Vector3(1, 1, 0.82)), gear)  # cummerbund
+		for x in [-0.085, 0.0, 0.085]:
+			torso.add(B.box(Vector3(0.065, 0.11, 0.045)), B.at(Vector3(x, 0.29, -0.155)), gear_dark)  # magazine pouches
+		for side in [-1.0, 1.0]:
+			torso.add(B.box(Vector3(0.06, 0.03, 0.27)), B.at(Vector3(side * 0.11, 0.52, 0)), gear)  # shoulder straps
+		torso.add(B.box(Vector3(0.08, 0.16, 0.05)), B.at(Vector3(-0.09, 0.4, 0.165)), gear_dark)  # radio
+		torso.add(B.cylinder(0.006, 0.006, 0.22, 4), B.at(Vector3(-0.11, 0.56, 0.17)), gloves)  # antenna
 	_bake(parts.torso, torso)
 
 	_part("head", neck, SphereShape3D.new(), Vector3(0.11, 0, 0), Vector3(0, 0.12, 0))
 	var head := MeshBaker.new()
-	head.add(B.cylinder(0.05, 0.055, 0.1, 10), B.at(Vector3(0, 0.03, 0)), face)  # neck
-	head.add(B.sphere(1.0, 16), B.at(Vector3(0, 0.13, 0), Vector3.ZERO, Vector3(0.095, 0.115, 0.105)), face)
-	head.add(B.box(Vector3(0.022, 0.035, 0.03)), B.at(Vector3(0, 0.12, -0.103), Vector3(-15, 0, 0)), face)  # nose
+	head.add(B.lathe(_profile([-0.03, 0.058, 0.03, 0.05, 0.09, 0.052]), 12), B.at(Vector3.ZERO), face)  # neck
+	# Skull to jaw in one shape: narrow chin, full cheeks, rounded crown,
+	# deeper front to back than side to side.
+	head.add(B.lathe(_profile([0.04, 0.035, 0.06, 0.062, 0.095, 0.08, 0.14, 0.093, 0.19, 0.088, 0.225, 0.062, 0.245, 0.02]), 16),
+			B.at(Vector3(0, 0, -0.004), Vector3.ZERO, Vector3(0.94, 1, 1.1)), face)
+	var shade := Color(face.darkened(0.25), 0.0)
+	head.add(B.capsule(0.013, 0.1, 8), B.at(Vector3(0, 0.162, -0.088), Vector3(0, 0, 90), Vector3(1, 1, 0.8)), face)  # brow ridge
+	head.add(B.sphere(1.0, 8), B.at(Vector3(0, 0.128, -0.103), Vector3(-12, 0, 0), Vector3(0.017, 0.028, 0.02)), face)  # nose
+	head.add(B.sphere(1.0, 8), B.at(Vector3(0, 0.112, -0.1), Vector3.ZERO, Vector3(0.024, 0.011, 0.012)), face)  # nostrils
+	head.add(B.capsule(0.006, 0.042, 6), B.at(Vector3(0, 0.088, -0.094), Vector3(0, 0, 90)), shade)  # lips
 	for side in [-1.0, 1.0]:
-		head.add(B.sphere(0.022, 6), B.at(Vector3(side * 0.095, 0.125, 0.005), Vector3.ZERO, Vector3(0.6, 1, 1)), face)  # ears
-		head.add(B.sphere(0.011, 6), B.at(Vector3(side * 0.034, 0.15, -0.092)), Color(0.05, 0.04, 0.04, 0))  # eyes
-	head.add(B.sphere(0.125, 16, true), B.at(Vector3(0, 0.165, 0.008), Vector3.ZERO, Vector3(1, 0.9, 1.06)), gear)  # helmet
-	head.add(B.torus(0.118, 0.134), B.at(Vector3(0, 0.168, 0.008), Vector3.ZERO, Vector3(1, 0.35, 1.06)), gear_dark)  # brim
-	head.add(B.box(Vector3(0.05, 0.035, 0.03)), B.at(Vector3(0, 0.22, -0.115), Vector3(20, 0, 0)), gear_dark)  # NVG mount
-	head.add(B.box(Vector3(0.02, 0.07, 0.015)), B.at(Vector3(0.09, 0.12, 0.02)), gear_dark)  # chin strap
-	head.add(B.box(Vector3(0.02, 0.07, 0.015)), B.at(Vector3(-0.09, 0.12, 0.02)), gear_dark)
+		head.add(B.sphere(0.022, 6), B.at(Vector3(side * 0.09, 0.13, 0.008), Vector3.ZERO, Vector3(0.55, 1.1, 0.9)), face)  # ears
+		head.add(B.sphere(1.0, 8), B.at(Vector3(side * 0.033, 0.147, -0.09), Vector3.ZERO, Vector3(0.018, 0.011, 0.008)), shade)  # eye socket
+		head.add(B.sphere(0.008, 6), B.at(Vector3(side * 0.033, 0.147, -0.093)), Color(0.04, 0.03, 0.03, 0))  # eye
+	if civilian:
+		# Short tight hair over the crown, and a headband on some.
+		head.add(B.sphere(0.1, 14, true), B.at(Vector3(0, 0.166, 0.006), Vector3.ZERO, Vector3(0.98, 0.98, 1.11)), Color(0.04, 0.035, 0.03, 0.0))
+		if variant % 3 == 0:
+			head.add(B.torus(0.091, 0.1), B.at(Vector3(0, 0.178, 0.0), Vector3.ZERO, Vector3(0.97, 0.6, 1.1)), Color(0.7, 0.08, 0.06, 0.0))
+	else:
+		head.add(B.sphere(0.125, 16, true), B.at(Vector3(0, 0.165, 0.008), Vector3.ZERO, Vector3(1, 0.9, 1.06)), gear)  # helmet
+		head.add(B.torus(0.118, 0.134), B.at(Vector3(0, 0.168, 0.008), Vector3.ZERO, Vector3(1, 0.35, 1.06)), gear_dark)  # brim
+		head.add(B.box(Vector3(0.05, 0.035, 0.03)), B.at(Vector3(0, 0.22, -0.115), Vector3(20, 0, 0)), gear_dark)  # NVG mount
+		head.add(B.box(Vector3(0.02, 0.07, 0.015)), B.at(Vector3(0.09, 0.12, 0.02)), gear_dark)  # chin strap
+		head.add(B.box(Vector3(0.02, 0.07, 0.015)), B.at(Vector3(-0.09, 0.12, 0.02)), gear_dark)
 	_bake(parts.head, head)
 
 	for side in [-1.0, 1.0]:
@@ -123,41 +164,92 @@ func build(profile: EnemyProfile) -> void:
 
 		_part("upper_arm" + suffix, shoulder, CapsuleShape3D.new(), Vector3(0.05, 0.3, 0), Vector3(0, -0.15, 0))
 		var upper_arm := MeshBaker.new()
-		upper_arm.add(B.sphere(0.063, 12), B.at(Vector3(0, -0.025, 0)), cloth)  # deltoid
-		upper_arm.add(B.cylinder(0.053, 0.043, 0.27, 12), B.at(Vector3(0, -0.15, 0)), cloth)
-		upper_arm.add(B.box(Vector3(0.012, 0.07, 0.06)), B.at(Vector3(side * 0.053, -0.08, 0)), gear_dark)  # patch
+		upper_arm.add(B.sphere(0.066, 12), B.at(Vector3(0, -0.02, 0)), cloth)  # deltoid
+		# Shoulder into biceps, tapering to the elbow.
+		var arm_profile := _profile([-0.31, 0.043, -0.26, 0.045, -0.18, 0.054, -0.12, 0.058, -0.05, 0.061, 0.02, 0.052])
+		if civilian:
+			upper_arm.add(B.lathe(arm_profile, 14), B.at(Vector3.ZERO, Vector3.ZERO, Vector3(0.95, 1, 0.88)), skin)
+			upper_arm.add(B.lathe(_profile([-0.14, 0.064, -0.08, 0.066, 0.0, 0.068, 0.03, 0.06]), 14), B.at(Vector3.ZERO, Vector3.ZERO, Vector3(1, 1, 0.92)), cloth)  # short sleeve
+		else:
+			upper_arm.add(B.lathe(arm_profile, 14), B.at(Vector3.ZERO, Vector3.ZERO, Vector3(1, 1, 0.92)), cloth)
+			upper_arm.add(B.box(Vector3(0.012, 0.07, 0.06)), B.at(Vector3(side * 0.053, -0.08, 0)), gear_dark)  # patch
 		_bake(parts["upper_arm" + suffix], upper_arm)
 
 		_part("lower_arm" + suffix, elbow, CapsuleShape3D.new(), Vector3(0.045, 0.28, 0), Vector3(0, -0.14, 0))
 		var forearm := MeshBaker.new()
-		forearm.add(B.sphere(0.046, 10), B.at(Vector3.ZERO), cloth)  # elbow
-		forearm.add(B.cylinder(0.045, 0.035, 0.25, 12), B.at(Vector3(0, -0.13, 0)), cloth)
-		forearm.add(B.sphere(1.0, 10), B.at(Vector3(0, -0.29, -0.005), Vector3.ZERO, Vector3(0.038, 0.055, 0.03)), gloves)  # glove
+		var sleeve := skin if civilian else cloth
+		forearm.add(B.sphere(0.046, 10), B.at(Vector3.ZERO), sleeve)  # elbow
+		# Forearm swelling below the elbow, slimming to the wrist.
+		forearm.add(B.lathe(_profile([-0.27, 0.034, -0.21, 0.038, -0.13, 0.046, -0.06, 0.05, 0.02, 0.044]), 14),
+				B.at(Vector3.ZERO, Vector3.ZERO, Vector3(1, 1, 0.86)), sleeve)
+		forearm.add(B.sphere(1.0, 10), B.at(Vector3(0, -0.29, -0.005), Vector3.ZERO, Vector3(0.038, 0.055, 0.03)), hands)  # hand
 		_bake(parts["lower_arm" + suffix], forearm)
 
 		_part("thigh" + suffix, hip, CapsuleShape3D.new(), Vector3(0.075, 0.45, 0), Vector3(0, -0.22, 0))
 		var thigh := MeshBaker.new()
-		thigh.add(B.sphere(0.08, 12), B.at(Vector3(0, -0.02, 0)), cloth)
-		thigh.add(B.cylinder(0.085, 0.06, 0.42, 12), B.at(Vector3(0, -0.22, 0)), cloth)
-		thigh.add(B.box(Vector3(0.03, 0.12, 0.09)), B.at(Vector3(side * 0.075, -0.24, 0)), cloth)  # cargo pocket
+		var thigh_profile := _profile([-0.46, 0.058, -0.36, 0.066, -0.22, 0.08, -0.1, 0.09, 0.0, 0.092, 0.05, 0.075])
+		if civilian:
+			thigh.add(B.lathe(thigh_profile, 14), B.at(Vector3.ZERO, Vector3.ZERO, Vector3(0.96, 1, 0.92)), skin)
+			thigh.add(B.lathe(_profile([-0.27, 0.086, -0.2, 0.09, -0.1, 0.097, 0.0, 0.098, 0.05, 0.08]), 14), B.at(Vector3.ZERO, Vector3.ZERO, Vector3(1, 1, 0.97)), legs)  # shorts
+		else:
+			thigh.add(B.lathe(thigh_profile, 14), B.at(Vector3.ZERO, Vector3.ZERO, Vector3(1, 1, 0.95)), cloth)
+			thigh.add(B.box(Vector3(0.03, 0.12, 0.09)), B.at(Vector3(side * 0.075, -0.24, 0)), cloth)  # cargo pocket
 		_bake(parts["thigh" + suffix], thigh)
 
 		_part("shin" + suffix, knee, CapsuleShape3D.new(), Vector3(0.06, 0.45, 0), Vector3(0, -0.22, 0))
 		var shin := MeshBaker.new()
-		shin.add(B.sphere(1.0, 10), B.at(Vector3(0, 0.0, -0.035), Vector3.ZERO, Vector3(0.068, 0.075, 0.045)), gear)  # knee pad
-		shin.add(B.cylinder(0.06, 0.045, 0.36, 12), B.at(Vector3(0, -0.19, 0)), cloth)
-		shin.add(B.cylinder(0.05, 0.055, 0.12, 12), B.at(Vector3(0, -0.4, 0)), boots)  # boot shaft
-		shin.add(B.sphere(1.0, 10), B.at(Vector3(0, -0.445, -0.06), Vector3.ZERO, Vector3(0.05, 0.035, 0.1)), boots)  # foot
-		shin.add(B.box(Vector3(0.1, 0.02, 0.24)), B.at(Vector3(0, -0.47, -0.04)), Color(0.06, 0.05, 0.04, 0))  # sole
+		# Knee into the calf, slimming to the ankle.
+		var shin_profile := _profile([-0.38, 0.045, -0.31, 0.047, -0.22, 0.057, -0.1, 0.066, 0.0, 0.06, 0.04, 0.055])
+		if civilian:
+			shin.add(B.lathe(shin_profile, 14), B.at(Vector3.ZERO, Vector3.ZERO, Vector3(0.95, 1, 0.9)), skin)
+			shin.add(B.sphere(1.0, 10), B.at(Vector3(0, -0.425, -0.05), Vector3.ZERO, Vector3(0.045, 0.03, 0.1)), skin)  # bare foot
+			shin.add(B.box(Vector3(0.095, 0.014, 0.25)), B.at(Vector3(0, -0.455, -0.045)), Color(0.08, 0.08, 0.09, 0))  # rubber sandal
+			shin.add(B.box(Vector3(0.008, 0.03, 0.05)), B.at(Vector3(0, -0.44, -0.12), Vector3(30, 0, 0)), Color(0.08, 0.08, 0.09, 0))  # thong strap
+		else:
+			shin.add(B.sphere(1.0, 10), B.at(Vector3(0, 0.0, -0.035), Vector3.ZERO, Vector3(0.068, 0.075, 0.045)), gear)  # knee pad
+			shin.add(B.lathe(shin_profile, 14), B.at(Vector3.ZERO, Vector3.ZERO, Vector3(1, 1, 0.92)), cloth)
+			shin.add(B.cylinder(0.05, 0.055, 0.12, 12), B.at(Vector3(0, -0.4, 0)), boots)  # boot shaft
+			shin.add(B.sphere(1.0, 10), B.at(Vector3(0, -0.445, -0.06), Vector3.ZERO, Vector3(0.05, 0.035, 0.1)), boots)  # foot
+			shin.add(B.box(Vector3(0.1, 0.02, 0.24)), B.at(Vector3(0, -0.47, -0.04)), Color(0.06, 0.05, 0.04, 0))  # sole
 		_bake(parts["shin" + suffix], shin)
 
-	# The weapon rides on the torso, pointing where the spine points.
+	# The weapon rides on the torso, pointing where the spine points; a
+	# machete is in the right hand instead.
 	gun = Node3D.new()
 	gun.position = Vector3(0.1, 0.42, -0.3)
 	spine.add_child(gun)
 	muzzle = Node3D.new()
-	muzzle.position = Vector3(0, 0.015, _bake_gun(profile))
 	gun.add_child(muzzle)
+	if melee:
+		_bake_machete(parts.lower_arm_r)
+	else:
+		muzzle.position = Vector3(0, 0.015, _bake_gun(profile))
+
+
+## A bush knife held in a hand at the end of `forearm` (its part frame: the
+## hand at y −0.29), blade forward.
+func _bake_machete(forearm: Node3D) -> void:
+	var B := MeshBaker
+	var blade := Color(0.5, 0.51, 0.5, 0.0)
+	var edge := Color(0.78, 0.79, 0.77, 0.0)
+	var machete := MeshBaker.new()
+	machete.add(B.box(Vector3(0.026, 0.032, 0.13)), B.at(Vector3(0, -0.3, 0.02)), Color(0.08, 0.06, 0.05, 0.0))  # handle
+	# Blade widening towards the tip, with a bright worn edge underneath. The
+	# outline's width runs up the part, its length forward (−Z).
+	machete.add(B.prism(PackedVector2Array([Vector2(-0.018, 0.0), Vector2(0.018, 0.0), Vector2(0.03, -0.42),
+			Vector2(0.005, -0.47), Vector2(-0.035, -0.42)]), 0.004), Transform3D(Basis(Vector3.UP, Vector3.BACK, Vector3.RIGHT), Vector3(0, -0.3, -0.04)), blade)
+	machete.add(B.box(Vector3(0.0045, 0.006, 0.4)), B.at(Vector3(0, -0.322, -0.26)), edge)
+	_bake(forearm, machete)
+
+
+## A bilum (string bag) at the hip, in bright stripes.
+func _bilum_bag(baker: MeshBaker, at: Vector3, variant: int) -> void:
+	var stripes := [Color(0.8, 0.15, 0.1, 0), Color(0.95, 0.75, 0.1, 0), Color(0.1, 0.1, 0.1, 0),
+			Color(0.15, 0.5, 0.25, 0), Color(0.95, 0.95, 0.9, 0), Color(0.2, 0.3, 0.7, 0)]
+	for b in 5:
+		var width := 0.11 * (1.0 - 0.3 * absf(float(b) / 5.0 - 0.5))
+		baker.add(MeshBaker.cylinder(width, width, 0.045, 12), MeshBaker.at(at + Vector3(0, -b * 0.044, 0), Vector3.ZERO, Vector3(0.5, 1, 1)),
+				stripes[(variant + b * 2) % stripes.size()])
 
 
 ## Builds the carried weapon (rifle or pump shotgun) as one mesh; returns the
@@ -217,10 +309,43 @@ func pose(delta: float, crouch: float, aim_pitch: float, speed: float, aiming: b
 	pivots.spine.rotation = Vector3(aim_pitch * 0.5 - lean - deg_to_rad(40.0) * hunker + _flinch.x, 0.0, _flinch.y)
 	pivots.neck.rotation.x = aim_pitch * 0.5 - deg_to_rad(15.0) * hunker
 
+	if melee:
+		_pose_blade(speed)
+		return
 	gun.rotation.x = 0.0 if aiming else deg_to_rad(-35.0)
 	# Both hands on the weapon: right on the grip, left on the handguard / pump.
 	_reach("_r", gun.transform * _grip, Vector3(0.6, -1.0, 0.4))
 	_reach("_l", gun.transform * _support, Vector3(-0.5, -1.0, 0.1))
+
+
+## Machete arms: the free arm pumps with the stride; the blade arm carries the
+## knife forward and low, then a strike raises it overhead through the windup
+## and chops down hard.
+func _pose_blade(speed: float) -> void:
+	var run := clampf(speed / 4.0, 0.0, 1.0)
+	var pump := sin(_walk_phase) * 0.8 * run
+	pivots.shoulder_l.rotation = Vector3(0.15 - pump, 0.0, -0.12)
+	pivots.elbow_l.rotation = Vector3(0.4 + 0.9 * run, 0.0, 0.0)
+	var raise := 0.5 + pump * 0.4
+	var bend := 1.1
+	if swing >= 0.0:
+		if swing < swing_windup:
+			var t := smoothstep(0.0, 1.0, swing / swing_windup)
+			raise = lerpf(0.5, 2.9, t)
+			bend = lerpf(1.1, 1.7, t)
+		else:
+			var t := clampf((swing - swing_windup) / 0.16, 0.0, 1.0)
+			raise = lerpf(2.9, 0.15, t)
+			bend = lerpf(1.7, 0.25, t)
+	pivots.shoulder_r.rotation = Vector3(raise, 0.0, 0.1)
+	pivots.elbow_r.rotation = Vector3(bend, 0.0, 0.0)
+
+
+## A basis whose +Y runs along `axis`.
+static func _along(axis: Vector3) -> Basis:
+	var y := axis.normalized()
+	var x := y.cross(Vector3.FORWARD if absf(y.dot(Vector3.FORWARD)) < 0.9 else Vector3.RIGHT).normalized()
+	return Basis(x, y, x.cross(y)).orthonormalized()
 
 
 ## Two-bone IK in the spine's space: turns the shoulder and folds the elbow so
@@ -288,7 +413,25 @@ func _part(part_name: String, pivot: Node3D, shape: Shape3D, size: Vector3, cent
 	shapes[part_name] = [shape, Transform3D(Basis.IDENTITY, center)]
 
 
+## Flat [y, radius, y, radius, ...] into lathe profile points.
+static func _profile(values: Array) -> PackedVector2Array:
+	var points := PackedVector2Array()
+	for i in range(0, values.size(), 2):
+		points.append(Vector2(values[i], values[i + 1]))
+	return points
+
+
+## Switches every part's shadow on or off (distance LOD; cheap to call often).
+func cast_shadows(on: bool) -> void:
+	if on == _shadows_on:
+		return
+	_shadows_on = on
+	for instance: MeshInstance3D in _instances:
+		instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if on else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
 func _bake(part: Node3D, baker: MeshBaker) -> void:
 	var instance := MeshInstance3D.new()
 	instance.mesh = baker.commit(_material)
 	part.add_child(instance)
+	_instances.append(instance)

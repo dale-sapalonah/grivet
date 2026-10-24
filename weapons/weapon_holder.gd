@@ -227,6 +227,14 @@ func _eject_casing(definition: WeaponDefinition) -> void:
 	_casings.eject(definition, port, throw + _player.velocity)
 
 
+## Full magazines, full reserves and a full set of grenades (a new stage).
+func refill() -> void:
+	for weapon in weapons:
+		weapon.ammo = weapon.definition.magazine_size
+		weapon.reserve = weapon.definition.reserve_ammo
+	grenades_left = grenade.player_carry if grenade != null else 0
+
+
 func _throw_grenade() -> void:
 	var aim := _player.aim_transform()
 	var forward := -aim.basis.z

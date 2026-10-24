@@ -40,7 +40,9 @@ box("Floor", 0, -1, 0, 64, 1, 64, "Asphalt", "concrete")
 container("WallNorth", 0, 0, -32.22, True, 1, cells=11, tiers=2)
 container("WallSouth", 0, 0, 32.22, True, 2, cells=11, tiers=2)
 container("WallWest", -32.22, 0, 0, False, 3, cells=11, tiers=2)
-container("WallEast", 32.22, 0, 0, False, 4, cells=11, tiers=2)
+# East wall split by a one-container gate (z -3.05..3.05) into the town.
+container("WallEastN", 32.22, 0, -18.3, False, 4, cells=5, tiers=2)
+container("WallEastS", 32.22, 0, 18.3, False, 5, cells=5, tiers=2)
 
 # South (player side).
 box("LowWallSW", -6, 0, 18, 3, 1, 0.4, "Sandbag", "sandbag")
@@ -88,13 +90,48 @@ for name, x, y, z, sx, sy, sz in [
 crate("BldgCrateW", 10, 0, -20, 7)
 crate("BldgCrateE", 17, 0, -22, 8)
 
+# --- Town strip east of the yard (x 33..98): road, taxi rank, stores, field.
+box("TownDirtW", 46, -1, 0, 28, 1, 64, "Dirt", "dirt")  # from x 32: no gap under the gate
+box("TownRoad", 65, -1, 0, 10, 1, 64, "Road", "concrete")
+box("TownDirtE", 84, -1, 0, 28, 1, 64, "Dirt", "dirt")
+box("RugbyField", 89.5, -0.99, 0, 15, 1, 36, "Grass", "dirt")
+container("TownWallN", 66.99, 0, -32.22, True, 21, cells=11, tiers=2)
+container("TownWallS", 66.99, 0, 32.22, True, 22, cells=11, tiers=2)
+container("TownWallE", 99.22, 0, 0, False, 23, cells=11, tiers=2)
+# Shops: solid blocks (cover), signboards and roofs dressed by port_yard.gd.
+stores = [("TradeStoa", 42, -25, 12, 10, "TRADE STOA", "Color(0.2, 0.36, 0.62, 1)"),
+          ("KaiBar", 41, 25, 10, 10, "KAI BAR", "Color(0.85, 0.62, 0.16, 1)"),
+          ("MarasinStoa", 77, -25, 10, 10, "MARASIN STOA", "Color(0.82, 0.83, 0.78, 1)"),
+          ("Supamaket", 78, 25, 12, 10, "SUPAMAKET", "Color(0.66, 0.16, 0.12, 1)")]
+for name, x, z, sx, sz, sign, color in stores:
+    box(name, x, 0, z, sx, 3.4, sz, "Store" + name, "concrete")
+box("LowWallTown1", 55, 0, 0, 0.4, 1, 4, "Sandbag", "sandbag")
+box("LowWallTown2", 75, 0, 2, 0.4, 1, 4, "Sandbag", "sandbag")
+box("LowWallTown3", 58, 0, -18, 4, 1, 0.4, "Sandbag", "sandbag")
+box("BarrierRoad1", 65, 0, -12, 2, 1.1, 0.6, "Barrier", "concrete")
+box("BarrierRoad2", 65, 0, 13, 2, 1.1, 0.6, "Barrier", "concrete")
+crate("CrateTown1", 52, 0, 22, 9)
+crate("CrateTown2", 70.5, 0, -16, 10)
+
 # Light poles (8 m, steel) and oil drums: (name, x, z).
 poles = [("PoleNW", -28, -28), ("PoleN", 0, -29.6), ("PoleNE", 28, -28), ("PoleW", -29.6, 8),
-         ("PoleE", 29.6, 6), ("PoleSW", -12, 29.6), ("PoleSE", 12, 29.6)]
+         ("PoleE", 29.6, 6), ("PoleSW", -12, 29.6), ("PoleSE", 12, 29.6),
+         # Street lights either side of the town road, arms over the road.
+         ("StreetW1", 59.4, -22), ("StreetW2", 59.4, 6), ("StreetE1", 70.6, -8), ("StreetE2", 70.6, 22)]
+# Rugby league posts at both ends of the field: (name, x, z).
+goal_posts = [("PostsN", 89.5, -17.5), ("PostsS", 89.5, 17.5)]
 drums = [("DrumSW1", -18, 16, 0), ("DrumSW2", -17.35, 16.3, 0), ("DrumSW3", -17.7, 15.6, 0),
          ("DrumE1", 22, -6, 1), ("DrumE2", 22.62, -6.3, 1),
          ("DrumW1", -27, -14, 2), ("DrumW2", -26.4, -14.25, 2), ("DrumW3", -26.75, -13.6, 2),
-         ("DrumN1", 6, -27, 0), ("DrumN2", 6.62, -27.2, 1)]
+         ("DrumN1", 6, -27, 0), ("DrumN2", 6.62, -27.2, 1),
+         ("DrumT1", 50, -10, 2), ("DrumT2", 50.6, -10.3, 0), ("DrumT3", 72, 10, 1)]
+
+# Kamfot Taxi rank (blue sedans): (name, x, z, yaw rows, plate). Vehicle cover.
+taxis = [("Taxi1", 40, -9, "1, 0, 0, 0, 1, 0, 0, 0, 1", "T 9925"),
+         ("Taxi2", 40, 9, "1, 0, 0, 0, 1, 0, 0, 0, 1", "T 9938"),
+         ("Taxi3", 47, -15, "0, 0, 1, 0, 1, 0, -1, 0, 0", "T 9917"),
+         ("Taxi4", 48, 14, "0, 0, 1, 0, 1, 0, -1, 0, 0", "T 5879"),
+         ("Taxi5", 62, -27, "1, 0, 0, 0, 1, 0, 0, 0, 1", "T 4110")]
 
 # Port Moresby PMVs parked on the player's side: (name, x, z, yaw rows, livery, route, plate, headlights).
 # Collision boxes with the "vehicle" surface; port_yard.gd dresses them.
@@ -103,12 +140,28 @@ buses = [
     ("PmvRoute4", 26, 18, "1, 0, 0, 0, 1, 0, 0, 0, 1", "Color(0.52, 0.52, 0.82, 1)", "4", "P 3908", False),
 ]
 
+# Enemy spawns: (name, x, z, kind, level). Level 1 is the original yard squad.
 spawns = [
-    ("RiflemanWest", -10, -21, "rifleman"),
-    ("RiflemanCentre", 2, -24, "rifleman"),
-    ("RiflemanBuilding", 16, -18, "rifleman"),
-    ("RusherWest", -22, -24, "rusher"),
-    ("RusherEast", 25, -10, "rusher"),
+    ("RiflemanWest", -10, -21, "rifleman", 1),
+    ("RiflemanCentre", 2, -24, "rifleman", 1),
+    ("RiflemanBuilding", 16, -18, "rifleman", 1),
+    ("RusherWest", -22, -24, "rusher", 1),
+    ("RusherEast", 25, -10, "rusher", 1),
+    # Level 2, taxi rank: the west half of town.
+    ("L2Rifle1", 52, -26, "rifleman", 2), ("L2Rifle2", 58, 22, "rifleman", 2), ("L2Rifle3", 64, -4, "rifleman", 2),
+    ("L2Rusher1", 56, -12, "rusher", 2), ("L2Rusher2", 52, 16, "rusher", 2),
+    ("L2Machete1", 66, 10, "machete", 2), ("L2Machete2", 64, -20, "machete", 2),
+    # Level 3, buai market: across the road to the field.
+    ("L3Rifle1", 76, -15, "rifleman", 3), ("L3Rifle2", 78, 15, "rifleman", 3), ("L3Rifle3", 90, -16, "rifleman", 3),
+    ("L3Rifle4", 94, 16, "rifleman", 3), ("L3Rusher1", 70, -5, "rusher", 3), ("L3Rusher2", 86, 0, "rusher", 3),
+    ("L3Machete1", 60, 24, "machete", 3), ("L3Machete2", 88, -6, "machete", 3),
+    ("L3Machete3", 92, 6, "machete", 3), ("L3Machete4", 66, -26, "machete", 3),
+    # Level 4, Grippet: everywhere at once.
+    ("L4Rifle1", -10, -21, "rifleman", 4), ("L4Rifle2", 2, -24, "rifleman", 4), ("L4Rifle3", 16, -18, "rifleman", 4),
+    ("L4Rifle4", 76, -15, "rifleman", 4), ("L4Rifle5", 90, 16, "rifleman", 4),
+    ("L4Rusher1", -22, -24, "rusher", 4), ("L4Rusher2", 25, -10, "rusher", 4), ("L4Rusher3", 70, 5, "rusher", 4),
+    ("L4Machete1", -20, 0, "machete", 4), ("L4Machete2", 6, -14, "machete", 4), ("L4Machete3", 56, -12, "machete", 4),
+    ("L4Machete4", 88, -6, "machete", 4), ("L4Machete5", 64, 20, "machete", 4),
 ]
 
 # Shader materials: (id, shader resource id, parameters).
@@ -117,7 +170,11 @@ materials = [
     ("Container", "container", {}),
     ("Crate", "crate", {}),
     ("Building", "concrete", {"base_color": "Color(0.56, 0.54, 0.5, 1)"}),
-]
+    ("Road", "asphalt", {"lane_spacing": 1000.0, "lane_offset": -65.0, "puddles": 0.28}),
+    ("Dirt", "dirt", {}),
+    ("Grass", "dirt", {"grass": 1.0}),
+] + [("Store" + name, "concrete", {"base_color": color, "panel_width": 0.0, "grime_height": 0.9})
+     for name, x, z, sx, sz, sign, color in stores]
 drum_colors = ["Color(0.12, 0.22, 0.42, 1)", "Color(0.5, 0.12, 0.08, 1)", "Color(0.62, 0.48, 0.1, 1)"]
 
 
@@ -170,7 +227,7 @@ w('[ext_resource type="PackedScene" path="res://player/player.tscn" id="3_player
 w('[ext_resource type="PackedScene" path="res://ui/debug_overlay.tscn" id="4_overlay"]')
 w('[ext_resource type="PackedScene" path="res://ui/hud.tscn" id="5_hud"]')
 w('[ext_resource type="Texture2D" path="res://levels/port/materials/noise.tres" id="6_noise"]')
-for shader in ["asphalt", "container", "crate", "concrete"]:
+for shader in ["asphalt", "container", "crate", "concrete", "dirt"]:
     w(f'[ext_resource type="Shader" path="res://levels/port/materials/{shader}.gdshader" id="shader_{shader}"]')
 w("")
 w('[sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]')
@@ -223,6 +280,13 @@ for name, shader, params in materials:
 for name, center, size, material, surface, params in boxes:
     if material in BODY_MATERIALS:
         w(body_shape(name, size, material))
+w('[sub_resource type="BoxShape3D" id="TaxiShape"]')
+w("size = Vector3(1.7, 1.44, 4.4)")
+w("")
+w('[sub_resource type="StandardMaterial3D" id="GoalPostWhite"]')
+w("albedo_color = Color(0.85, 0.85, 0.82, 1)")
+w("roughness = 0.5")
+w("")
 w('[sub_resource type="BoxShape3D" id="BusShape"]')
 w("size = Vector3(2.05, 2.5, 7)")
 w("")
@@ -239,6 +303,7 @@ for i, color in enumerate(drum_colors):
     w("")
 w('[node name="PortYard" type="Node3D"]')
 w('script = ExtResource("1_level")')
+w("bounds = AABB(-31, -0.5, -31, 129, 4, 62)")
 w("")
 w('[node name="WorldEnvironment" type="WorldEnvironment" parent="."]')
 w('environment = SubResource("Environment")')
@@ -253,8 +318,8 @@ w("light_energy = 1.25")
 w("shadow_enabled = true")
 w("shadow_bias = 0.04")
 w("shadow_normal_bias = 1.5")
-w("directional_shadow_mode = 1")
-w("directional_shadow_max_distance = 60.0")
+w("directional_shadow_mode = 0")  # one pass: half the shadow draws of two splits
+w("directional_shadow_max_distance = 50.0")
 w("")
 w('[node name="Player" parent="." instance=ExtResource("3_player")]')
 w("transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 26)")
@@ -278,8 +343,13 @@ for name, (x, y, z), (sx, sy, sz), material, surface, params in boxes:
         w(f'shape = SubResource("Shape{name}")')
         w("")
         continue
-    w(f'[node name="{name}" type="CSGBox3D" parent="Navigation"]')
+    store = next((st for st in stores if st[0] == name), None)
+    groups = ' groups=["store"]' if store else ""
+    w(f'[node name="{name}" type="CSGBox3D" parent="Navigation"{groups}]')
     w(f"transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {x:g}, {y:g}, {z:g})")
+    if store:
+        w(f'metadata/sign = "{store[5]}"')
+        w(f"metadata/sign_color = {store[6]}")
     for key, value in params.items():
         w(f"instance_shader_parameters/{key} = {vec(value) if isinstance(value, tuple) else f'{value:g}'}")
     w("use_collision = true")
@@ -290,6 +360,8 @@ for name, (x, y, z), (sx, sy, sz), material, surface, params in boxes:
 for name, x, z in poles:
     w(f'[node name="{name}" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]')
     w(f"transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {x:g}, 4, {z:g})")
+    if name.startswith("Street"):
+        w(f"metadata/arm = Vector3({1 if x < 65 else -1}, 0, 0)  # over the road")
     w("use_collision = true")
     w("radius = 0.12")
     w("height = 8.0")
@@ -320,12 +392,41 @@ for name, x, z, rows, livery, route, plate, headlights in buses:
     w("transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)")
     w('shape = SubResource("BusShape")')
     w("")
+for name, x, z, rows, plate in taxis:
+    w(f'[node name="{name}" type="StaticBody3D" parent="Navigation" groups=["taxi"]]')
+    w(f"transform = Transform3D({rows}, {x:g}, 0, {z:g})")
+    w('metadata/surface = "vehicle"')
+    w(f'metadata/plate = "{plate}"')
+    w("")
+    w(f'[node name="Shape" type="CollisionShape3D" parent="Navigation/{name}"]')
+    w("transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)")
+    w('shape = SubResource("TaxiShape")')
+    w("")
+for name, x, z in goal_posts:
+    for side, dx in (("L", -2.8), ("R", 2.8)):
+        w(f'[node name="{name}{side}" type="CSGCylinder3D" parent="Navigation"]')
+        w(f"transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {x + dx:g}, 3.5, {z:g})")
+        w("use_collision = true")
+        w("radius = 0.08")
+        w("height = 7.0")
+        w("sides = 8")
+        w('material = SubResource("GoalPostWhite")')
+        w('metadata/surface = "steel"')
+        w("")
+    w(f'[node name="{name}Bar" type="CSGBox3D" parent="Navigation"]')
+    w(f"transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {x:g}, 3, {z:g})")
+    w("use_collision = true")
+    w("size = Vector3(5.6, 0.1, 0.1)")
+    w('material = SubResource("GoalPostWhite")')
+    w('metadata/surface = "steel"')
+    w("")
 w('[node name="EnemySpawns" type="Node3D" parent="."]')
 w("")
-for name, x, z, kind in spawns:
+for name, x, z, kind, level in spawns:
     w(f'[node name="{name}" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]')
     w(f"transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, {x:g}, 0, {z:g})")
     w(f'metadata/enemy = "{kind}"')
+    w(f"metadata/level = {level}")
     w("")
 out.parent.mkdir(parents=True, exist_ok=True)
 out.write_text("\n".join(lines), encoding="utf-8")

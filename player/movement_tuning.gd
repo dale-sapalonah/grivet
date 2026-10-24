@@ -67,6 +67,10 @@ extends Resource
 
 @export_group("Death and respawn")
 @export var respawn_delay := 3.0
+## Hits do no damage for this long after spawning, and enemies lose track of you.
+@export var spawn_protection_seconds := 3.0
+## Below this height the player has fallen out of the level and respawns.
+@export var fall_reset_height := -20.0
 @export var death_eye_height := 0.3
 @export var death_roll_degrees := 35.0
 @export var death_blend_speed := 4.0

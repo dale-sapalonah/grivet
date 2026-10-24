@@ -93,7 +93,9 @@ void fragment() {
 		color = mix(color * 0.85, rust_color.rgb, rust * 0.6);
 	}
 	ALBEDO = color * (0.9 + 0.2 * noise2(local_position.xy * 1.7 + local_position.z));
-	NORMAL = bend_normal(NORMAL, bend, VIEW_MATRIX);
-	ROUGHNESS = 0.6;
+	vec3 axis_v = vec3(0.0, 1.0, 0.0);
+	vec2 detail_uv = vec2(u, v);
+	NORMAL = bend_normal(NORMAL, bend + detail_bend(detail_uv, world_u, axis_v), VIEW_MATRIX);
+	ROUGHNESS = detail_rough(detail_uv, 0.6);
 	METALLIC = 0.25;
 }

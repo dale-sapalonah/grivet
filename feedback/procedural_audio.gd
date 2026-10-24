@@ -298,6 +298,24 @@ static func _hull_tock(weapon: WeaponDefinition, brightness: float, rng: RandomN
 	return to_stream(buffer)
 
 
+## A blade cutting the air: a breathy noise swell that peaks and falls.
+static func blade_whoosh(variant: int = 0) -> AudioStreamWAV:
+	var rng := _rng("whoosh:%d" % variant)
+	var buffer := _buffer(0.35)
+	add_noise(buffer, 0.0, 0.07, 0.55, 2600.0, 500.0, rng, 0.12)
+	add_noise(buffer, 0.08, 0.05, 0.3, 5200.0, 1600.0, rng, 0.05)
+	return to_stream(buffer)
+
+
+## A blade striking a body: a dull chop with a little slap.
+static func blade_chop(variant: int = 0) -> AudioStreamWAV:
+	var rng := _rng("chop:%d" % variant)
+	var buffer := _buffer(0.3)
+	add_thump(buffer, 0.0, 150.0 + 20.0 * variant, 0.035, 0.9)
+	add_noise(buffer, 0.0, 0.03, 0.6, 3200.0, 600.0, rng)
+	return to_stream(buffer)
+
+
 # --- Building blocks -----------------------------------------------------------
 
 ## Damped modal ring: each partial is quieter and dies faster than the last.

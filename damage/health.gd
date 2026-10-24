@@ -12,6 +12,8 @@ signal revived
 
 var model: DamageModel
 var invulnerable := false
+## Seconds of spawn protection left: hits do no damage meanwhile.
+var protected_left := 0.0
 var plates_carried := 0
 var last_hit: Dictionary = {}
 
@@ -33,7 +35,7 @@ func setup(health_profile: HealthProfile) -> void:
 func take_hit(amount: float, zone: DamageModel.Zone, info: Dictionary = {}) -> void:
 	if model.dead:
 		return
-	var result := model.apply(0.0 if invulnerable else amount, zone, info.get("on_plate", true))
+	var result := model.apply(0.0 if invulnerable or protected_left > 0.0 else amount, zone, info.get("on_plate", true))
 	_since_damage = 0.0
 	last_hit = info.duplicate()
 	last_hit.merge({"zone": zone, "health_damage": result.health_damage,
@@ -49,6 +51,11 @@ func is_dead() -> bool:
 
 func fraction() -> float:
 	return model.health / profile.max_health
+
+
+## Shrugs off hits for `seconds` (a fresh spawn).
+func protect(seconds: float) -> void:
+	protected_left = maxf(protected_left, seconds)
 
 
 func revive() -> void:
@@ -69,6 +76,7 @@ func insert_plate() -> bool:
 
 
 func _process(delta: float) -> void:
+	protected_left = maxf(protected_left - delta, 0.0)
 	if model == null or model.dead or profile.regen_delay <= 0.0:
 		return
 	_since_damage += delta

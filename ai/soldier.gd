@@ -42,6 +42,15 @@ var _crouch := 0.0
 var _want_crouch := false
 var _advancing_low := false  # set each frame by the action
 var _muzzle_flash: MuzzleFlash
+var _action := SoldierBrain.Action.IDLE
+var _think_timer := 0.0
+var _think_delta := 0.0
+var _pose_delta := 0.0
+## Blade instead of a gun: strikes in reach rather than firing.
+var _melee := false
+var _swing := -1.0  # seconds into the current strike, below zero when not striking
+var _swing_landed := false
+var _swing_cooldown := 0.0
 var _aim_pitch := 0.0
 var _move_target := Vector3.INF
 var _requested_target := Vector3.INF
@@ -85,7 +94,9 @@ func _ready() -> void:
 	health.damaged.connect(_on_damaged)
 	hitbox.health = health
 	hitbox.body = self
-	mannequin.build(profile)
+	_melee = profile.weapon.melee_damage > 0.0
+	mannequin.build(profile, _rng.randi_range(0, 59))
+	mannequin.swing_windup = profile.weapon.melee_windup
 	for part_name: String in Mannequin.PARTS:
 		var zone := CollisionShape3D.new()
 		zone.shape = mannequin.shapes[part_name][0]
@@ -102,9 +113,11 @@ func _ready() -> void:
 	collision_mask = PhysicsLayers.ENEMY_MOVEMENT
 	_perception_interval = 1.0 / _settings.perception_hz
 	_perception_timer = _rng.randf() * _perception_interval  # stagger soldiers' sight checks
+	_think_timer = _rng.randf() / _settings.think_hz  # and their decisions
 	_grenades = profile.grenade_count
-	_shot_audio.stream = ProceduralAudio.cached("shot:" + profile.weapon.id,
-			func() -> AudioStreamWAV: return ProceduralAudio.gunshot(profile.weapon))
+	if not _melee:
+		_shot_audio.stream = ProceduralAudio.cached("shot:" + profile.weapon.id,
+				func() -> AudioStreamWAV: return ProceduralAudio.gunshot(profile.weapon))
 	_debug_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_debug_label.position = Vector3(0, 2.2, 0)
 	_debug_label.fixed_size = true  # same size on screen near or far
@@ -142,16 +155,39 @@ func _physics_process(delta: float) -> void:
 	if _perception_timer <= 0.0:
 		_perceive(_perception_interval - _perception_timer, target)
 		_perception_timer += _perception_interval
-	_update_facts()
-	var action := brain.decide(_facts, profile, delta)
-	_fire_mode = 0
-	_advancing_low = false
-	_act(action, delta, target)
+	# Think at think_hz (staggered across soldiers); move and shoot every tick.
+	_think_timer -= delta
+	_think_delta += delta
+	if _think_timer <= 0.0:
+		_think_timer += 1.0 / _settings.think_hz
+		_update_facts()
+		_action = brain.decide(_facts, profile, _think_delta)
+		_fire_mode = 0
+		_advancing_low = false
+		_act(_action, _think_delta, target)
+		_think_delta = 0.0
 	_update_weapon(delta, target)
 	_move(delta)
-	_pose(delta, target)
+	AI.add_frame_time(Time.get_ticks_usec() - started)
+
+
+## Posing and the hit boxes that follow it run once per drawn frame, not per
+## physics tick (2-3 times a frame at 120 Hz); far soldiers every other frame.
+func _process(delta: float) -> void:
+	if dead or AI.frozen:
+		return
+	var started := Time.get_ticks_usec()
+	_pose_delta += delta
+	var target := AI.target()
+	var distance_squared := global_position.distance_squared_to(target.global_position) if target != null else 0.0
+	mannequin.cast_shadows(distance_squared < _settings.shadow_lod_distance * _settings.shadow_lod_distance)
+	var far := distance_squared > _settings.pose_lod_distance * _settings.pose_lod_distance
+	if far and (Engine.get_process_frames() + get_instance_id()) % 2 == 0:
+		return
+	_pose(_pose_delta, target)
+	_pose_delta = 0.0
 	_sync_hitbox()
-	_update_debug_label(action)
+	_update_debug_label(_action)
 	AI.add_frame_time(Time.get_ticks_usec() - started)
 
 
@@ -232,6 +268,15 @@ func hear(position: Vector3, radius: float, source: Node) -> void:
 func _alert() -> void:
 	awareness = maxf(awareness, 1.0)
 	_alerted = true
+
+
+## The target vanished (respawned elsewhere): drop what we knew, stay wary.
+func forget_target() -> void:
+	last_known = Vector3.INF
+	noise_position = Vector3.INF
+	target_visible = false
+	time_since_seen = INF
+	awareness = minf(awareness, profile.suspicious_threshold)
 
 
 ## An ally saw the target at `position`.
@@ -471,8 +516,18 @@ func _charge(target: Player) -> void:
 	cover = null
 	AI.release_cover(self)
 	var goal := last_known if target == null else target.global_position
+	if _melee:
+		# Straight at them (the weave comes from being shot at), stopping at
+		# striking distance rather than walking into them.
+		var reach := weapon.definition.melee_range * 0.8
+		if CoverScoring.flat_distance(global_position, goal) <= reach:
+			_move_target = Vector3.INF
+		else:
+			var back := Vector3(global_position.x - goal.x, 0.0, global_position.z - goal.z).normalized()
+			_move_target = goal + back * reach
+		return
 	if CoverScoring.flat_distance(global_position, goal) <= _settings.close_strafe_range:
-		_strafe_timer -= get_physics_process_delta_time()
+		_strafe_timer -= _think_delta  # called while thinking
 		if _strafe_timer <= 0.0:
 			_strafe_side = -_strafe_side
 			_strafe_timer = _rng.randf_range(0.8, 1.8)
@@ -508,6 +563,9 @@ func _at_cover() -> bool:
 # --- Firing --------------------------------------------------------------------
 
 func _update_weapon(delta: float, target: Player) -> void:
+	if _melee:
+		_update_blade(delta, target)
+		return
 	var aim_at := _aim_target(target)
 	var want_fire := _fire_mode != 0 and _reaction_left <= 0.0 and aim_at != Vector3.INF and _facing(aim_at)
 	if not want_fire:
@@ -529,7 +587,56 @@ func _update_weapon(delta: float, target: Player) -> void:
 			_burst_pause = _rng.randf_range(profile.burst_pause_min, profile.burst_pause_max)
 
 
+## Machete: in reach and facing the target, wind up and chop; the blow lands
+## at the end of the windup if the target is still there.
+func _update_blade(delta: float, target: Player) -> void:
+	var definition := weapon.definition
+	_swing_cooldown -= delta
+	if _swing >= 0.0:
+		_swing += delta
+		if not _swing_landed and _swing >= definition.melee_windup:
+			_swing_landed = true
+			_land_blow(target)
+		if _swing >= definition.melee_windup + definition.melee_recover:
+			_swing = -1.0
+		mannequin.swing = _swing
+		return
+	mannequin.swing = -1.0
+	if target == null or not target_visible or target.dead or _swing_cooldown > 0.0:
+		return
+	if CoverScoring.flat_distance(global_position, target.global_position) <= definition.melee_range 			and _facing(target.aim_point()):
+		_swing = 0.0
+		_swing_landed = false
+		_swing_cooldown = definition.melee_windup + definition.melee_recover
+		_shot_audio.stream = ProceduralAudio.cached("whoosh:%d" % (_rng.randi() % 3),
+				func() -> AudioStreamWAV: return ProceduralAudio.blade_whoosh(_rng.randi() % 3))
+		_shot_audio.volume_db = -6.0
+		_shot_audio.pitch_scale = _rng.randf_range(0.9, 1.1)
+		_shot_audio.play()
+
+
+func _land_blow(target: Player) -> void:
+	if target == null or not is_instance_valid(target) or target.dead:
+		return
+	var to := target.global_position - global_position
+	var forward := -global_basis.z
+	if Vector2(to.x, to.z).length() > weapon.definition.melee_range * 1.25 or Vector2(forward.x, forward.z).dot(Vector2(to.x, to.z).normalized()) < 0.3:
+		return  # dodged: stepped out of reach or round behind
+	# Cuts land on arms raised to block as often as on the body.
+	var zone := DamageModel.Zone.ARMS if _rng.randf() < 0.5 else DamageModel.Zone.TORSO
+	target.health.take_hit(weapon.definition.melee_damage * profile.damage_multiplier, zone,
+			{"shooter": self, "direction": to.normalized(), "position": target.aim_point(), "kind": "melee"})
+	var chop := AudioStreamPlayer3D.new()
+	chop.stream = ProceduralAudio.cached("chop:0", func() -> AudioStreamWAV: return ProceduralAudio.blade_chop(0))
+	chop.finished.connect(chop.queue_free)
+	add_child(chop)
+	chop.global_position = target.aim_point()
+	chop.play()
+
+
 func _aim_target(target: Player) -> Vector3:
+	if _melee and target != null and target_visible:
+		return target.head_point()  # face to face, not staring at the chest
 	if _fire_mode == 1 and target != null and target_visible:
 		return target.aim_point()
 	if last_known != Vector3.INF:

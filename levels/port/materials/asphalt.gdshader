@@ -11,6 +11,7 @@ uniform vec4 paint_yellow : source_color = vec4(0.78, 0.62, 0.18, 1.0);
 uniform vec4 paint_white : source_color = vec4(0.72, 0.72, 0.68, 1.0);
 uniform vec4 buai_red : source_color = vec4(0.36, 0.05, 0.03, 1.0);
 uniform float lane_spacing = 16.0;
+uniform float lane_offset = 8.0;  // lines where (x + offset) is a multiple of the spacing
 uniform float puddles = 0.34;  // higher = more water
 
 varying vec3 world_position;
@@ -30,7 +31,7 @@ void fragment() {
 	float roughness = 0.82 + 0.12 * fine;
 
 	// Lane markings: dashed yellow centre lines, white ticks marking bays.
-	float lane = grid_distance(p.x + 8.0, lane_spacing);
+	float lane = grid_distance(p.x + lane_offset, lane_spacing);
 	float dash = step(0.45, fract(p.y / 4.0));
 	float wear = smoothstep(0.32, 0.5, noise2(p * 0.37 + 0.13));
 	float yellow = (1.0 - smoothstep(0.06, 0.075, lane)) * dash * wear;
@@ -51,7 +52,10 @@ void fragment() {
 	roughness = mix(roughness, 0.45, damp);
 	roughness = mix(roughness, 0.03, water);
 
+	// Aggregate grain: bumps catch the low sun and the lamps; water is flat.
+	vec2 slope = noise_slope(p * 1.6, 0.02) * 0.012 * (1.0 - water);
+	NORMAL = bend_normal(NORMAL, vec3(-slope.x, 0.0, -slope.y) + detail_bend(p, vec3(1, 0, 0), vec3(0, 0, 1)) * (1.0 - water), VIEW_MATRIX);
 	ALBEDO = color;
-	ROUGHNESS = roughness;
+	ROUGHNESS = mix(detail_rough(p, roughness), roughness, water);
 	SPECULAR = mix(0.5, 0.7, water);
 }

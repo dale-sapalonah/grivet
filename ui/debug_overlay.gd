@@ -49,7 +49,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _process(_delta: float) -> void:
-	var lines := PackedStringArray(["FPS %d" % Engine.get_frames_per_second()])
+	var lines := PackedStringArray(["FPS %d" % Engine.get_frames_per_second()] if Settings.get_value("show_fps") else [])
 	if Debug.show_watches:
 		for key: String in Debug.watches:
 			lines.append("%s: %s" % [key, Debug.watches[key]])

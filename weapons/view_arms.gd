@@ -104,10 +104,10 @@ func _hand_mesh(grip: Grip) -> ArrayMesh:
 	var r := grip.radius
 	var hand := MeshBaker.new()
 	# Back of the hand and palm: a flattened lump on the grip's palm side.
-	hand.add(B.sphere(1.0, 10), B.at(Vector3(side * (r + 0.015), -0.004, 0.012), Vector3.ZERO, Vector3(0.019, 0.05, 0.04)), glove)
+	hand.add(B.sphere(1.0, 12), B.at(Vector3(side * (r + 0.017), -0.004, 0.012), Vector3.ZERO, Vector3(0.023, 0.056, 0.046)), glove)
 	hand.add(B.box(Vector3(0.012, 0.07, 0.022)), B.at(Vector3(side * (r + 0.03), 0.0, -0.01)), pad)  # knuckle pad
 	# Fingers, index on top, curling round the front of the grip.
-	var fingers := [[0.027, 0.0108], [0.006, 0.0112], [-0.015, 0.0106], [-0.034, 0.0095]]
+	var fingers := [[0.029, 0.0122], [0.006, 0.0126], [-0.016, 0.012], [-0.037, 0.0108]]
 	for f in fingers.size():
 		var y: float = fingers[f][0]
 		var thickness: float = fingers[f][1]
@@ -132,13 +132,13 @@ func _hand_mesh(grip: Grip) -> ArrayMesh:
 		heel = Vector3(side * (r + 0.008), 0.03, r * 0.6 + 0.01)
 		thumb_mid = Vector3(side * r * 0.35, -0.01, r + 0.011)
 		thumb_tip = Vector3(side * r * 0.1, -0.055, r + 0.009)
-	_finger(hand, heel, thumb_mid, 0.012, glove)
-	_finger(hand, thumb_mid, thumb_tip, 0.011, glove)
+	_finger(hand, heel, thumb_mid, 0.0135, glove)
+	_finger(hand, thumb_mid, thumb_tip, 0.0125, glove)
 	# Glove cuff to the wrist, with its strap.
 	var wrist := grip.wrist
 	var cuff_from := Vector3(side * (r + 0.012), -0.035, 0.014)
-	_finger(hand, cuff_from, wrist, 0.026, glove)
-	hand.add(B.cylinder(0.029, 0.029, 0.018, 12), Transform3D(_along(wrist - cuff_from), cuff_from.lerp(wrist, 0.7)), pad)
+	_finger(hand, cuff_from, wrist, 0.031, glove)
+	hand.add(B.cylinder(0.034, 0.034, 0.02, 14), Transform3D(_along(wrist - cuff_from), cuff_from.lerp(wrist, 0.7)), pad)
 	return hand.commit(_material)
 
 
@@ -149,9 +149,13 @@ func _forearm_mesh() -> ArrayMesh:
 	var skin := Color(tuning.skin_color, 0.0)
 	var sleeve := Color(1, 1, 1, 1)  # camouflage
 	var arm := MeshBaker.new()
-	arm.add(B.cylinder(0.034, 0.027, 0.42, 12), B.at(Vector3(0, 0.21, 0)), skin)
-	arm.add(B.cylinder(0.046, 0.044, 0.5, 12), B.at(Vector3(0, 0.67, 0)), sleeve)
-	arm.add(B.torus(0.038, 0.054), B.at(Vector3(0, 0.43, 0), Vector3.ZERO, Vector3(1, 1.6, 1)), sleeve)  # rolled cuff
+	# A working forearm: slim at the wrist, swelling with muscle towards the
+	# elbow, slightly flattened; then the rolled sleeve over it.
+	arm.add(B.lathe(PackedVector2Array([Vector2(-0.02, 0.031), Vector2(0.08, 0.035), Vector2(0.2, 0.043),
+			Vector2(0.34, 0.051), Vector2(0.46, 0.054), Vector2(0.55, 0.053)]), 16), B.at(Vector3.ZERO, Vector3.ZERO, Vector3(1, 1, 0.84)), skin)
+	arm.add(B.lathe(PackedVector2Array([Vector2(0.5, 0.058), Vector2(0.6, 0.064), Vector2(0.8, 0.066), Vector2(1.0, 0.068)]), 16),
+			B.at(Vector3.ZERO, Vector3.ZERO, Vector3(1, 1, 0.9)), sleeve)
+	arm.add(B.torus(0.05, 0.072), B.at(Vector3(0, 0.52, 0), Vector3.ZERO, Vector3(1, 1.5, 0.9)), sleeve)  # rolled cuff
 	return arm.commit(_material)
 
 

@@ -93,6 +93,7 @@ func _text(text: String, at: Vector3, normal: Vector3, height: float, color: Col
 	label.shaded = true
 	label.double_sided = false
 	label.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	label.visibility_range_end = 30.0  # each label is a draw call
 	label.position = at
 	label.basis = Basis.looking_at(-normal)
 	add_child(label)

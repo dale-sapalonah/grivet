@@ -45,6 +45,11 @@ void fragment() {
 			color *= mix(0.6, 1.0, smoothstep(0.008, 0.02, joint));
 		}
 	}
+	// Pitted, trowelled surface: small bumps that shade with the light.
+	vec2 slope = noise_slope(uv * 2.2, 0.02) * 0.01;
+	vec3 tangent_u = top ? vec3(1, 0, 0) : (n.x > 0.5 ? vec3(0, 0, 1) : vec3(1, 0, 0));
+	vec3 tangent_v = top ? vec3(0, 0, 1) : vec3(0, 1, 0);
+	NORMAL = bend_normal(NORMAL, -(tangent_u * slope.x + tangent_v * slope.y) + detail_bend(uv, tangent_u, tangent_v), VIEW_MATRIX);
 	ALBEDO = color;
-	ROUGHNESS = roughness;
+	ROUGHNESS = detail_rough(uv, roughness);
 }

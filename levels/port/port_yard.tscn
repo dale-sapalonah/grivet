@@ -9,6 +9,7 @@
 [ext_resource type="Shader" path="res://levels/port/materials/container.gdshader" id="shader_container"]
 [ext_resource type="Shader" path="res://levels/port/materials/crate.gdshader" id="shader_crate"]
 [ext_resource type="Shader" path="res://levels/port/materials/concrete.gdshader" id="shader_concrete"]
+[ext_resource type="Shader" path="res://levels/port/materials/dirt.gdshader" id="shader_dirt"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
 sky_top_color = Color(0.045, 0.06, 0.15, 1)
@@ -67,6 +68,50 @@ shader = ExtResource("shader_concrete")
 shader_parameter/noise_tex = ExtResource("6_noise")
 shader_parameter/base_color = Color(0.56, 0.54, 0.5, 1)
 
+[sub_resource type="ShaderMaterial" id="Road"]
+shader = ExtResource("shader_asphalt")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/lane_spacing = 1000.0
+shader_parameter/lane_offset = -65.0
+shader_parameter/puddles = 0.28
+
+[sub_resource type="ShaderMaterial" id="Dirt"]
+shader = ExtResource("shader_dirt")
+shader_parameter/noise_tex = ExtResource("6_noise")
+
+[sub_resource type="ShaderMaterial" id="Grass"]
+shader = ExtResource("shader_dirt")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/grass = 1.0
+
+[sub_resource type="ShaderMaterial" id="StoreTradeStoa"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.2, 0.36, 0.62, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.9
+
+[sub_resource type="ShaderMaterial" id="StoreKaiBar"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.85, 0.62, 0.16, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.9
+
+[sub_resource type="ShaderMaterial" id="StoreMarasinStoa"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.82, 0.83, 0.78, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.9
+
+[sub_resource type="ShaderMaterial" id="StoreSupamaket"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.66, 0.16, 0.12, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.9
+
 [sub_resource type="BoxShape3D" id="ShapeLowWallSW"]
 size = Vector3(3, 1, 0.4)
 
@@ -90,6 +135,28 @@ points = PackedVector3Array(-1, -0.55, -0.3, -1, -0.55, 0.3, -1, -0.47, 0.3, -1,
 
 [sub_resource type="BoxShape3D" id="ShapeLowWallN"]
 size = Vector3(4, 1, 0.4)
+
+[sub_resource type="BoxShape3D" id="ShapeLowWallTown1"]
+size = Vector3(0.4, 1, 4)
+
+[sub_resource type="BoxShape3D" id="ShapeLowWallTown2"]
+size = Vector3(0.4, 1, 4)
+
+[sub_resource type="BoxShape3D" id="ShapeLowWallTown3"]
+size = Vector3(4, 1, 0.4)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeBarrierRoad1"]
+points = PackedVector3Array(-1, -0.55, -0.3, -1, -0.55, 0.3, -1, -0.47, 0.3, -1, -0.25, 0.16, -1, 0.55, 0.09, -1, 0.55, -0.09, -1, -0.25, -0.16, -1, -0.47, -0.3, 1, -0.55, -0.3, 1, -0.55, 0.3, 1, -0.47, 0.3, 1, -0.25, 0.16, 1, 0.55, 0.09, 1, 0.55, -0.09, 1, -0.25, -0.16, 1, -0.47, -0.3)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeBarrierRoad2"]
+points = PackedVector3Array(-1, -0.55, -0.3, -1, -0.55, 0.3, -1, -0.47, 0.3, -1, -0.25, 0.16, -1, 0.55, 0.09, -1, 0.55, -0.09, -1, -0.25, -0.16, -1, -0.47, -0.3, 1, -0.55, -0.3, 1, -0.55, 0.3, 1, -0.47, 0.3, 1, -0.25, 0.16, 1, 0.55, 0.09, 1, 0.55, -0.09, 1, -0.25, -0.16, 1, -0.47, -0.3)
+
+[sub_resource type="BoxShape3D" id="TaxiShape"]
+size = Vector3(1.7, 1.44, 4.4)
+
+[sub_resource type="StandardMaterial3D" id="GoalPostWhite"]
+albedo_color = Color(0.85, 0.85, 0.82, 1)
+roughness = 0.5
 
 [sub_resource type="BoxShape3D" id="BusShape"]
 size = Vector3(2.05, 2.5, 7)
@@ -116,6 +183,7 @@ roughness = 0.55
 
 [node name="PortYard" type="Node3D"]
 script = ExtResource("1_level")
+bounds = AABB(-31, -0.5, -31, 129, 4, 62)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment")
@@ -127,8 +195,8 @@ light_energy = 1.25
 shadow_enabled = true
 shadow_bias = 0.04
 shadow_normal_bias = 1.5
-directional_shadow_mode = 1
-directional_shadow_max_distance = 60.0
+directional_shadow_mode = 0
+directional_shadow_max_distance = 50.0
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 26)
@@ -177,13 +245,23 @@ size = Vector3(2.44, 5.2, 67.1)
 material = SubResource("Container")
 metadata/surface = "steel"
 
-[node name="WallEast" type="CSGBox3D" parent="Navigation"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.22, 2.6, 0)
-instance_shader_parameters/box_size = Vector3(2.44, 5.2, 67.1)
-instance_shader_parameters/cells = Vector3(1, 2, 11)
+[node name="WallEastN" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.22, 2.6, -18.3)
+instance_shader_parameters/box_size = Vector3(2.44, 5.2, 30.5)
+instance_shader_parameters/cells = Vector3(1, 2, 5)
 instance_shader_parameters/seed = 4
 use_collision = true
-size = Vector3(2.44, 5.2, 67.1)
+size = Vector3(2.44, 5.2, 30.5)
+material = SubResource("Container")
+metadata/surface = "steel"
+
+[node name="WallEastS" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.22, 2.6, 18.3)
+instance_shader_parameters/box_size = Vector3(2.44, 5.2, 30.5)
+instance_shader_parameters/cells = Vector3(1, 2, 5)
+instance_shader_parameters/seed = 5
+use_collision = true
+size = Vector3(2.44, 5.2, 30.5)
 material = SubResource("Container")
 metadata/surface = "steel"
 
@@ -471,6 +549,158 @@ size = Vector3(1.2, 1.2, 1.2)
 material = SubResource("Crate")
 metadata/surface = "wood"
 
+[node name="TownDirtW" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46, -0.5, 0)
+use_collision = true
+size = Vector3(28, 1, 64)
+material = SubResource("Dirt")
+metadata/surface = "dirt"
+
+[node name="TownRoad" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65, -0.5, 0)
+use_collision = true
+size = Vector3(10, 1, 64)
+material = SubResource("Road")
+metadata/surface = "concrete"
+
+[node name="TownDirtE" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 84, -0.5, 0)
+use_collision = true
+size = Vector3(28, 1, 64)
+material = SubResource("Dirt")
+metadata/surface = "dirt"
+
+[node name="RugbyField" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 89.5, -0.49, 0)
+use_collision = true
+size = Vector3(15, 1, 36)
+material = SubResource("Grass")
+metadata/surface = "dirt"
+
+[node name="TownWallN" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66.99, 2.6, -32.22)
+instance_shader_parameters/box_size = Vector3(67.1, 5.2, 2.44)
+instance_shader_parameters/cells = Vector3(11, 2, 1)
+instance_shader_parameters/seed = 21
+use_collision = true
+size = Vector3(67.1, 5.2, 2.44)
+material = SubResource("Container")
+metadata/surface = "steel"
+
+[node name="TownWallS" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66.99, 2.6, 32.22)
+instance_shader_parameters/box_size = Vector3(67.1, 5.2, 2.44)
+instance_shader_parameters/cells = Vector3(11, 2, 1)
+instance_shader_parameters/seed = 22
+use_collision = true
+size = Vector3(67.1, 5.2, 2.44)
+material = SubResource("Container")
+metadata/surface = "steel"
+
+[node name="TownWallE" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 99.22, 2.6, 0)
+instance_shader_parameters/box_size = Vector3(2.44, 5.2, 67.1)
+instance_shader_parameters/cells = Vector3(1, 2, 11)
+instance_shader_parameters/seed = 23
+use_collision = true
+size = Vector3(2.44, 5.2, 67.1)
+material = SubResource("Container")
+metadata/surface = "steel"
+
+[node name="TradeStoa" type="CSGBox3D" parent="Navigation" groups=["store"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 1.7, -25)
+metadata/sign = "TRADE STOA"
+metadata/sign_color = Color(0.2, 0.36, 0.62, 1)
+use_collision = true
+size = Vector3(12, 3.4, 10)
+material = SubResource("StoreTradeStoa")
+metadata/surface = "concrete"
+
+[node name="KaiBar" type="CSGBox3D" parent="Navigation" groups=["store"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41, 1.7, 25)
+metadata/sign = "KAI BAR"
+metadata/sign_color = Color(0.85, 0.62, 0.16, 1)
+use_collision = true
+size = Vector3(10, 3.4, 10)
+material = SubResource("StoreKaiBar")
+metadata/surface = "concrete"
+
+[node name="MarasinStoa" type="CSGBox3D" parent="Navigation" groups=["store"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 77, 1.7, -25)
+metadata/sign = "MARASIN STOA"
+metadata/sign_color = Color(0.82, 0.83, 0.78, 1)
+use_collision = true
+size = Vector3(10, 3.4, 10)
+material = SubResource("StoreMarasinStoa")
+metadata/surface = "concrete"
+
+[node name="Supamaket" type="CSGBox3D" parent="Navigation" groups=["store"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78, 1.7, 25)
+metadata/sign = "SUPAMAKET"
+metadata/sign_color = Color(0.66, 0.16, 0.12, 1)
+use_collision = true
+size = Vector3(12, 3.4, 10)
+material = SubResource("StoreSupamaket")
+metadata/surface = "concrete"
+
+[node name="LowWallTown1" type="StaticBody3D" parent="Navigation" groups=["sandbag_wall"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55, 0.5, 0)
+metadata/surface = "sandbag"
+metadata/size = Vector3(0.4, 1, 4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/LowWallTown1"]
+shape = SubResource("ShapeLowWallTown1")
+
+[node name="LowWallTown2" type="StaticBody3D" parent="Navigation" groups=["sandbag_wall"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 75, 0.5, 2)
+metadata/surface = "sandbag"
+metadata/size = Vector3(0.4, 1, 4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/LowWallTown2"]
+shape = SubResource("ShapeLowWallTown2")
+
+[node name="LowWallTown3" type="StaticBody3D" parent="Navigation" groups=["sandbag_wall"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 0.5, -18)
+metadata/surface = "sandbag"
+metadata/size = Vector3(4, 1, 0.4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/LowWallTown3"]
+shape = SubResource("ShapeLowWallTown3")
+
+[node name="BarrierRoad1" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65, 0.55, -12)
+metadata/surface = "concrete"
+metadata/size = Vector3(2, 1.1, 0.6)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/BarrierRoad1"]
+shape = SubResource("ShapeBarrierRoad1")
+
+[node name="BarrierRoad2" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65, 0.55, 13)
+metadata/surface = "concrete"
+metadata/size = Vector3(2, 1.1, 0.6)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/BarrierRoad2"]
+shape = SubResource("ShapeBarrierRoad2")
+
+[node name="CrateTown1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52, 0.6, 22)
+instance_shader_parameters/box_size = Vector3(1.2, 1.2, 1.2)
+instance_shader_parameters/seed = 9
+use_collision = true
+size = Vector3(1.2, 1.2, 1.2)
+material = SubResource("Crate")
+metadata/surface = "wood"
+
+[node name="CrateTown2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.5, 0.6, -16)
+instance_shader_parameters/box_size = Vector3(1.2, 1.2, 1.2)
+instance_shader_parameters/seed = 10
+use_collision = true
+size = Vector3(1.2, 1.2, 1.2)
+material = SubResource("Crate")
+metadata/surface = "wood"
+
 [node name="PoleNW" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 4, -28)
 use_collision = true
@@ -527,6 +757,46 @@ metadata/surface = "steel"
 
 [node name="PoleSE" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 4, 29.6)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="StreetW1" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 59.4, 4, -22)
+metadata/arm = Vector3(1, 0, 0)  # over the road
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="StreetW2" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 59.4, 4, 6)
+metadata/arm = Vector3(1, 0, 0)  # over the road
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="StreetE1" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.6, 4, -8)
+metadata/arm = Vector3(-1, 0, 0)  # over the road
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="StreetE2" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.6, 4, 22)
+metadata/arm = Vector3(-1, 0, 0)  # over the road
 use_collision = true
 radius = 0.12
 height = 8.0
@@ -624,6 +894,33 @@ sides = 14
 material = SubResource("Drum1")
 metadata/surface = "steel"
 
+[node name="DrumT1" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 0.44, -10)
+use_collision = true
+radius = 0.29
+height = 0.88
+sides = 14
+material = SubResource("Drum2")
+metadata/surface = "steel"
+
+[node name="DrumT2" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.6, 0.44, -10.3)
+use_collision = true
+radius = 0.29
+height = 0.88
+sides = 14
+material = SubResource("Drum0")
+metadata/surface = "steel"
+
+[node name="DrumT3" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72, 0.44, 10)
+use_collision = true
+radius = 0.29
+height = 0.88
+sides = 14
+material = SubResource("Drum1")
+metadata/surface = "steel"
+
 [node name="PmvRoute17" type="StaticBody3D" parent="Navigation" groups=["pmv_bus"]]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -22, 0, 27)
 metadata/surface = "vehicle"
@@ -648,24 +945,274 @@ metadata/headlights = false
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
 shape = SubResource("BusShape")
 
+[node name="Taxi1" type="StaticBody3D" parent="Navigation" groups=["taxi"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, -9)
+metadata/surface = "vehicle"
+metadata/plate = "T 9925"
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Taxi1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
+shape = SubResource("TaxiShape")
+
+[node name="Taxi2" type="StaticBody3D" parent="Navigation" groups=["taxi"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, 9)
+metadata/surface = "vehicle"
+metadata/plate = "T 9938"
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Taxi2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
+shape = SubResource("TaxiShape")
+
+[node name="Taxi3" type="StaticBody3D" parent="Navigation" groups=["taxi"]]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 47, 0, -15)
+metadata/surface = "vehicle"
+metadata/plate = "T 9917"
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Taxi3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
+shape = SubResource("TaxiShape")
+
+[node name="Taxi4" type="StaticBody3D" parent="Navigation" groups=["taxi"]]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 48, 0, 14)
+metadata/surface = "vehicle"
+metadata/plate = "T 5879"
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Taxi4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
+shape = SubResource("TaxiShape")
+
+[node name="Taxi5" type="StaticBody3D" parent="Navigation" groups=["taxi"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62, 0, -27)
+metadata/surface = "vehicle"
+metadata/plate = "T 4110"
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Taxi5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
+shape = SubResource("TaxiShape")
+
+[node name="PostsNL" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 86.7, 3.5, -17.5)
+use_collision = true
+radius = 0.08
+height = 7.0
+sides = 8
+material = SubResource("GoalPostWhite")
+metadata/surface = "steel"
+
+[node name="PostsNR" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 92.3, 3.5, -17.5)
+use_collision = true
+radius = 0.08
+height = 7.0
+sides = 8
+material = SubResource("GoalPostWhite")
+metadata/surface = "steel"
+
+[node name="PostsNBar" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 89.5, 3, -17.5)
+use_collision = true
+size = Vector3(5.6, 0.1, 0.1)
+material = SubResource("GoalPostWhite")
+metadata/surface = "steel"
+
+[node name="PostsSL" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 86.7, 3.5, 17.5)
+use_collision = true
+radius = 0.08
+height = 7.0
+sides = 8
+material = SubResource("GoalPostWhite")
+metadata/surface = "steel"
+
+[node name="PostsSR" type="CSGCylinder3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 92.3, 3.5, 17.5)
+use_collision = true
+radius = 0.08
+height = 7.0
+sides = 8
+material = SubResource("GoalPostWhite")
+metadata/surface = "steel"
+
+[node name="PostsSBar" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 89.5, 3, 17.5)
+use_collision = true
+size = Vector3(5.6, 0.1, 0.1)
+material = SubResource("GoalPostWhite")
+metadata/surface = "steel"
+
 [node name="EnemySpawns" type="Node3D" parent="."]
 
 [node name="RiflemanWest" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -10, 0, -21)
 metadata/enemy = "rifleman"
+metadata/level = 1
 
 [node name="RiflemanCentre" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2, 0, -24)
 metadata/enemy = "rifleman"
+metadata/level = 1
 
 [node name="RiflemanBuilding" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 16, 0, -18)
 metadata/enemy = "rifleman"
+metadata/level = 1
 
 [node name="RusherWest" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -22, 0, -24)
 metadata/enemy = "rusher"
+metadata/level = 1
 
 [node name="RusherEast" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 25, 0, -10)
 metadata/enemy = "rusher"
+metadata/level = 1
+
+[node name="L2Rifle1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 52, 0, -26)
+metadata/enemy = "rifleman"
+metadata/level = 2
+
+[node name="L2Rifle2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 58, 0, 22)
+metadata/enemy = "rifleman"
+metadata/level = 2
+
+[node name="L2Rifle3" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 64, 0, -4)
+metadata/enemy = "rifleman"
+metadata/level = 2
+
+[node name="L2Rusher1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 56, 0, -12)
+metadata/enemy = "rusher"
+metadata/level = 2
+
+[node name="L2Rusher2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 52, 0, 16)
+metadata/enemy = "rusher"
+metadata/level = 2
+
+[node name="L2Machete1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 66, 0, 10)
+metadata/enemy = "machete"
+metadata/level = 2
+
+[node name="L2Machete2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 64, 0, -20)
+metadata/enemy = "machete"
+metadata/level = 2
+
+[node name="L3Rifle1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 76, 0, -15)
+metadata/enemy = "rifleman"
+metadata/level = 3
+
+[node name="L3Rifle2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 78, 0, 15)
+metadata/enemy = "rifleman"
+metadata/level = 3
+
+[node name="L3Rifle3" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 90, 0, -16)
+metadata/enemy = "rifleman"
+metadata/level = 3
+
+[node name="L3Rifle4" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 94, 0, 16)
+metadata/enemy = "rifleman"
+metadata/level = 3
+
+[node name="L3Rusher1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 70, 0, -5)
+metadata/enemy = "rusher"
+metadata/level = 3
+
+[node name="L3Rusher2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 86, 0, 0)
+metadata/enemy = "rusher"
+metadata/level = 3
+
+[node name="L3Machete1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 60, 0, 24)
+metadata/enemy = "machete"
+metadata/level = 3
+
+[node name="L3Machete2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 88, 0, -6)
+metadata/enemy = "machete"
+metadata/level = 3
+
+[node name="L3Machete3" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 92, 0, 6)
+metadata/enemy = "machete"
+metadata/level = 3
+
+[node name="L3Machete4" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 66, 0, -26)
+metadata/enemy = "machete"
+metadata/level = 3
+
+[node name="L4Rifle1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -10, 0, -21)
+metadata/enemy = "rifleman"
+metadata/level = 4
+
+[node name="L4Rifle2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2, 0, -24)
+metadata/enemy = "rifleman"
+metadata/level = 4
+
+[node name="L4Rifle3" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 16, 0, -18)
+metadata/enemy = "rifleman"
+metadata/level = 4
+
+[node name="L4Rifle4" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 76, 0, -15)
+metadata/enemy = "rifleman"
+metadata/level = 4
+
+[node name="L4Rifle5" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 90, 0, 16)
+metadata/enemy = "rifleman"
+metadata/level = 4
+
+[node name="L4Rusher1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -22, 0, -24)
+metadata/enemy = "rusher"
+metadata/level = 4
+
+[node name="L4Rusher2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 25, 0, -10)
+metadata/enemy = "rusher"
+metadata/level = 4
+
+[node name="L4Rusher3" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 70, 0, 5)
+metadata/enemy = "rusher"
+metadata/level = 4
+
+[node name="L4Machete1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -20, 0, 0)
+metadata/enemy = "machete"
+metadata/level = 4
+
+[node name="L4Machete2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 6, 0, -14)
+metadata/enemy = "machete"
+metadata/level = 4
+
+[node name="L4Machete3" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 56, 0, -12)
+metadata/enemy = "machete"
+metadata/level = 4
+
+[node name="L4Machete4" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 88, 0, -6)
+metadata/enemy = "machete"
+metadata/level = 4
+
+[node name="L4Machete5" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 64, 0, 20)
+metadata/enemy = "machete"
+metadata/level = 4

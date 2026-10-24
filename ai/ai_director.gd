@@ -10,7 +10,8 @@ signal grenade_thrown(soldier: Soldier)
 
 const SETTINGS := preload("res://data/ai/ai_settings.tres")
 const SOLDIER_SCENE := "res://ai/soldier.tscn"
-const PROFILES := {"rifleman": "res://data/ai/rifleman.tres", "rusher": "res://data/ai/rusher.tres"}
+const PROFILES := {"rifleman": "res://data/ai/rifleman.tres", "rusher": "res://data/ai/rusher.tres",
+		"machete": "res://data/ai/machete.tres"}
 const GRENADE := "res://data/grenades/frag.tres"
 
 var settings: AiSettings = SETTINGS
@@ -87,9 +88,26 @@ func unregister(soldier: Soldier) -> void:
 
 
 ## Spawns an enemy of `kind` ("rifleman", "rusher") at `at` under `parent`.
-func spawn(kind: String, at: Transform3D, parent: Node) -> Soldier:
+## The player respawned elsewhere: everyone loses track of them (still wary)
+## and has to find them again.
+func forget_target() -> void:
+	for soldier in soldiers:
+		soldier.forget_target()
+
+
+## `stage`, when given, sharpens the soldier: a copy of its profile with the
+## stage's aim, reaction, damage and awareness multipliers applied.
+func spawn(kind: String, at: Transform3D, parent: Node, stage: CampaignStage = null) -> Soldier:
 	var soldier: Soldier = load(SOLDIER_SCENE).instantiate()
-	soldier.profile = load(PROFILES[kind])
+	var profile: EnemyProfile = load(PROFILES[kind])
+	if stage != null:
+		profile = profile.duplicate()
+		profile.aim_error_degrees *= stage.aim_error_multiplier
+		profile.aim_error_per_10m *= stage.aim_error_multiplier
+		profile.reaction_time *= stage.reaction_multiplier
+		profile.damage_multiplier *= stage.damage_multiplier
+		profile.awareness_gain *= stage.awareness_multiplier
+	soldier.profile = profile
 	parent.add_child(soldier)
 	soldier.global_transform = at
 	return soldier

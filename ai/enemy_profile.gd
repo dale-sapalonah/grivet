@@ -7,17 +7,29 @@ extends Resource
 enum Role {
 	RIFLEMAN,  ## Holds cover at range, suppresses, flanks in pairs.
 	RUSHER,    ## Closes distance through cover while others pin the target.
+	MELEE,     ## Machete: sprints in weaving and strikes; ducks only when pinned.
+}
+
+enum Outfit {
+	MILITARY,  ## Camouflage uniform, helmet, plate carrier, boots.
+	CIVILIAN,  ## T-shirt, shorts, sandals, a bilum across the chest.
 }
 
 @export var display_name := "Rifleman"
 @export var role: Role = Role.RIFLEMAN
 @export var weapon: WeaponDefinition
 @export var health: HealthProfile
+@export var outfit: Outfit = Outfit.MILITARY
 @export var uniform_color := Color(0.33, 0.36, 0.28)
+## Civilian outfits pick a shirt from these per soldier (uniform_color unused).
+@export var shirt_colors: PackedColorArray = PackedColorArray()
+@export var shorts_color := Color(0.12, 0.13, 0.16)
 @export var gear_color := Color(0.14, 0.15, 0.13)
 ## Second and third camouflage colours (uniform_color is the first).
 @export var camo_b := Color(0.22, 0.24, 0.17)
 @export var camo_c := Color(0.45, 0.42, 0.32)
+## Melanesian skin tones by default: the fight is in Port Moresby.
+@export var skin_color := Color(0.33, 0.22, 0.16)
 ## Face covered (gear colour) instead of bare skin.
 @export var balaclava := false
 

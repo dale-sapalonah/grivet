@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="Campaign" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://levels/campaign.gd" id="1_campaign"]
+[ext_resource type="Script" path="res://levels/campaign_stage.gd" id="2_stage"]
+
+[sub_resource type="Resource" id="Stage1"]
+script = ExtResource("2_stage")
+title = "THE WHARF"
+subtitle = "Clear the container yard"
+marker_level = 1
+player_start = Vector3(0, 0, 26)
+player_yaw_degrees = 0.0
+aim_error_multiplier = 1.0
+reaction_multiplier = 1.0
+damage_multiplier = 1.0
+awareness_multiplier = 1.0
+
+[sub_resource type="Resource" id="Stage2"]
+script = ExtResource("2_stage")
+title = "TAXI RANK"
+subtitle = "They're holed up around the taxi rank"
+marker_level = 2
+player_start = Vector3(24, 0, 0)
+player_yaw_degrees = -90.0
+aim_error_multiplier = 0.92
+reaction_multiplier = 0.9
+damage_multiplier = 1.05
+awareness_multiplier = 1.1
+
+[sub_resource type="Resource" id="Stage3"]
+script = ExtResource("2_stage")
+title = "BUAI MARKET"
+subtitle = "Machete gangs at the market"
+marker_level = 3
+player_start = Vector3(40, 0, 0)
+player_yaw_degrees = -90.0
+aim_error_multiplier = 0.82
+reaction_multiplier = 0.8
+damage_multiplier = 1.12
+awareness_multiplier = 1.2
+
+[sub_resource type="Resource" id="Stage4"]
+script = ExtResource("2_stage")
+title = "ALL OUT"
+subtitle = "Everyone, everywhere. Hold on."
+marker_level = 4
+player_start = Vector3(0, 0, 26)
+player_yaw_degrees = 0.0
+aim_error_multiplier = 0.72
+reaction_multiplier = 0.72
+damage_multiplier = 1.2
+awareness_multiplier = 1.3
+
+[resource]
+script = ExtResource("1_campaign")
+stages = Array[ExtResource("2_stage")]([SubResource("Stage1"), SubResource("Stage2"), SubResource("Stage3"), SubResource("Stage4")])

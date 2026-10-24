@@ -6,7 +6,7 @@ extends Resource
 enum FireMode { AUTO, SEMI, PUMP }
 enum ReloadMode { MAGAZINE, PER_SHELL }
 ## Which placeholder shape set the view model builds.
-enum ViewStyle { RIFLE, SHOTGUN, PISTOL }
+enum ViewStyle { RIFLE, SHOTGUN, PISTOL, MACHETE }
 
 @export var id := ""
 @export var display_name := ""
@@ -93,6 +93,15 @@ enum ViewStyle { RIFLE, SHOTGUN, PISTOL }
 @export var furniture_color := Color(0.1, 0.1, 0.1)
 @export var sway_amount := 0.0006
 @export var sway_limit := 0.03
+
+@export_group("Melee")
+## Above zero: a blade, not a gun. Damage per strike (before zone multipliers).
+@export var melee_damage := 0.0
+## Reach (m) from the wielder's centre at which a strike lands.
+@export var melee_range := 1.7
+## Windup before the blade lands, and recovery after (s).
+@export var melee_windup := 0.32
+@export var melee_recover := 0.7
 
 @export_group("Casings")
 @export var casing_ejects := true

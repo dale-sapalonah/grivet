@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "machete"
+display_name = "Machete"
+fire_mode = 1
+magazine_size = 1
+reserve_ammo = 0
+chamber_round = false
+damage = 0.0
+view_style = 3
+melee_damage = 45.0
+melee_range = 1.75
+melee_windup = 0.32
+melee_recover = 0.7
+casing_ejects = false

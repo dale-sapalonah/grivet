@@ -89,6 +89,15 @@ func wanted_action(facts: Facts, profile: EnemyProfile) -> Action:
 	if not facts.target_visible and facts.time_since_seen > profile.lose_target_time:
 		return Action.INVESTIGATE  # contact went stale: hunt the last known position
 
+	if profile.role == EnemyProfile.Role.MELEE:
+		# Machete: runs straight in (weaving under fire); ducks behind cover
+		# only when pinned and still far, and never stops to reload.
+		if facts.suppression > profile.suppression_tolerance and facts.distance > settings.point_blank_range * 2.0 				and not facts.in_cover:
+			return Action.TAKE_COVER
+		if facts.in_cover and facts.suppression > profile.suppression_tolerance:
+			return Action.ENGAGE  # hold, then go again once the fire lets up
+		return Action.CHARGE
+
 	var rusher := profile.role == EnemyProfile.Role.RUSHER
 	if facts.reloading or facts.ammo_fraction <= 0.0:
 		return Action.RELOAD if facts.in_cover else Action.TAKE_COVER

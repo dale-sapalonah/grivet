@@ -131,7 +131,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		var motion := (event as InputEventMouseMotion).relative
 		rotate_y(-motion.x * sensitivity)
 		var limit := deg_to_rad(camera_tuning.pitch_limit_degrees)
-		_pitch = clampf(_pitch - motion.y * sensitivity, -limit, limit)
+		var vertical := -motion.y if not camera_tuning.invert_y else motion.y
+		_pitch = clampf(_pitch + vertical * sensitivity, -limit, limit)
 		_head.rotation.x = _pitch
 	elif event.is_action_pressed("pause"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -141,6 +142,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Out of the world (a gap in a level): put the player back rather than
+	# letting them fall forever.
+	if global_position.y < tuning.fall_reset_height and not dead:
+		respawn()
+		return
 	if dead:
 		_update_death(delta)
 		return
@@ -210,8 +216,17 @@ func _update_death(delta: float) -> void:
 		respawn()
 
 
+## Where respawns (and a new stage) put the player.
+func set_spawn(at: Transform3D) -> void:
+	_spawn = at
+
+
 func respawn() -> void:
 	dead = false
+	# The level may know somewhere safer than the fixed spawn (away from the fight).
+	var picker := get_tree().get_first_node_in_group("spawn_picker")
+	if picker != null and picker.has_method("pick_spawn"):
+		_spawn = picker.pick_spawn(_spawn)
 	global_transform = _spawn
 	velocity = Vector3.ZERO
 	model = MovementModel.new(tuning)
@@ -221,6 +236,8 @@ func respawn() -> void:
 	_head.rotation.z = 0.0
 	set_look(_spawn.basis.get_euler().y, 0.0)
 	health.revive()
+	health.protect(tuning.spawn_protection_seconds)
+	AI.forget_target()
 
 
 func _move_normally(delta: float) -> void:

@@ -5,6 +5,9 @@
 [resource]
 script = ExtResource("1")
 perception_hz = 8.0
+think_hz = 30.0
+pose_lod_distance = 40.0
+shadow_lod_distance = 25.0
 share_radius = 30.0
 stance_visibility_stand = 1.0
 stance_visibility_crouch = 0.65
