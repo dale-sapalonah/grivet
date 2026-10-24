@@ -187,13 +187,21 @@ func _dress_pole(pole: Node3D) -> void:
 
 ## Paints one MARKINGS entry onto its box's face.
 func _paint_marking(marking: Array) -> void:
-	var box := get_node_or_null("Navigation/" + str(marking[0])) as CSGBox3D
+	var box := get_node_or_null("Navigation/" + str(marking[0])) as Node3D
 	if box == null:
 		push_warning("marking on missing box %s" % marking[0])
 		return
+	# CSG boxes know their size; static bodies (sandbags, barriers) carry it as metadata.
+	var size: Vector3 = (box as CSGBox3D).size if box is CSGBox3D else box.get_meta("size", Vector3.ZERO)
 	var normal: Vector3 = marking[1]
 	var basis := Basis.looking_at(-normal)
-	var face := box.global_position + normal * (absf(normal.dot(box.size)) * 0.5 + 0.012)
+	var half_depth := absf(normal.dot(size)) * 0.5
+	if box.is_in_group("jersey_barrier"):
+		# The face slopes in: paint at the profile's width at that height, leaning with it.
+		var height := float(marking[3]) - (box.global_position.y - size.y * 0.5)
+		half_depth = lerpf(0.16, 0.09, clampf((height - 0.3) / 0.8, 0.0, 1.0))
+		basis = basis * Basis(Vector3.RIGHT, -atan2(0.07, 0.8))
+	var face := box.global_position + normal * (half_depth + 0.012)
 	face += basis.x * float(marking[2])
 	face.y = marking[3]
 	var label := Label3D.new()

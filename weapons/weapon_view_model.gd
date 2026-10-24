@@ -16,10 +16,11 @@ extends Node3D
 ## the finger on the trigger, left hand on the handguard, the pump (riding with
 ## it) or cupping the pistol grip, reaching for the magazine during reloads.
 
-## Support hand under a barrel-axis part (handguard, pump): palm below (hand
-## +X = gun down), hand axis along the barrel (+Y = gun back), fingers round
-## the right side, thumb over the top.
-const SUPPORT_BASIS := Basis(Vector3(0, -1, 0), Vector3(0, 0, 1), Vector3(-1, 0, 0))
+## Support hand under a barrel-axis part (handguard, pump): palm on the
+## lower left (hand +X), hand axis along the barrel (+Y = gun back), fingers
+## curling under to the right side (hidden behind the barrel), thumb forward
+## along the upper left where the shooter sees it (hand +Z).
+const SUPPORT_BASIS := Basis(Vector3(-0.7071, -0.7071, 0), Vector3(0, 0, 1), Vector3(-0.7071, 0.7071, 0))
 
 var tuning: ViewModelTuning
 
@@ -262,7 +263,7 @@ func _build_rifle(definition: WeaponDefinition) -> Vector3:
 	_left_on_pump = false
 	_magazine_hold = Transform3D(Basis(Vector3.UP, PI), Vector3(0, -magazine.y * 0.55, -0.01))
 	_grips = [ViewArms.Grip.new(0.018, Vector3(0.03, -0.075, 0.03), false, true),
-			ViewArms.Grip.new(receiver.x * 0.62, Vector3(receiver.x * 0.62 + 0.03, 0.05, 0.0))]
+			ViewArms.Grip.support(receiver.x * 0.62, Vector3(receiver.x * 0.62 + 0.03, 0.05, 0.0))]
 
 	# Stock: buffer tube, cheek riser, butt.
 	_cylinder(_gun, 0.014, 0.16, Vector3(0, bore_y - 0.01, back + 0.08), _dark)
@@ -340,7 +341,7 @@ func _build_shotgun(definition: WeaponDefinition) -> Vector3:
 	_left_on_pump = true
 	_loading_hold = Transform3D(SUPPORT_BASIS, Vector3(0, box_bottom - 0.03, front + 0.04))
 	_grips = [ViewArms.Grip.new(0.024, Vector3(0.03, -0.078, -0.022)),
-			ViewArms.Grip.new(0.026, Vector3(0.056, 0.05, 0.0))]
+			ViewArms.Grip.support(0.026, Vector3(0.056, 0.05, 0.0))]
 
 	# Wooden wrist and stock dropping toward the butt, with a dark pad.
 	_box(_gun, Vector3(receiver.x * 0.8, 0.05, 0.1), Vector3(0, box_y - 0.012, back + 0.045), _furniture, Vector3(14, 0, 0))

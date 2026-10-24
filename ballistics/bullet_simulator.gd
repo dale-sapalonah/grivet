@@ -54,6 +54,7 @@ func _ready() -> void:
 	add_child(tracers)
 	add_child(_effects)
 	_effects.setup(settings)
+	get_tree().scene_changed.connect(clear)
 	Debug.register("ballistics.trace", _cmd_trace,
 			"Toggle persistent flight paths and a log line per hit.")
 
@@ -98,7 +99,7 @@ func _process(_delta: float) -> void:
 
 ## Moves one bullet through one tick. Returns false when it stops.
 func _advance(bullet: Bullet, space: PhysicsDirectSpaceState3D, delta: float) -> bool:
-	if bullet.shooter != null and not is_instance_valid(bullet.shooter):
+	if not is_instance_valid(bullet.shooter):  # a freed object compares equal to null
 		bullet.shooter = null  # the shooter died with rounds still in flight
 	var stepped := BallisticsMath.step(bullet.position, bullet.velocity,
 			settings.gravity * bullet.weapon.gravity_scale, delta)
@@ -107,7 +108,7 @@ func _advance(bullet: Bullet, space: PhysicsDirectSpaceState3D, delta: float) ->
 	bullet.velocity = stepped[1]
 	var tick_start := from
 	var alive := _fly(bullet, space, from, to)
-	bullet_moved.emit(tick_start, bullet.position, bullet.shooter)
+	bullet_moved.emit(tick_start, bullet.position, _live_shooter(bullet))
 	return alive
 
 
@@ -154,7 +155,7 @@ func _hit_surface(bullet: Bullet, hit: Dictionary, direction: Vector3,
 	if target != null:
 		var info := {
 			"target": target,
-			"shooter": bullet.shooter,
+			"shooter": _live_shooter(bullet),
 			"weapon": bullet.weapon,
 			"damage": BallisticsMath.damage_at(bullet.weapon, bullet.travelled) * bullet.damage_scale,
 			"distance": bullet.travelled,
@@ -234,9 +235,23 @@ func _report(position: Vector3, normal: Vector3, direction: Vector3, surface: Su
 		kind: String, thickness: float, solid: bool, energy: float, bullet: Bullet) -> void:
 	var info := {"position": position, "normal": normal, "direction": direction,
 			"surface": surface.id, "kind": kind, "thickness": thickness, "solid": solid,
-			"energy": energy, "shooter": bullet.shooter, "weapon": bullet.weapon}
+			"energy": energy, "shooter": _live_shooter(bullet), "weapon": bullet.weapon}
 	impact.emit(info)
 	_effects.handle_impact(surface, info)
+
+
+## The bullet's shooter, or null once it is gone (died, or its level was
+## freed): checked at every report, since a hit earlier in the same tick can
+## free it, and listeners must never be handed a freed object.
+func _live_shooter(bullet: Bullet) -> Node:
+	if not is_instance_valid(bullet.shooter):  # a freed object compares equal to null
+		bullet.shooter = null
+	return bullet.shooter
+
+
+## Drops every round in flight (their world is gone: the scene changed).
+func clear() -> void:
+	_bullets.clear()
 
 
 ## The SurfaceMaterial for a collider (its `surface` metadata, or a parent's).

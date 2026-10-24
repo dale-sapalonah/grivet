@@ -16,6 +16,11 @@ class Grip:
 	var radius := 0.02
 	var mirrored := false
 	var trigger_finger := false
+	## How far round the grip the fingertips reach (degrees from the palm).
+	var curl_degrees := 192.0
+	## Thumb laid forward along the grip on the palm's near side (a support
+	## hand under a handguard) instead of wrapped round the back.
+	var thumb_along := false
 	## Wrist point in the hand's own frame (where the forearm starts).
 	var wrist := Vector3.ZERO
 
@@ -24,6 +29,15 @@ class Grip:
 		wrist = wrist_point
 		mirrored = is_mirrored
 		trigger_finger = has_trigger_finger
+
+
+	## A support hand under a barrel-axis part: fingers curl under to the far
+	## side and stop there, thumb forward along the near side.
+	static func support(grip_radius: float, wrist_point: Vector3) -> Grip:
+		var grip := Grip.new(grip_radius, wrist_point)
+		grip.curl_degrees = 130.0
+		grip.thumb_along = true
+		return grip
 
 
 const BODY_SHADER := preload("res://ai/soldier_body.gdshader")
@@ -105,13 +119,19 @@ func _hand_mesh(grip: Grip) -> ArrayMesh:
 			_finger(hand, root, knuckle, thickness, glove)
 			_finger(hand, knuckle, tip, thickness * 0.92, glove)
 			continue
-		var bend := [12.0, 78.0, 140.0, 192.0]
+		var reach := grip.curl_degrees
+		var bend := [12.0, reach * 0.4, reach * 0.72, reach]
 		for k in 3:
 			_finger(hand, _wrap(r, side, bend[k], y), _wrap(r, side, bend[k + 1], y - 0.002 * k), thickness * (1.0 - 0.06 * k), glove)
-	# Thumb: from the heel round the back to the far side, pointing forward.
+	# Thumb: from the heel round the back to the far side, pointing forward;
+	# or laid forward (towards −Y) along the near side.
 	var heel := Vector3(side * (r + 0.006), -0.03, r * 0.8 + 0.012)
 	var thumb_mid := Vector3(-side * r * 0.4, 0.0, r + 0.012)
 	var thumb_tip := Vector3(-side * (r + 0.006), 0.02, r * 0.1)
+	if grip.thumb_along:
+		heel = Vector3(side * (r + 0.008), 0.03, r * 0.6 + 0.01)
+		thumb_mid = Vector3(side * r * 0.35, -0.01, r + 0.011)
+		thumb_tip = Vector3(side * r * 0.1, -0.055, r + 0.009)
 	_finger(hand, heel, thumb_mid, 0.012, glove)
 	_finger(hand, thumb_mid, thumb_tip, 0.011, glove)
 	# Glove cuff to the wrist, with its strap.

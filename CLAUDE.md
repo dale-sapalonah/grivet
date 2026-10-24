@@ -45,6 +45,8 @@ data/ — tuning Resources   levels/ — scenes   assets/ — imported art/audio
 - The test runner fails any test that raises an engine or script error, not just failed asserts.
 - Judge probes by their exit code, not just their PASS line: an engine crash at exit (exit 139) happens after the report prints.
 - Every WorkerThreadPool task must be waited on (wait_for_task_completion, e.g. in _exit_tree) or the engine segfaults at exit; worker functions stay static and hand results to the main thread with call_deferred.
+- Level-cycle crash probe (windowed: fights, frees the level mid-fight like `map`, quits): `$GODOT --path . res://tests/probes/level_cycle.tscn` (exit 0 and no SCRIPT ERROR lines = pass).
+- A freed object compares equal to null in Godot 4: test references that may outlive their target with `is_instance_valid(x)` alone, never `x != null and not is_instance_valid(x)`.
 - AI alerts go through Soldier._alert() (awareness 1 + the alerted flag): setting awareness alone is undone by the next perception decay.
 - Weapons are data: data/weapons/<id>.tres (WeaponDefinition). Surfaces: data/ballistics/surfaces/*.tres, mapped by id in ballistics_settings.tres; tag colliders with metadata `surface = "<id>"`.
 - `Ballistics` autoload simulates all bullets; anything with `apply_damage(hit: Dictionary)` takes damage.
