@@ -1,0 +1,36 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://ai/soldier.gd" id="1_soldier"]
+[ext_resource type="Script" path="res://damage/health.gd" id="2_health"]
+[ext_resource type="Script" path="res://damage/hitbox.gd" id="3_hitbox"]
+[ext_resource type="Script" path="res://ai/mannequin.gd" id="4_mannequin"]
+
+[sub_resource type="CapsuleShape3D" id="Body"]
+radius = 0.3
+height = 1.8
+
+[node name="Soldier" type="CharacterBody3D" groups=["enemies"]]
+collision_layer = 4
+collision_mask = 7
+floor_snap_length = 0.3
+script = ExtResource("1_soldier")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("Body")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2_health")
+
+[node name="Hitbox" type="AnimatableBody3D" parent="." node_paths=PackedStringArray("health")]
+script = ExtResource("3_hitbox")
+health = NodePath("../Health")
+
+[node name="Mannequin" type="Node3D" parent="."]
+script = ExtResource("4_mannequin")
+
+[node name="ShotAudio" type="AudioStreamPlayer3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+unit_size = 20.0
+max_distance = 300.0
+max_polyphony = 4

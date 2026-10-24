@@ -9,6 +9,21 @@
 [ext_resource type="Resource" path="res://data/weapons/hammerhead.tres" id="7_hammerhead"]
 [ext_resource type="Resource" path="res://data/weapons/vanta.tres" id="8_vanta"]
 [ext_resource type="Resource" path="res://data/weapons/view_model_tuning.tres" id="9_view"]
+[ext_resource type="Script" path="res://damage/health.gd" id="10_health"]
+[ext_resource type="Resource" path="res://data/damage/player.tres" id="11_profile"]
+[ext_resource type="Script" path="res://damage/hitbox.gd" id="12_hitbox"]
+[ext_resource type="Resource" path="res://data/grenades/frag.tres" id="13_frag"]
+
+[sub_resource type="SphereShape3D" id="HeadZone"]
+radius = 0.12
+
+[sub_resource type="CapsuleShape3D" id="TorsoZone"]
+radius = 0.2
+height = 0.65
+
+[sub_resource type="CapsuleShape3D" id="LegsZone"]
+radius = 0.17
+height = 0.85
 
 [sub_resource type="CapsuleShape3D" id="Capsule"]
 radius = 0.3
@@ -24,7 +39,9 @@ size = Vector3(0.14, 0.85, 0.16)
 albedo_color = Color(0.22, 0.24, 0.19, 1)
 roughness = 0.9
 
-[node name="Player" type="CharacterBody3D"]
+[node name="Player" type="CharacterBody3D" groups=["player"]]
+collision_layer = 2
+collision_mask = 5
 script = ExtResource("1_player")
 tuning = ExtResource("3_move")
 camera_tuning = ExtResource("4_cam")
@@ -36,6 +53,29 @@ shape = SubResource("Capsule")
 [node name="StepRay" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0.35, 0)
 shape = SubResource("StepRayShape")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("10_health")
+profile = ExtResource("11_profile")
+
+[node name="Hitbox" type="AnimatableBody3D" parent="." node_paths=PackedStringArray("health")]
+script = ExtResource("12_hitbox")
+health = NodePath("../Health")
+
+[node name="Head" type="CollisionShape3D" parent="Hitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.68, 0)
+shape = SubResource("HeadZone")
+metadata/zone = "head"
+
+[node name="Torso" type="CollisionShape3D" parent="Hitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+shape = SubResource("TorsoZone")
+metadata/zone = "torso"
+
+[node name="Legs" type="CollisionShape3D" parent="Hitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+shape = SubResource("LegsZone")
+metadata/zone = "legs"
 
 [node name="Head" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0)
@@ -52,6 +92,7 @@ near = 0.02
 script = ExtResource("5_holder")
 loadout = [ExtResource("6_kestrel"), ExtResource("7_hammerhead"), ExtResource("8_vanta")]
 view_tuning = ExtResource("9_view")
+grenade = ExtResource("13_frag")
 
 [node name="LegsPlaceholder" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.18)

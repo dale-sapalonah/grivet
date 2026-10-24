@@ -29,6 +29,14 @@ data/ — tuning Resources   levels/ — scenes   assets/ — imported art/audio
 - Sounds are generated in code (feedback/procedural_audio.gd) from WeaponDefinition / SurfaceMaterial fields until Milestone 5's recordings. Mechanism sounds fire at ViewModelTuning timing points so they match the animation.
 - Impacts are physics-driven: each hit reports outcome (penetrated / stopped / ricochet / exit), measured thickness (or solid) and remaining energy; SurfaceMaterial.acoustic_type + mass_factor (density x thickness) pick the sound and debris. Light rounds ricochet at steeper angles.
 - Impact sounds are built on a worker thread (ImpactEffects); never build audio on the main thread during play. Effect shaders are pre-compiled when a camera first exists.
+- Combat probe (arena: spotting, cover, flank, grenade, stuck check, ragdoll, blast, respawn, AI budget): `$GODOT --headless --path . res://tests/probes/combat_arena.tscn`
+- AI: `AI` autoload (ai/ai_director.gd) owns the target, cover map, flank slot, grenade cooldown, noise and near-miss suppression. Soldier = body + senses + carrying out SoldierBrain (pure, tested) decisions. Enemy types are data/ai/*.tres (EnemyProfile); world tuning data/ai/ai_settings.tres.
+- Levels with AI need a NavigationRegion3D named Navigation over CSG (`use_collision`); bake at runtime after CSG has built (2 frames), wait for the map iteration to change, then `AI.build_cover`. See levels/greybox/arena.gd. Navmesh cells are 0.125 m (project setting); doorways ≥ 1.6 m.
+- The baked navmesh floats ~0.5 m above the floor: compare path points on the ground plane (CoverScoring.flat_distance), never in 3D.
+- tools/gen_arena.py regenerates levels/greybox/arena.tscn.
+- Ragdolls use Generic6DOFJoint3D with anatomical per-axis limits, built in the neutral pose then moved to the death pose (ai/ragdoll.gd). The joint's angle sign is opposite to Mannequin's pivot rotations (measured). HingeJoint3D/ConeTwist were tried and didn't behave predictably.
+- Pushes on loose bodies (death, blasts) are velocity changes scaled by mass, never fixed impulses (light limbs would fly off).
+- Collision layers: core/physics_layers.gd. Bullets hit Hitbox zone shapes (layer 4), never movement capsules.
 - Frame-rate numbers drift with whatever else the PC is doing (Chrome on the shared iGPU). Compare against `scene=res://levels/boot/boot.tscn` measured in the same session before calling something a regression.
 - Lights you toggle (muzzle flash): set `visible`, never just `light_energy = 0` — a dark light still costs every nearby pixel.
 - The test runner fails any test that raises an engine or script error, not just failed asserts.

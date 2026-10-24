@@ -16,6 +16,8 @@ const KEYS := {
 	"lean_right": [KEY_E],
 	"reload": [KEY_R],
 	"inspect": [KEY_T],
+	"plate": [KEY_V],
+	"grenade": [KEY_G],
 	"weapon_1": [KEY_1],
 	"weapon_2": [KEY_2],
 	"weapon_3": [KEY_3],

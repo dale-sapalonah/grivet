@@ -56,6 +56,8 @@ var _warm_results: Dictionary = {}  # key -> AudioStreamWAV; guarded by _warm_mu
 var _priority_energies: Dictionary = {}  # quantized energy -> true; guarded
 var _urgent_keys := PackedStringArray()  # guarded
 var _warm_stop := false
+var _flash := OmniLight3D.new()
+var _flash_left := 0.0
 var _visuals_prewarmed := false
 var _prewarm_frames_left := 0
 var _prewarm_holes: Array[MeshInstance3D] = []
@@ -135,6 +137,11 @@ func setup(settings: BallisticsSettings) -> void:
 		dust.scale_amount_curve = grow
 		add_child(dust)
 		_dust.append(dust)
+
+	_flash.light_color = Color(1.0, 0.7, 0.35)
+	_flash.omni_range = settings.explosion_flash_range
+	_flash.visible = false  # hidden, not just dark: a dark light still costs every nearby pixel
+	add_child(_flash)
 
 	_warm_jobs_left = _warm_jobs()
 	_warm_thread.start(_warm_up)
@@ -242,14 +249,43 @@ func _sound_params(surface: SurfaceMaterial, outcome: String, mass: float, energ
 	return [outcome, quantized_mass, quantized_energy]
 
 
-func _schedule(stream: AudioStreamWAV, position: Vector3, volume_db: float, pitch: float) -> float:
+func _schedule(stream: AudioStreamWAV, position: Vector3, volume_db: float, pitch: float,
+		unit_size: float = -1.0) -> float:
 	var delay := _listener_distance(position) / _settings.speed_of_sound
 	_pending.append({"at": _now() + delay, "stream": stream, "position": position,
-			"volume_db": volume_db, "pitch": pitch})
+			"volume_db": volume_db, "pitch": pitch,
+			"unit_size": unit_size if unit_size > 0.0 else _settings.impact_sound_unit_size})
 	return delay
 
 
-func _process(_delta: float) -> void:
+## A grenade blast: flash, a big dust cloud and chips, a scorch on the ground
+## below, and the explosion sound (heard late with distance like everything).
+func explosion(center: Vector3, definition: GrenadeDefinition) -> void:
+	var down := PhysicsRayQueryParameters3D.create(center, center + Vector3.DOWN * 1.5, PhysicsLayers.WORLD)
+	var ground := get_world_3d().direct_space_state.intersect_ray(down)
+	var at: Vector3 = ground.get("position", center)
+	var normal: Vector3 = ground.get("normal", Vector3.UP)
+	var facing := _facing(normal)
+	_hole(at, normal, _hole_dark, _settings.scorch_size / _settings.hole_size)
+	var concrete := _settings.surface("concrete")
+	_burst(at, facing, _chip_mesh, concrete.impact_color, _settings.chip_count_heavy * 2, 1.2, 2.5, 70.0, 1.0, false, 1.8)
+	_burst(at, facing, _spark_mesh, Color(1.0, 0.75, 0.35), _settings.spark_count * 3, 0.3, 3.0, 80.0, 0.3, false)
+	for i in 3:
+		_puff(at + Vector3.UP * 0.3 * i, facing, concrete.dust_color, _settings.explosion_dust_scale)
+	_flash.global_position = center + Vector3.UP * 0.3
+	_flash.visible = true
+	_flash_left = _settings.explosion_flash_time
+	var variant := randi() % maxi(1, _settings.impact_sound_variants)
+	var stream := ProceduralAudio.cached("explosion:%d" % variant,
+			func() -> AudioStreamWAV: return ProceduralAudio.explosion(variant))
+	_schedule(stream, center, definition.volume_db, randf_range(0.95, 1.05), _settings.explosion_unit_size)
+
+
+func _process(delta: float) -> void:
+	if _flash_left > 0.0:
+		_flash_left -= delta
+		_flash.light_energy = _settings.explosion_flash_energy * maxf(_flash_left / _settings.explosion_flash_time, 0.0)
+		_flash.visible = _flash_left > 0.0
 	if not _visuals_prewarmed:
 		var camera := get_viewport().get_camera_3d()
 		if camera != null and camera.is_inside_tree():
@@ -274,6 +310,7 @@ func _process(_delta: float) -> void:
 		player.stream = sound.stream
 		player.volume_db = sound.volume_db
 		player.pitch_scale = sound.pitch
+		player.unit_size = sound.unit_size
 		player.play()
 	_pending = waiting
 

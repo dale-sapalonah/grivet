@@ -160,6 +160,29 @@ static func ricochet(variant: int) -> AudioStreamWAV:
 	return to_stream(buffer)
 
 
+## Frag detonation: a sharp crack over a deep, felt boom, the roar of the
+## blast, a long low rumble, and debris pattering down afterwards.
+static func explosion(variant: int) -> AudioStreamWAV:
+	var rng := _rng("explosion:%d" % variant)
+	var buffer := _buffer(2.2)
+	add_noise(buffer, 0.0, 0.004, 1.0, 12000.0, 0.0, rng)
+	add_thump(buffer, 0.0, 45.0 * rng.randf_range(0.92, 1.08), 0.35, 1.0)
+	add_noise(buffer, 0.0, 0.25, 0.8, 900.0, 0.0, rng, 0.01)
+	add_noise(buffer, 0.05, 0.6, 0.3, 400.0, 0.0, rng)
+	add_grains(buffer, 0.12, 1.3, 60, 0.002, 0.006, 1200.0, 5000.0, 0.1, 0.3, rng)
+	return to_stream(buffer)
+
+
+## A grenade body knocking on the ground: a dull tock with a little ring.
+static func grenade_bounce() -> AudioStreamWAV:
+	var rng := _rng("grenade_bounce")
+	var buffer := _buffer(0.15)
+	add_thump(buffer, 0.0, 320.0, 0.012, 0.8)
+	add_ring(buffer, 0.0, PackedFloat32Array([1800.0, 2900.0]), 0.02, 0.5)
+	add_noise(buffer, 0.0, 0.003, 0.4, 6000.0, 1000.0, rng)
+	return to_stream(buffer)
+
+
 ## Metallic click: the building block of every mechanism sound.
 static func add_click(buffer: PackedFloat32Array, at: float, hz: float, amplitude: float,
 		rng: RandomNumberGenerator) -> void:

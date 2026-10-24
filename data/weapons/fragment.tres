@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="WeaponDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "fragment"
+display_name = "Fragment"
+damage = 22.0
+damage_falloff_start = 3.0
+damage_falloff_end = 12.0
+min_damage_multiplier = 0.2
+muzzle_velocity = 500.0
+gravity_scale = 1.0
+max_range = 20.0
+penetration_power = 4.0
+impact_energy = 0.3

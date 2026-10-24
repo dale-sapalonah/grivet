@@ -36,6 +36,14 @@ extends Resource
 @export var chip_count_heavy := 18
 @export var dust_lifetime := 1.4
 
+@export_group("Explosions")
+@export var scorch_size := 1.6
+@export var explosion_dust_scale := 4.0
+@export var explosion_flash_energy := 10.0
+@export var explosion_flash_range := 14.0
+@export var explosion_flash_time := 0.15
+@export var explosion_unit_size := 30.0
+
 @export_group("Impact sound")
 ## Distant hits are heard later than they are seen (m/s).
 @export var speed_of_sound := 343.0

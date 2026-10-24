@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="EnemyProfile" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://ai/enemy_profile.gd" id="1"]
+[ext_resource type="Resource" path="res://data/weapons/kestrel.tres" id="2_weapon"]
+[ext_resource type="Resource" path="res://data/damage/rifleman.tres" id="3_health"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Rifleman"
+role = 0
+weapon = ExtResource("2_weapon")
+health = ExtResource("3_health")
+uniform_color = Color(0.33, 0.36, 0.28, 1)
+gear_color = Color(0.14, 0.15, 0.13, 1)
+walk_speed = 2.0
+run_speed = 4.6
+crouch_speed = 1.5
+turn_speed_degrees = 300.0
+sight_range = 70.0
+fov_degrees = 130.0
+peripheral_range = 6.0
+awareness_gain = 1.8
+awareness_decay = 0.2
+suspicious_threshold = 0.3
+hearing_multiplier = 1.0
+lose_target_time = 8.0
+reaction_time = 0.45
+aim_error_degrees = 1.6
+aim_error_per_10m = 0.35
+first_burst_error_multiplier = 2.5
+first_burst_duration = 0.9
+moving_error_multiplier = 1.6
+target_moving_error_multiplier = 1.4
+suppressed_error_multiplier = 2.5
+aim_turn_degrees_per_second = 220.0
+burst_min = 3
+burst_max = 6
+burst_pause_min = 0.35
+burst_pause_max = 0.9
+damage_multiplier = 0.7
+suppress_spread = 1.5
+preferred_range_min = 12.0
+preferred_range_max = 35.0
+peek_time = 1.6
+hide_time = 1.4
+hide_time_suppressed = 3.0
+suppression_tolerance = 0.6
+flank_after_pinned = 4.0
+retreat_health = 0.3
+charge_range = 0.0
+grenade_count = 1
+grenade_camp_time = 6.0
+grenade_range_min = 8.0
+grenade_range_max = 30.0
+cover_search_radius = 20.0
+death_push_speed = 1.5

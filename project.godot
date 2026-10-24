@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Meridian"
 config/description="Grounded near-future military FPS. Vertical slice: night raid on a coastal port."
-run/main_scene="res://levels/greybox/firing_range.tscn"
+run/main_scene="res://levels/greybox/arena.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 
 [autoload]
@@ -20,12 +20,26 @@ config/features=PackedStringArray("4.7", "Forward Plus")
 InputBindings="*res://core/input_bindings.gd"
 Debug="*res://core/debug_commands.gd"
 Ballistics="*res://ballistics/bullet_simulator.gd"
+AI="*res://ai/ai_director.gd"
 
 [display]
 
 window/size/viewport_width=1600
 window/size/viewport_height=900
 window/vsync/vsync_mode=0
+
+[layer_names]
+
+3d_physics/layer_1="world"
+3d_physics/layer_2="player"
+3d_physics/layer_3="enemies"
+3d_physics/layer_4="hitboxes"
+3d_physics/layer_5="debris"
+
+[navigation]
+
+3d/default_cell_size=0.125
+3d/default_cell_height=0.125
 
 [physics]
 

@@ -13,6 +13,8 @@ signal mechanical_sound(sound: String)
 ## WeaponDefinition resources in slot order (keys 1, 2, 3).
 @export var loadout: Array = []
 @export var view_tuning: ViewModelTuning
+## Thrown with the grenade key; player_carry of them.
+@export var grenade: GrenadeDefinition
 
 var weapons: Array[WeaponModel] = []
 var current := -1
@@ -21,6 +23,7 @@ var aim_blend := 0.0
 var spread_enabled := true
 ## Spread cone (degrees) of the next shot; the HUD draws the crosshair from it.
 var current_spread := 0.0
+var grenades_left := 0
 
 var _player: Player
 var _view := WeaponViewModel.new()
@@ -51,12 +54,13 @@ func _ready() -> void:
 		_add_weapon(definition)
 	if not weapons.is_empty():
 		equip(0)
+	grenades_left = grenade.player_carry if grenade != null else 0
 	add_to_group("player_weapons")
 	_register_debug_commands()
 
 
 func _exit_tree() -> void:
-	for command in ["give", "ammo.infinite", "spread", "recoil.show"]:
+	for command in ["give", "ammo.infinite", "spread", "recoil.show", "grenades"]:
 		Debug.unregister(command)
 
 
@@ -102,10 +106,12 @@ func _physics_process(delta: float) -> void:
 	var weapon := current_weapon()
 	if weapon == null or _player.model == null:
 		return
-	var can_act := not Debug.console_open
+	var can_act := not Debug.console_open and not _player.dead and not _player.is_plating()
 	_controls.trigger = can_act and Input.is_action_pressed("fire")
 	_controls.reload_pressed = can_act and Input.is_action_just_pressed("reload")
 	_controls.inspect_pressed = can_act and Input.is_action_just_pressed("inspect")
+	if can_act and Input.is_action_just_pressed("grenade") and grenades_left > 0 and grenade != null:
+		_throw_grenade()
 	if _controls.trigger and _player.model.is_sprinting():
 		_player.model.interrupt_sprint()  # firing drops out of sprint
 	_controls.sprinting = _player.model.is_sprinting()
@@ -132,7 +138,7 @@ func _shoot(weapon: WeaponModel, kick: Vector2) -> void:
 	var definition := weapon.definition
 	var aim := _player.aim_transform()
 	var forward := -aim.basis.z
-	var exclude: Array[RID] = [_player.get_rid()]
+	var exclude := _player.bullet_exclude()
 	var center := BallisticsMath.random_in_cone(forward, current_spread, _rng)
 	for pellet in definition.pellets:
 		var direction := center
@@ -220,6 +226,15 @@ func _eject_casing(definition: WeaponDefinition) -> void:
 	_casings.eject(definition, port, throw + _player.velocity)
 
 
+func _throw_grenade() -> void:
+	var aim := _player.aim_transform()
+	var forward := -aim.basis.z
+	var velocity := forward * grenade.throw_speed + Vector3.UP * grenade.throw_loft + _player.velocity
+	Grenade.throw(grenade, _player.get_parent(), aim.origin + forward * 0.5, velocity, _player)
+	grenades_left -= 1
+	_view.kick()
+
+
 ## For probes: casings report where they land.
 func casing_ejector() -> CasingEjector:
 	return _casings
@@ -266,6 +281,12 @@ func _register_debug_commands() -> void:
 	Debug.register("ammo.infinite", _cmd_infinite_ammo, "Toggle infinite ammo for every carried weapon.")
 	Debug.register("spread", _cmd_spread, "Toggle spread (off = every shot goes dead centre).")
 	Debug.register("recoil.show", _cmd_recoil_show, "Toggle the weapon readout (ammo, recoil index, spread).")
+	Debug.register("grenades", _cmd_grenades, "Refill grenades.")
+
+
+func _cmd_grenades(_args: PackedStringArray) -> String:
+	grenades_left = grenade.player_carry if grenade != null else 0
+	return "%d grenades" % grenades_left
 
 
 func _cmd_give(args: PackedStringArray) -> String:

@@ -9,6 +9,9 @@ extends Node3D
 
 signal impact(info: Dictionary)
 signal target_hit(info: Dictionary)
+## Every tick of every bullet's flight: the segment it covered. The AI uses
+## it for near-miss suppression.
+signal bullet_moved(from: Vector3, to: Vector3, shooter: Node)
 
 const SETTINGS := preload("res://data/ballistics/ballistics_settings.tres")
 const SURFACE_LOOKUP_DEPTH := 3
@@ -95,13 +98,23 @@ func _process(_delta: float) -> void:
 
 ## Moves one bullet through one tick. Returns false when it stops.
 func _advance(bullet: Bullet, space: PhysicsDirectSpaceState3D, delta: float) -> bool:
+	if bullet.shooter != null and not is_instance_valid(bullet.shooter):
+		bullet.shooter = null  # the shooter died with rounds still in flight
 	var stepped := BallisticsMath.step(bullet.position, bullet.velocity,
 			settings.gravity * bullet.weapon.gravity_scale, delta)
 	var from := bullet.position
 	var to := stepped[0]
 	bullet.velocity = stepped[1]
+	var tick_start := from
+	var alive := _fly(bullet, space, from, to)
+	bullet_moved.emit(tick_start, bullet.position, bullet.shooter)
+	return alive
+
+
+## Traces one tick's segment through surfaces. Returns false when the bullet stops.
+func _fly(bullet: Bullet, space: PhysicsDirectSpaceState3D, from: Vector3, to: Vector3) -> bool:
 	while true:
-		var query := PhysicsRayQueryParameters3D.create(from, to, 0xFFFFFFFF, bullet.exclude)
+		var query := PhysicsRayQueryParameters3D.create(from, to, PhysicsLayers.BULLETS, bullet.exclude)
 		query.hit_back_faces = false
 		var hit := space.intersect_ray(query)
 		if hit.is_empty():
@@ -118,6 +131,7 @@ func _advance(bullet: Bullet, space: PhysicsDirectSpaceState3D, delta: float) ->
 		var next := _hit_surface(bullet, hit, bullet.velocity.normalized(), space)
 		bullet.events += 1
 		if next.is_empty() or bullet.events > settings.max_surface_events:
+			bullet.position = point  # where it stopped (end of this tick's segment)
 			return false
 		from = next.from
 		to = from + (next.direction as Vector3) * remaining
@@ -147,6 +161,8 @@ func _hit_surface(bullet: Bullet, hit: Dictionary, direction: Vector3,
 			"position": point,
 			"normal": normal,
 			"direction": direction,
+			"shape": hit.get("shape", -1),  # which hit zone on a Hitbox
+			"energy": energy,
 		}
 		target.call("apply_damage", info)
 		target_hit.emit(info)
@@ -199,7 +215,7 @@ func _find_exit(space: PhysicsDirectSpaceState3D, entry: Vector3, direction: Vec
 		var exclude: Array[RID] = []
 		for attempt in EXIT_PROBE_ATTEMPTS:
 			var query := PhysicsRayQueryParameters3D.create(start + direction * max_thickness,
-					start, 0xFFFFFFFF, exclude)
+					start, PhysicsLayers.BULLETS, exclude)
 			query.hit_back_faces = false
 			var hit := space.intersect_ray(query)
 			if hit.is_empty():

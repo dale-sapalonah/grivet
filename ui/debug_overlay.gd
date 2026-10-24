@@ -3,6 +3,7 @@ extends CanvasLayer
 ## runs commands registered on the Debug autoload.
 
 const MAPS := {
+	"arena": "res://levels/greybox/arena.tscn",
 	"range": "res://levels/greybox/firing_range.tscn",
 	"course": "res://levels/greybox/movement_course.tscn",
 }

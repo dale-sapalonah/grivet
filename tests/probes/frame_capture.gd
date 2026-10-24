@@ -2,7 +2,8 @@ extends Node
 ## Renders a level on the real GPU for a few seconds, reports the average and
 ## worst frame time, and saves a screenshot. Not headless.
 ##
-##   $GODOT --path . res://tests/probes/frame_capture.tscn -- [shot=<abs path.png>] [scene=res://...] [fire] [aim] [weapon=<id>] [hide_gun]
+##   $GODOT --path . res://tests/probes/frame_capture.tscn -- [shot=<abs path.png>] [scene=res://...] [fire] [aim] [weapon=<id>] [hide_gun] [cmd=<console_command>]...
+##   (cmd= runs a console command at start; underscores stand for spaces, e.g. cmd=god cmd=ai.show)
 ##
 ## Every option is named (positional arguments shift silently when a shell
 ## drops an empty one, which once overwrote a scene with a PNG). Defaults to
@@ -32,6 +33,7 @@ var _screenshot := ""
 var _fire := false
 var _weapon := ""
 var _hide_gun := false
+var _commands := PackedStringArray()
 var _measure_from := -1
 
 
@@ -61,6 +63,8 @@ func _ready() -> void:
 			_weapon = arg.trim_prefix("weapon=")
 		elif arg == "hide_gun":
 			_hide_gun = true
+		elif arg.begins_with("cmd="):
+			_commands.append(arg.trim_prefix("cmd=").replace("_", " "))
 		else:
 			printerr("unknown option %s" % arg)
 			get_tree().quit(2)
@@ -73,6 +77,9 @@ func _process(delta: float) -> void:
 	_frame += 1
 	if _frame == 2 and not _weapon.is_empty():
 		Debug.execute("give " + _weapon)
+	if _frame == 2:
+		for command in _commands:
+			Debug.execute(command)
 	if _frame == 2 and _hide_gun:
 		var holder := get_tree().get_first_node_in_group("player_weapons") as Node3D
 		if holder != null:

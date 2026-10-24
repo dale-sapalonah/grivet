@@ -109,6 +109,8 @@ enum ViewStyle { RIFLE, SHOTGUN, PISTOL }
 @export var shot_sound_length := 0.25
 @export var shot_thump_hz := 70.0
 @export var shot_volume_db := -6.0
+## How far (m) enemies hear this weapon fire.
+@export var shot_loudness := 90.0
 ## Brightness of the action's clicks (magazine, bolt, pump).
 @export var mech_click_hz := 3000.0
 @export var mech_volume_db := -10.0

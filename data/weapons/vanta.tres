@@ -72,3 +72,4 @@ casing_volume_db = -18.0
 mech_click_hz = 3800.0
 mech_volume_db = -11.0
 impact_energy = 0.35
+shot_loudness = 60.0

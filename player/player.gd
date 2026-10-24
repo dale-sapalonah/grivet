@@ -12,6 +12,9 @@ extends CharacterBody3D
 var model: MovementModel
 var noclip := false
 var speed_multiplier := 1.0
+var dead := false
+## 0..1 while holding the plate key; a plate goes in at 1.
+var plate_progress := 0.0
 
 var _intent := MovementModel.Intent.new()
 var _world := MovementModel.World.new()
@@ -23,7 +26,12 @@ var _mantle_from := Vector3.ZERO
 var _mantle_to := Vector3.ZERO
 var _mantle_time := 0.0
 var _mantle_duration := 0.0
+var _spawn := Transform3D.IDENTITY
+var _dead_time := 0.0
+var _zone_rest: Dictionary = {}  # hitbox shape -> standing local position
 
+@onready var health: Health = $Health
+@onready var _hitbox: Hitbox = $Hitbox
 @onready var _collision: CollisionShape3D = $Collision
 @onready var _step_ray: CollisionShape3D = $StepRay
 @onready var _head: Node3D = $Head
@@ -46,6 +54,11 @@ func _ready() -> void:
 	floor_snap_length = tuning.floor_snap
 	floor_max_angle = deg_to_rad(tuning.max_slope_degrees)
 	_rig.setup(camera_tuning, self)
+	_hitbox.body = self
+	for zone: CollisionShape3D in _hitbox.get_children():
+		_zone_rest[zone] = zone.position
+	health.died.connect(_on_died)
+	_spawn = global_transform
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_register_debug_commands()
 
@@ -80,13 +93,36 @@ func look_pitch() -> float:
 	return _pitch
 
 
+## RIDs our own bullets must pass through (our hitbox).
+func bullet_exclude() -> Array[RID]:
+	return [_hitbox.get_rid()]
+
+
+## Where enemies aim: centre of the torso zone, following stance.
+func aim_point() -> Vector3:
+	return _hitbox.get_node("Torso").global_position
+
+
+func head_point() -> Vector3:
+	return _hitbox.get_node("Head").global_position
+
+
+func hitbox() -> Hitbox:
+	return _hitbox
+
+
+## True while inserting a plate (weapons can't fire meanwhile).
+func is_plating() -> bool:
+	return plate_progress > 0.0
+
+
 func _exit_tree() -> void:
-	for command in ["noclip", "speed", "tp", "pos", "movement.show"]:
+	for command in ["noclip", "speed", "tp", "pos", "movement.show", "god", "kill", "damage", "plates"]:
 		Debug.unregister(command)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if Debug.console_open:
+	if Debug.console_open or dead:
 		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var sensitivity := camera_tuning.mouse_sensitivity
@@ -105,7 +141,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if dead:
+		_update_death(delta)
+		return
 	_read_intent()
+	_update_plating(delta)
 	if noclip:
 		_move_noclip(delta)
 	elif model.gait == MovementModel.Gait.MANTLE:
@@ -113,7 +153,74 @@ func _physics_process(delta: float) -> void:
 	else:
 		_move_normally(delta)
 	_update_head(delta)
+	_update_hitbox()
 	_publish_watches()
+
+
+## Holding the plate key fills plate_progress over plate_insert_time; each
+## time it fills, a carried plate goes in. Releasing cancels the current plate.
+func _update_plating(delta: float) -> void:
+	var holding := _can_act() and Input.is_action_pressed("plate")
+	if not holding or health.plates_carried <= 0 or health.model.armor >= health.model.max_armor() - 0.001:
+		plate_progress = 0.0
+		return
+	plate_progress += delta / health.profile.plate_insert_time
+	if plate_progress >= 1.0:
+		health.insert_plate()
+		plate_progress = 0.0
+
+
+## Hit zones follow the stance: scaled down for crouch, laid flat for prone.
+func _update_hitbox() -> void:
+	var prone := model.stance == MovementModel.Stance.PRONE
+	var height_scale := _body_height / tuning.stand_height
+	for zone: CollisionShape3D in _zone_rest:
+		var rest: Vector3 = _zone_rest[zone]
+		if prone:
+			match str(zone.get_meta("zone")):
+				"head":
+					zone.position = tuning.prone_head_offset
+				"legs":
+					zone.position = tuning.prone_legs_offset
+				_:
+					zone.position = tuning.prone_torso_offset
+			zone.rotation_degrees.x = 0.0 if zone.get_meta("zone") == "head" else 90.0
+		else:
+			zone.position = Vector3(rest.x, rest.y * height_scale, rest.z)
+			zone.rotation_degrees.x = 0.0
+
+
+func _on_died(_info: Dictionary) -> void:
+	dead = true
+	_dead_time = 0.0
+	velocity = Vector3.ZERO
+	plate_progress = 0.0
+
+
+## Camera sinks and rolls; after respawn_delay the player comes back at the spawn.
+func _update_death(delta: float) -> void:
+	_dead_time += delta
+	var blend := 1.0 - exp(-tuning.death_blend_speed * delta)
+	_head.position.y = lerpf(_head.position.y, tuning.death_eye_height, blend)
+	_head.rotation.z = lerpf(_head.rotation.z, deg_to_rad(tuning.death_roll_degrees), blend)
+	if not is_on_floor():
+		velocity.y -= tuning.gravity * delta
+		move_and_slide()
+	if _dead_time >= tuning.respawn_delay:
+		respawn()
+
+
+func respawn() -> void:
+	dead = false
+	global_transform = _spawn
+	velocity = Vector3.ZERO
+	model = MovementModel.new(tuning)
+	_body_height = -1.0
+	_set_body_height(tuning.stand_height)
+	_head.position.y = tuning.stand_eye_height
+	_head.rotation.z = 0.0
+	set_look(_spawn.basis.get_euler().y, 0.0)
+	health.revive()
 
 
 func _move_normally(delta: float) -> void:
@@ -168,7 +275,7 @@ func _read_intent() -> void:
 
 
 func _can_act() -> bool:
-	return not Debug.console_open
+	return not Debug.console_open and not dead
 
 
 func _apply_horizontal(delta: float) -> void:
@@ -290,6 +397,33 @@ func _register_debug_commands() -> void:
 	Debug.register("tp", _cmd_tp, "tp <x> <y> <z>: teleport the player.")
 	Debug.register("pos", _cmd_pos, "Print the player's position.")
 	Debug.register("movement.show", _cmd_movement_show, "Toggle movement state readout.")
+	Debug.register("god", _cmd_god, "Toggle player invulnerability.")
+	Debug.register("kill", _cmd_kill, "Kill the player (tests death and respawn).")
+	Debug.register("damage", _cmd_damage, "damage <amount>: hit the player in the torso.")
+	Debug.register("plates", _cmd_plates, "Refill armour and spare plates.")
+
+
+func _cmd_kill(_args: PackedStringArray) -> String:
+	health.take_hit(INF, DamageModel.Zone.HEAD, {})
+	return "player killed"
+
+
+func _cmd_plates(_args: PackedStringArray) -> String:
+	health.model.armor = health.model.max_armor()
+	health.plates_carried = health.profile.plates_carried
+	return "armour and spare plates refilled"
+
+
+func _cmd_god(_args: PackedStringArray) -> String:
+	health.invulnerable = not health.invulnerable
+	return "god %s" % ("ON" if health.invulnerable else "OFF")
+
+
+func _cmd_damage(args: PackedStringArray) -> String:
+	if args.size() != 1 or not args[0].is_valid_float():
+		return "usage: damage <amount>"
+	health.take_hit(args[0].to_float(), DamageModel.Zone.TORSO, {})
+	return "health %.0f, armour %.0f" % [health.model.health, health.model.armor]
 
 
 func _cmd_noclip(_args: PackedStringArray) -> String:

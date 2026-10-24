@@ -65,5 +65,16 @@ extends Resource
 @export var hard_landing_slow_time := 0.35
 @export var hard_landing_speed_multiplier := 0.5
 
+@export_group("Death and respawn")
+@export var respawn_delay := 3.0
+@export var death_eye_height := 0.3
+@export var death_roll_degrees := 35.0
+@export var death_blend_speed := 4.0
+
+@export_group("Prone hitbox (body lies along the view)")
+@export var prone_head_offset := Vector3(0, 0.3, -0.45)
+@export var prone_torso_offset := Vector3(0, 0.22, 0.0)
+@export var prone_legs_offset := Vector3(0, 0.15, 0.7)
+
 @export_group("Debug")
 @export var noclip_speed := 12.0

@@ -16,6 +16,7 @@ var _dip_velocity := 0.0
 var _roll := 0.0
 var _kick := 0.0
 var _kick_velocity := 0.0
+var _shake := 0.0
 
 @onready var camera: Camera3D = $Camera3D
 
@@ -30,6 +31,11 @@ func add_landing(impact_speed: float) -> void:
 	if impact_speed < tuning.landing_min_speed:
 		return
 	_dip_velocity -= minf(impact_speed, tuning.landing_max_speed) * tuning.landing_kick
+
+
+## Blast shake (degrees of jitter) that dies away; camera only.
+func add_shake(degrees: float) -> void:
+	_shake = maxf(_shake, degrees)
 
 
 ## Camera-only upward kick (degrees) that springs back; does not move the aim.
@@ -55,7 +61,10 @@ func update_rig(delta: float, model: MovementModel, intent: MovementModel.Intent
 
 	_kick_velocity += (-tuning.kick_spring * _kick - tuning.kick_damping * _kick_velocity) * delta
 	_kick += _kick_velocity * delta
-	rotation.x = _kick
+	_shake = move_toward(_shake, 0.0, tuning.shake_decay * delta)
+	var jitter := deg_to_rad(_shake)
+	rotation.x = _kick + randf_range(-jitter, jitter)
+	rotation.z += randf_range(-jitter, jitter)
 
 	camera.fov = lerpf(camera.fov, _target_fov(model),
 			1.0 - exp(-tuning.fov_blend_speed * delta))

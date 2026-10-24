@@ -43,6 +43,9 @@ extends Resource
 ## Converts a weapon's visual_kick_degrees into spring velocity.
 @export var kick_impulse := 33.0
 
+## Blast shake fades by this many degrees per second.
+@export var shake_decay := 6.0
+
 @export_group("Landing dip")
 @export var landing_min_speed := 4.0
 @export var landing_max_speed := 14.0

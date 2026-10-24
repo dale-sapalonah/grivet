@@ -30,6 +30,7 @@ roll_blend_speed = 8.0
 kick_spring = 220.0
 kick_damping = 22.0
 kick_impulse = 33.0
+shake_decay = 6.0
 landing_min_speed = 4.0
 landing_max_speed = 14.0
 landing_kick = 0.1

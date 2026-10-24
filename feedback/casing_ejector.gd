@@ -93,7 +93,7 @@ func _physics_process(delta: float) -> void:
 		casing.velocity += Vector3.DOWN * gravity * delta
 		var from := casing.node.global_position
 		var to := from + casing.velocity * delta
-		var query := PhysicsRayQueryParameters3D.create(from, to, 0xFFFFFFFF, exclude)
+		var query := PhysicsRayQueryParameters3D.create(from, to, PhysicsLayers.WORLD, exclude)
 		query.hit_back_faces = false
 		var hit := space.intersect_ray(query)
 		if hit.is_empty():
