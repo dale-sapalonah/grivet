@@ -54,6 +54,7 @@ var _swing := -1.0  # seconds into the current strike, below zero when not strik
 var _swing_landed := false
 var _swing_cooldown := 0.0
 var _aim_pitch := 0.0
+var _step_distance := 0.0
 var _move_target := Vector3.INF
 var _requested_target := Vector3.INF
 var _speed := 0.0
@@ -117,9 +118,6 @@ func _ready() -> void:
 	_perception_timer = _rng.randf() * _perception_interval  # stagger soldiers' sight checks
 	_think_timer = _rng.randf() / _settings.think_hz  # and their decisions
 	_grenades = profile.grenade_count
-	if not _melee:
-		_shot_audio.stream = ProceduralAudio.cached("shot:" + profile.weapon.id,
-				func() -> AudioStreamWAV: return ProceduralAudio.gunshot(profile.weapon))
 	_debug_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_debug_label.position = Vector3(0, 2.2, 0)
 	_debug_label.fixed_size = true  # same size on screen near or far
@@ -697,9 +695,7 @@ func _shoot(aim_at: Vector3, target: Player) -> void:
 		if weapon.definition.pellets > 1:
 			pellet_direction = BallisticsMath.random_in_cone(direction, weapon.definition.pellet_spread_degrees, _rng)
 		Ballistics.fire(muzzle, pellet_direction, weapon.definition, self, exclude)
-	_shot_audio.volume_db = weapon.definition.shot_volume_db
-	_shot_audio.pitch_scale = _rng.randf_range(0.96, 1.04)
-	_shot_audio.play()
+	Soundscape.gunshot(weapon.definition, muzzle)  # close and distant layers, heard late with distance
 	_muzzle_flash.flash()
 	_eject_casing()
 	mannequin.flinch(-global_basis.z, 0.6)
@@ -763,6 +759,22 @@ func _move(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= Ballistics.settings.gravity * delta
 	move_and_slide()
+	_step(delta)
+
+
+## Footsteps: one per stride's worth of ground covered, louder running.
+func _step(delta: float) -> void:
+	if not is_on_floor():
+		return
+	var speed := Vector2(velocity.x, velocity.z).length()
+	_step_distance += speed * delta
+	var audio := Soundscape.settings
+	if _step_distance < audio.soldier_step_length:
+		return
+	_step_distance = 0.0
+	var running := speed > audio.soldier_run_speed
+	Soundscape.footstep(global_position, audio.soldier_run_step_db if running else audio.soldier_step_db,
+			audio.soldier_step_unit_size, audio.soldier_step_max_distance)
 
 
 func _path_finished() -> bool:

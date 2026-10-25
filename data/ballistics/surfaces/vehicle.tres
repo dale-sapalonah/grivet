@@ -24,3 +24,7 @@ ring_decay_thin = 0.12
 ring_decay_thick = 0.05
 ricochet_ring_multiplier = 2.5
 casing_brightness = 1.2
+footstep_hz = 130.0
+footstep_ring_hz = 330.0
+footstep_grit = 0.05
+footstep_volume_db = 0.0

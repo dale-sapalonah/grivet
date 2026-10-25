@@ -71,6 +71,15 @@ enum AcousticType {
 ## 0 = casings land silently (dirt, bodies); 1 = concrete; above 1 rings brighter.
 @export var casing_brightness := 1.0
 
+@export_group("Footsteps on it")
+## Pitch (Hz) of the heel's thud: low and soft on earth, higher on hard ground.
+@export var footstep_hz := 110.0
+## Ring (Hz) of a hollow metal surface underfoot (container roofs); 0 = none.
+@export var footstep_ring_hz := 0.0
+## 0..1 grit and crunch scattered by the sole (dirt, gravel, sand).
+@export var footstep_grit := 0.3
+@export var footstep_volume_db := 0.0
+
 
 ## 0 = thin / light, 1 = thick / dense, from the thickness the bullet met.
 ## `solid` means the exit probe found no far side within max_thickness.

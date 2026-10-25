@@ -91,9 +91,10 @@ func _apply(key: String) -> void:
 			AudioServer.set_bus_volume_db(bus, linear_to_db(maxf(float(values.music_volume), 0.0001)))
 			AudioServer.set_bus_mute(bus, not bool(values.music_on))
 		"sfx_volume", "sfx_on":
-			var bus := AudioServer.get_bus_index("SFX")
-			AudioServer.set_bus_volume_db(bus, linear_to_db(maxf(float(values.sfx_volume), 0.0001)))
-			AudioServer.set_bus_mute(bus, not bool(values.sfx_on))
+			for bus_name in ["SFX", "Cues"]:
+				var bus := AudioServer.get_bus_index(bus_name)
+				AudioServer.set_bus_volume_db(bus, linear_to_db(maxf(float(values.sfx_volume), 0.0001)))
+				AudioServer.set_bus_mute(bus, not bool(values.sfx_on))
 		"mouse_sensitivity":
 			camera_tuning.mouse_sensitivity = _base_sensitivity * float(value)
 		"invert_y":
@@ -220,7 +221,9 @@ func _grade_lamp(lamp: SpotLight3D) -> void:
 
 
 func _ensure_buses() -> void:
-	for bus_name in ["Music", "SFX"]:
+	# Cues: the player's own feedback sounds (hit, kill, breathing, ringing
+	# ears); beside SFX so a blast's muffling and the reverb leave them alone.
+	for bus_name in ["Music", "SFX", "Cues"]:
 		if AudioServer.get_bus_index(bus_name) < 0:
 			AudioServer.add_bus()
 			var bus := AudioServer.bus_count - 1

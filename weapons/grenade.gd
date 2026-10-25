@@ -102,6 +102,8 @@ func _explode() -> void:
 			Ballistics.fire(center, direction, definition.fragment, thrower, [])
 	Ballistics.effects().explosion(center, definition)
 	AI.make_noise(center, definition.loudness, thrower)
+	Soundscape.blast(center)  # dull, ringing ears close by
+	get_tree().call_group("produce", "blast", center, definition.blast_radius)  # market stalls burst
 	for player: Node in get_tree().get_nodes_in_group("player"):
 		var distance := (player as Node3D).global_position.distance_to(center)
 		if distance < definition.shake_radius:

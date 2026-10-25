@@ -143,3 +143,57 @@ func test_cache_returns_the_same_stream() -> void:
 	var second := ProceduralAudio.cached("test:steel",
 			func() -> AudioStreamWAV: return null)
 	assert_true(first == second and first != null)
+
+
+func test_distant_shot_is_longer_and_duller_than_close() -> void:
+	for weapon: WeaponDefinition in [KESTREL, HAMMERHEAD, VANTA]:
+		var close := ProceduralAudio.gunshot(weapon)
+		var far := ProceduralAudio.gunshot_distant(weapon, 1.6)
+		assert_approx(ProceduralAudio.duration(far), 1.6, 0.01, "%s distant length" % weapon.id)
+		assert_true(crossing_rate(far, 0.0, 0.1) < crossing_rate(close, 0.0, 0.1) * 0.6,
+				"%s: distant %.0f /s duller than close %.0f /s" % [weapon.id, crossing_rate(far, 0.0, 0.1), crossing_rate(close, 0.0, 0.1)])
+		# Rolling echoes: still sounding well after the close shot has ended.
+		assert_true(ProceduralAudio.rms(far, 0.4, 0.8) > 0.02, "%s distant shot rolls on" % weapon.id)
+
+
+func test_close_shot_opens_with_a_crack() -> void:
+	var shot := ProceduralAudio.gunshot(KESTREL)
+	assert_true(crossing_rate(shot, 0.0, 0.004) > 3000.0, "bright onset: %.0f /s" % crossing_rate(shot, 0.0, 0.004))
+
+
+func test_bullet_snap_is_short_and_bright() -> void:
+	for variant in 4:
+		var snap := ProceduralAudio.bullet_snap(variant)
+		assert_true(ProceduralAudio.rms(snap, 0.0, 0.01) > 0.1, "snap %d is sharp" % variant)
+		assert_true(ProceduralAudio.rms(snap, 0.15, 0.22) < 0.02, "snap %d is over quickly" % variant)
+		assert_true(crossing_rate(snap, 0.0, 0.005) > 2500.0, "snap %d is bright" % variant)
+
+
+func test_footsteps_take_the_character_of_the_surface() -> void:
+	for id in ["concrete", "dirt", "steel", "wood", "sandbag", "vehicle"]:
+		var step := ProceduralAudio.footstep(SETTINGS.surface(id), 0)
+		assert_true(ProceduralAudio.rms(step, 0.0, 0.05) > 0.05, "%s step audible" % id)
+	var steel := ProceduralAudio.footstep(SETTINGS.surface("steel"), 0)
+	var dirt := ProceduralAudio.footstep(SETTINGS.surface("dirt"), 0)
+	var concrete := ProceduralAudio.footstep(SETTINGS.surface("concrete"), 0)
+	# A container roof booms and rings on; earth is dead quickly.
+	assert_true(ProceduralAudio.rms(steel, 0.12, 0.25) > ProceduralAudio.rms(dirt, 0.12, 0.25) * 2.0, "steel rings on")
+	# A slap, not a padded thud: the step opens bright on hard ground.
+	assert_true(crossing_rate(concrete, 0.0, 0.01) > 2500.0, "concrete step opens with a slap: %.0f /s" % crossing_rate(concrete, 0.0, 0.01))
+	# Sounds are normalised, so compare how much of each step is the slap.
+	var slap_share := func(step: AudioStreamWAV) -> float: return ProceduralAudio.rms(step, 0.0, 0.01) / ProceduralAudio.rms(step, 0.0, 0.12)
+	assert_true(slap_share.call(concrete) > slap_share.call(dirt), "concrete slaps more than dirt: %.2f vs %.2f" % [slap_share.call(concrete), slap_share.call(dirt)])
+	# Variants differ, so a run of steps doesn't repeat one sample.
+	var a := ProceduralAudio.footstep(SETTINGS.surface("concrete"), 0)
+	var b := ProceduralAudio.footstep(SETTINGS.surface("concrete"), 1)
+	assert_true(a.data != b.data, "footstep variants differ")
+
+
+func test_feedback_cues_are_audible() -> void:
+	assert_true(ProceduralAudio.rms(ProceduralAudio.hit_confirm(), 0.0, 0.03) > 0.1, "hit confirm")
+	assert_true(ProceduralAudio.rms(ProceduralAudio.kill_cue(), 0.0, 0.15) > 0.05, "kill cue")
+	var breath := ProceduralAudio.breath(0)
+	assert_true(ProceduralAudio.rms(breath, 0.1, 1.2) > 0.03, "breathing")
+	var ring := ProceduralAudio.ear_ring()
+	assert_true(ProceduralAudio.rms(ring, 0.0, 0.5) > ProceduralAudio.rms(ring, 2.5, 3.5) * 3.0, "ringing dies away")
+	assert_true(crossing_rate(ring, 0.0, 0.5) > 6000.0, "ringing is high: %.0f /s" % crossing_rate(ring, 0.0, 0.5))

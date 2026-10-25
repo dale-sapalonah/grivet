@@ -37,6 +37,9 @@ var _fire := false
 var _weapon := ""
 var _hide_gun := false
 var _commands := PackedStringArray()
+## Commands wait for a level's combat_ready: CSG floors build their colliders a
+## few frames in, and a `tp` before that falls through and respawns elsewhere.
+var _commands_done := false
 var _measure_from := -1
 
 
@@ -72,7 +75,12 @@ func _ready() -> void:
 			printerr("unknown option %s" % arg)
 			get_tree().quit(2)
 			return
-	add_child(load(scene_path).instantiate())
+	var level: Node = load(scene_path).instantiate()
+	add_child(level)
+	if level.has_signal("combat_ready"):
+		level.combat_ready.connect(_run_commands, CONNECT_ONE_SHOT)
+	else:
+		_run_commands.call_deferred()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
@@ -80,9 +88,6 @@ func _process(delta: float) -> void:
 	_frame += 1
 	if _frame == 2 and not _weapon.is_empty():
 		Debug.execute("give " + _weapon)
-	if _frame == 2:
-		for command in _commands:
-			Debug.execute(command)
 	if _frame == 2 and _hide_gun:
 		var holder := get_tree().get_first_node_in_group("player_weapons") as Node3D
 		if holder != null:
@@ -90,7 +95,7 @@ func _process(delta: float) -> void:
 	# Measure steady-state play: wait out the startup sound build on the worker
 	# thread too (it competes for the CPU for a few seconds after launch).
 	if _measure_from < 0:
-		if _frame >= WARMUP_FRAMES and (Ballistics.effects().sounds_ready() or _frame >= MAX_WARMUP_FRAMES):
+		if _commands_done and _frame >= WARMUP_FRAMES and (Ballistics.effects().sounds_ready() or _frame >= MAX_WARMUP_FRAMES):
 			_measure_from = _frame
 			if _fire:
 				Debug.execute("ammo.infinite")
@@ -119,3 +124,9 @@ func _process(delta: float) -> void:
 	Input.action_release("fire")
 	Input.action_release("aim")
 	get_tree().quit()
+
+
+func _run_commands() -> void:
+	for command in _commands:
+		Debug.execute(command)
+	_commands_done = true

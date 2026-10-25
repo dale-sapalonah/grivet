@@ -8,7 +8,9 @@ extends Control
 
 enum Mode { TITLE, PAUSE }
 
-const GAME_SCENE := "res://levels/port/port_yard.tscn"
+## The maps: [name, scene, campaign]. Each map's campaign is its stages.
+const MAPS := [["PORT YARD", "res://levels/port/port_yard.tscn", preload("res://data/levels/campaign.tres")],
+		["GORDONS MARKET", "res://levels/gordons/gordons_market.tscn", preload("res://data/levels/gordons_campaign.tres")]]
 const GUTTER := 8.0
 
 ## [key, label, min, max, step] sliders and [key, label] toggles on the settings page.
@@ -30,7 +32,6 @@ const PANELS := [[CharacterPanel.Subject.RIFLE_AIM, Color(0.95, 0.5, 0.12), 0],
 var _heavy: SystemFont
 var _script: SystemFont
 var _pages: Dictionary = {}  # name -> Control
-var _campaign: Campaign = preload("res://data/levels/campaign.tres")
 
 
 func _ready() -> void:
@@ -124,7 +125,7 @@ func _build_logo() -> void:
 func _build_pages() -> void:
 	var main := _page("main", mode == Mode.PAUSE)
 	if mode == Mode.TITLE:
-		main.add_child(_item("START GAME", func() -> void: _start(0)))
+		main.add_child(_item("START GAME", func() -> void: _show("maps")))
 		main.add_child(_item("STAGES", func() -> void: _show("stages")))
 	else:
 		main.add_child(GrivetStyle.label("PAUSED", _heavy, 120, GrivetStyle.WHITE, 18))
@@ -134,11 +135,26 @@ func _build_pages() -> void:
 		main.add_child(_item("MAIN MENU", _to_title))
 	main.add_child(_item("QUIT", func() -> void: get_tree().quit()))
 
+	var maps := _page("maps", true)
+	maps.add_child(GrivetStyle.label("CHOOSE A MAP", _heavy, 90, GrivetStyle.WHITE, 14))
+	for map: Array in MAPS:
+		var scene: String = map[1]
+		maps.add_child(_item(map[0], func() -> void: _start(0, scene), (map[2] as Campaign).stages[0].subtitle))
+	maps.add_child(_item("BACK", func() -> void: _show("main")))
+
 	var stages := _page("stages", true)
 	stages.add_child(GrivetStyle.label("STAGES", _heavy, 90, GrivetStyle.WHITE, 14))
-	for i in _campaign.stages.size():
-		var stage := _campaign.stages[i]
-		stages.add_child(_item("%d. %s" % [i + 1, stage.title], func() -> void: _start(i), stage.subtitle))
+	for m in MAPS.size():
+		var map: Array = MAPS[m]
+		var scene: String = map[1]
+		var campaign: Campaign = map[2]
+		stages.add_child(_item(map[0], func() -> void: _show("stages_%d" % m), "%d stages" % campaign.stages.size()))
+		var page := _page("stages_%d" % m, true)
+		page.add_child(GrivetStyle.label(map[0], _heavy, 80, GrivetStyle.WHITE, 14))
+		for i in campaign.stages.size():
+			var stage := campaign.stages[i]
+			page.add_child(_item("%d. %s" % [i + 1, stage.title], func() -> void: _start(i, scene), stage.subtitle))
+		page.add_child(_item("BACK", func() -> void: _show("stages")))
 	stages.add_child(_item("BACK", func() -> void: _show("main")))
 
 	var settings := _page("settings", true)
@@ -244,10 +260,10 @@ func _slider(key: String, label_text: String, low: float, high: float, step: flo
 
 # --- Actions ---------------------------------------------------------------------
 
-func _start(stage: int) -> void:
+func _start(stage: int, scene: String) -> void:
 	Settings.requested_stage = stage
 	get_tree().paused = false
-	get_tree().change_scene_to_file(GAME_SCENE)
+	get_tree().change_scene_to_file(scene)
 
 
 func _pause() -> void:

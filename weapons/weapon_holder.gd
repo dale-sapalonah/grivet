@@ -155,6 +155,7 @@ func _shoot(weapon: WeaponModel, kick: Vector2) -> void:
 			func() -> AudioStreamWAV: return ProceduralAudio.gunshot(definition))
 	_audio.volume_db = definition.shot_volume_db
 	_audio.play()
+	Soundscape.own_shot_tail(definition)  # the rolling echo off the yard
 	if definition.casing_ejects and not definition.casing_eject_on_pump:
 		_eject_casing(definition)
 	shot_fired.emit(definition)

@@ -23,6 +23,7 @@ Ballistics="*res://ballistics/bullet_simulator.gd"
 AI="*res://ai/ai_director.gd"
 Settings="*res://core/settings.gd"
 MusicPlayer="*res://feedback/music_player.gd"
+Soundscape="*res://feedback/soundscape.gd"
 
 [debug]
 
@@ -41,6 +42,8 @@ window/vsync/vsync_mode=0
 3d_physics/layer_3="enemies"
 3d_physics/layer_4="hitboxes"
 3d_physics/layer_5="debris"
+3d_physics/layer_6="guard"
+3d_physics/layer_7="produce"
 
 [navigation]
 
@@ -52,6 +55,8 @@ window/vsync/vsync_mode=0
 common/physics_ticks_per_second=120
 
 [rendering]
+
+occlusion_culling/use_occlusion_culling=true
 
 renderer/rendering_method="forward_plus"
 anti_aliasing/quality/msaa_3d=0

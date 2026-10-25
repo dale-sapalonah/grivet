@@ -1,14 +1,15 @@
 extends Node
-## Headless campaign probe: checks a buai bundle heals, then plays the port's
-## stages by clearing each squad
+## Headless campaign probe: checks a buai bundle heals and that every enemy
+## spawn is reachable on the navmesh (floors joined by their stairs), then
+## plays the map's stages by clearing each squad
 ## (ai.kill) and checks the flow: each stage spawns its own squad, a cleared
 ## stage shouts KLIN CHOL! and WARAA!, the player is moved to the next start
 ## healed and re-armed, and the last stage ends with the final shout.
 ## Exit code 0 = all passed.
 ##
-##   $GODOT --headless --path . res://tests/probes/campaign.tscn
+##   $GODOT --headless --path . res://tests/probes/campaign.tscn [-- level=res://...]
 
-const LEVEL := "res://levels/port/port_yard.tscn"
+const PORT := "res://levels/port/port_yard.tscn"
 const WATCHDOG_SECONDS := 200.0
 
 var level: Node3D
@@ -18,7 +19,12 @@ var _shouts: PackedStringArray = []
 
 
 func _ready() -> void:
-	level = load(LEVEL).instantiate()
+	var path := PORT
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("level="):
+			path = arg.trim_prefix("level=")
+	print("level: %s" % path)
+	level = load(path).instantiate()
 	var campaign: Campaign = level.campaign.duplicate()
 	campaign.next_stage_delay = 0.5
 	level.campaign = campaign
@@ -34,7 +40,9 @@ func _run() -> void:
 	await level.combat_ready
 	var hud := get_tree().get_first_node_in_group("hud")
 	# The HUD logs every announced line; read what each clear adds.
-	await _check_gate_floor()
+	if level.scene_file_path == PORT:
+		await _check_gate_floor()
+	_check_reachable()
 	await _check_buai()
 	player.health.invulnerable = true
 	var campaign: Campaign = level.campaign
@@ -90,6 +98,23 @@ func _check_gate_floor() -> void:
 	_check("the gate into town has ground under it", holes == 0, "%d spots with no floor" % holes)
 
 
+## Every enemy spawn (on any floor) has a navmesh path from every stage's
+## start, so no squad is cut off upstairs and none is unreachable.
+func _check_reachable() -> void:
+	var map: RID = AI.nav_map
+	var cut_off: PackedStringArray = []
+	for stage in level.campaign.stages:
+		var from := NavigationServer3D.map_get_closest_point(map, stage.player_start)
+		for marker: Node3D in get_tree().get_nodes_in_group("enemy_spawn"):
+			var to := NavigationServer3D.map_get_closest_point(map, marker.global_position)
+			var path := NavigationServer3D.map_get_path(map, from, to, true)
+			var reached := not path.is_empty() and path[-1].distance_to(to) < 1.0 					and absf(to.y - marker.global_position.y) < 1.2
+			if not reached:
+				cut_off.append("%s from stage start %s" % [marker.name, stage.player_start])
+	_check("every enemy spawn is reachable on the navmesh from every stage start", cut_off.is_empty(),
+			", ".join(cut_off.slice(0, 6)))
+
+
 ## Hurt, then stand on a buai bundle: it heals and is used up.
 func _check_buai() -> void:
 	var bundles := get_tree().get_nodes_in_group("buai")
@@ -105,7 +130,7 @@ func _check_buai() -> void:
 		await get_tree().physics_frame
 	_check("chewing buai heals (%d bundles out)" % count, player.health.model.health > before and not is_instance_valid(bundle),
 			"health %.0f -> %.0f" % [before, player.health.model.health])
-	player.global_position = Vector3(0, 0, 26)
+	player.global_position = level.campaign.stages[0].player_start
 
 
 func _check(what: String, ok: bool, detail: String) -> void:

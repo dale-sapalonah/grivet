@@ -1,0 +1,3859 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://levels/gordons/gordons_market.gd" id="1_level"]
+[ext_resource type="PackedScene" path="res://player/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://ui/debug_overlay.tscn" id="4_overlay"]
+[ext_resource type="PackedScene" path="res://ui/hud.tscn" id="5_hud"]
+[ext_resource type="Texture2D" path="res://levels/port/materials/noise.tres" id="6_noise"]
+[ext_resource type="Resource" path="res://data/levels/gordons_campaign.tres" id="7_campaign"]
+[ext_resource type="Shader" path="res://levels/port/materials/asphalt.gdshader" id="shader_asphalt"]
+[ext_resource type="Shader" path="res://levels/port/materials/concrete.gdshader" id="shader_concrete"]
+[ext_resource type="Shader" path="res://levels/port/materials/dirt.gdshader" id="shader_dirt"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
+sky_top_color = Color(0.06, 0.08, 0.19, 1)
+sky_horizon_color = Color(0.66, 0.38, 0.26, 1)
+sky_curve = 0.09
+ground_bottom_color = Color(0.02, 0.02, 0.025, 1)
+ground_horizon_color = Color(0.32, 0.22, 0.17, 1)
+sun_angle_max = 12.0
+sun_curve = 0.06
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMaterial")
+
+[sub_resource type="Environment" id="Environment"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.38, 0.37, 0.48, 1)
+ambient_light_sky_contribution = 0.55
+ambient_light_energy = 1.9
+tonemap_mode = 2
+tonemap_exposure = 1.15
+fog_enabled = true
+fog_light_color = Color(0.34, 0.27, 0.27, 1)
+fog_density = 0.008
+fog_sun_scatter = 0.35
+fog_aerial_perspective = 0.6
+fog_sky_affect = 0.25
+adjustment_enabled = true
+adjustment_saturation = 1.08
+
+[sub_resource type="NavigationMesh" id="NavMesh"]
+cell_size = 0.125
+cell_height = 0.125
+agent_height = 1.75
+agent_radius = 0.375
+agent_max_climb = 0.25
+agent_max_slope = 46.0
+region_min_size = 30.0
+geometry_parsed_geometry_type = 1
+geometry_collision_mask = 33
+
+[sub_resource type="ShaderMaterial" id="Asphalt"]
+shader = ExtResource("shader_asphalt")
+shader_parameter/noise_tex = ExtResource("6_noise")
+
+[sub_resource type="ShaderMaterial" id="Road"]
+shader = ExtResource("shader_asphalt")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/lane_spacing = 3.5
+shader_parameter/lane_offset = -54.0
+shader_parameter/puddles = 0.2
+
+[sub_resource type="ShaderMaterial" id="Pavers"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.66, 0.64, 0.6, 1)
+shader_parameter/panel_width = 1.2
+shader_parameter/grime_height = 0.0
+
+[sub_resource type="ShaderMaterial" id="HallFloor"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.5, 0.49, 0.46, 1)
+shader_parameter/panel_width = 4.0
+shader_parameter/grime_height = 0.0
+
+[sub_resource type="ShaderMaterial" id="Concrete"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.72, 0.71, 0.68, 1)
+shader_parameter/panel_width = 0.0
+
+[sub_resource type="ShaderMaterial" id="Deck"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.68, 0.67, 0.64, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.0
+
+[sub_resource type="ShaderMaterial" id="Stair"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.6, 0.59, 0.56, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.0
+
+[sub_resource type="ShaderMaterial" id="Admin"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.86, 0.85, 0.8, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.8
+
+[sub_resource type="ShaderMaterial" id="Planter"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.78, 0.77, 0.73, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.3
+
+[sub_resource type="ShaderMaterial" id="Stone"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.82, 0.8, 0.76, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.0
+
+[sub_resource type="ShaderMaterial" id="Mural"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.2, 0.42, 0.24, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.4
+
+[sub_resource type="ShaderMaterial" id="Boundary"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.62, 0.6, 0.56, 1)
+shader_parameter/panel_width = 3.0
+shader_parameter/grime_height = 1.0
+
+[sub_resource type="ShaderMaterial" id="Dirt"]
+shader = ExtResource("shader_dirt")
+shader_parameter/noise_tex = ExtResource("6_noise")
+
+[sub_resource type="ShaderMaterial" id="Grass"]
+shader = ExtResource("shader_dirt")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/grass = 1.0
+
+[sub_resource type="ShaderMaterial" id="StoreKaiBar"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.85, 0.62, 0.16, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.9
+
+[sub_resource type="ShaderMaterial" id="StoreHadwiaStoa"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.2, 0.36, 0.62, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.9
+
+[sub_resource type="ShaderMaterial" id="StoreMarasinStoa"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.82, 0.83, 0.78, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.9
+
+[sub_resource type="ShaderMaterial" id="StoreTradeStoa"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.66, 0.16, 0.12, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.9
+
+[sub_resource type="ShaderMaterial" id="StoreWholsel"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.15, 0.5, 0.3, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.9
+
+[sub_resource type="StandardMaterial3D" id="SteelPaint"]
+albedo_color = Color(0.86, 0.87, 0.86, 1)
+metallic = 0.4
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Railing"]
+albedo_color = Color(0.8, 0.82, 0.82, 1)
+metallic = 0.6
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Fence"]
+albedo_color = Color(0.62, 0.64, 0.64, 1)
+metallic = 0.7
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="PoleSteel"]
+albedo_color = Color(0.32, 0.33, 0.34, 1)
+metallic = 0.6
+roughness = 0.5
+
+[sub_resource type="BoxShape3D" id="ShapeStallG0"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallGSacks1"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG2"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG3"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG4"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG5"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallGSacks6"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG7"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG8"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG9"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG10"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallGSacks11"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG12"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG13"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG14"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG15"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallGSacks16"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG17"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG18"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG19"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG20"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallGSacks21"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG22"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG23"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG24"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG25"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallGSacks26"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG27"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG28"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG29"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG30"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallGSacks31"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG32"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG33"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG34"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG35"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallGSacks36"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG37"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG38"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG39"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG40"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallGSacks41"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG42"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG43"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG44"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG45"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallGSacks46"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG47"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG48"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG49"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG50"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallGSacks51"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallG52"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU0"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallUSacks1"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU2"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU3"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU4"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallUSacks5"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU6"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU7"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU8"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallUSacks9"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU10"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU11"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU12"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallUSacks13"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU14"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU15"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU16"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallUSacks17"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU18"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU19"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU20"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallUSacks21"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU22"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU23"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU24"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallUSacks25"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU26"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU27"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU28"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallUSacks29"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU30"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU31"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU32"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallUSacks33"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU34"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU35"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU36"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallUSacks37"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU38"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU39"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU40"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallUSacks41"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU42"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU43"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU44"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallUSacks45"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU46"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU47"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU48"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallUSacks49"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU50"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU51"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallU52"]
+size = Vector3(7.2, 0.85, 1.1)
+
+[sub_resource type="BoxShape3D" id="ShapeStallUSacks53"]
+size = Vector3(6, 1.8, 1.2)
+
+[sub_resource type="BoxShape3D" id="ShapeShedASacks0"]
+size = Vector3(2.4, 1.8, 6)
+
+[sub_resource type="BoxShape3D" id="ShapeShedASacks1"]
+size = Vector3(2.4, 1.8, 6)
+
+[sub_resource type="BoxShape3D" id="ShapeShedASacks2"]
+size = Vector3(2.4, 1.8, 6)
+
+[sub_resource type="BoxShape3D" id="ShapeShedASacks3"]
+size = Vector3(2.4, 1.8, 4)
+
+[sub_resource type="BoxShape3D" id="ShapeShedASacksW"]
+size = Vector3(1.4, 1.1, 4)
+
+[sub_resource type="BoxShape3D" id="ShapeShedASacksE"]
+size = Vector3(1.4, 1.1, 3)
+
+[sub_resource type="BoxShape3D" id="ShapeShedBSacks0"]
+size = Vector3(2.4, 1.8, 6)
+
+[sub_resource type="BoxShape3D" id="ShapeShedBSacks1"]
+size = Vector3(2.4, 1.8, 6)
+
+[sub_resource type="BoxShape3D" id="ShapeShedBSacks2"]
+size = Vector3(2.4, 1.8, 6)
+
+[sub_resource type="BoxShape3D" id="ShapeShedBSacks3"]
+size = Vector3(2.4, 1.8, 4)
+
+[sub_resource type="BoxShape3D" id="ShapeShedBSacksW"]
+size = Vector3(1.4, 1.1, 4)
+
+[sub_resource type="BoxShape3D" id="ShapeShedBSacksE"]
+size = Vector3(1.4, 1.1, 3)
+
+[sub_resource type="BoxShape3D" id="ShapeSandNorth1"]
+size = Vector3(4, 1, 0.4)
+
+[sub_resource type="BoxShape3D" id="ShapeSandNorth2"]
+size = Vector3(4, 1, 0.4)
+
+[sub_resource type="BoxShape3D" id="ShapeSandRoad"]
+size = Vector3(0.4, 1, 4)
+
+[sub_resource type="BoxShape3D" id="ShapeSandShed"]
+size = Vector3(0.4, 1, 4)
+
+[sub_resource type="BoxShape3D" id="ShapeSandCarPark"]
+size = Vector3(4, 1, 0.4)
+
+[sub_resource type="BoxShape3D" id="ShapeSandPlaza"]
+size = Vector3(0.4, 1, 3)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian0"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian1"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian2"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian3"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian4"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian5"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian6"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian7"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian8"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian9"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian10"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian11"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian12"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian15"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian16"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian17"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian18"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian19"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian20"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian21"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian22"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian23"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian24"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian25"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian26"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian27"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeMedian28"]
+points = PackedVector3Array(-0.3, -0.55, -1, 0.3, -0.55, -1, 0.3, -0.47, -1, 0.16, -0.25, -1, 0.09, 0.55, -1, -0.09, 0.55, -1, -0.16, -0.25, -1, -0.3, -0.47, -1, -0.3, -0.55, 1, 0.3, -0.55, 1, 0.3, -0.47, 1, 0.16, -0.25, 1, 0.09, 0.55, 1, -0.09, 0.55, 1, -0.16, -0.25, 1, -0.3, -0.47, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeBarrierN1"]
+points = PackedVector3Array(-1, -0.55, -0.3, -1, -0.55, 0.3, -1, -0.47, 0.3, -1, -0.25, 0.16, -1, 0.55, 0.09, -1, 0.55, -0.09, -1, -0.25, -0.16, -1, -0.47, -0.3, 1, -0.55, -0.3, 1, -0.55, 0.3, 1, -0.47, 0.3, 1, -0.25, 0.16, 1, 0.55, 0.09, 1, 0.55, -0.09, 1, -0.25, -0.16, 1, -0.47, -0.3)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeBarrierW1"]
+points = PackedVector3Array(-1, -0.55, -0.3, -1, -0.55, 0.3, -1, -0.47, 0.3, -1, -0.25, 0.16, -1, 0.55, 0.09, -1, 0.55, -0.09, -1, -0.25, -0.16, -1, -0.47, -0.3, 1, -0.55, -0.3, 1, -0.55, 0.3, 1, -0.47, 0.3, 1, -0.25, 0.16, 1, 0.55, 0.09, 1, 0.55, -0.09, 1, -0.25, -0.16, 1, -0.47, -0.3)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeBarrierS1"]
+points = PackedVector3Array(-1, -0.55, -0.3, -1, -0.55, 0.3, -1, -0.47, 0.3, -1, -0.25, 0.16, -1, 0.55, 0.09, -1, 0.55, -0.09, -1, -0.25, -0.16, -1, -0.47, -0.3, 1, -0.55, -0.3, 1, -0.55, 0.3, 1, -0.47, 0.3, 1, -0.25, 0.16, 1, 0.55, 0.09, 1, 0.55, -0.09, 1, -0.25, -0.16, 1, -0.47, -0.3)
+
+[sub_resource type="ConvexPolygonShape3D" id="ShapeBarrierS2"]
+points = PackedVector3Array(-1, -0.55, -0.3, -1, -0.55, 0.3, -1, -0.47, 0.3, -1, -0.25, 0.16, -1, 0.55, 0.09, -1, 0.55, -0.09, -1, -0.25, -0.16, -1, -0.47, -0.3, 1, -0.55, -0.3, 1, -0.55, 0.3, 1, -0.47, 0.3, 1, -0.25, 0.16, 1, 0.55, 0.09, 1, 0.55, -0.09, 1, -0.25, -0.16, 1, -0.47, -0.3)
+
+[sub_resource type="BoxShape3D" id="TaxiShape"]
+size = Vector3(1.7, 1.44, 4.4)
+
+[sub_resource type="BoxShape3D" id="BusShape"]
+size = Vector3(2.05, 2.5, 7)
+
+[sub_resource type="BoxShape3D" id="TruckShape"]
+size = Vector3(2.2, 2.6, 7.2)
+
+[node name="GordonsMarket" type="Node3D"]
+script = ExtResource("1_level")
+bounds = AABB(-70, -0.5, -60, 140, 7.5, 122)
+campaign = ExtResource("7_campaign")
+lamp_lit_count = 4
+cover_floors = PackedFloat32Array(0, 4.8)
+safe_spots = PackedVector3Array(44, 90, 54, 60, 90, 50, 60, 90, -40, -12, 90, 36.5, -40, -90, -25, -64, -90, -40, -64, 180, 50, 20, 0, 58, -14, 0, 16, 40, 0, 30, 66, 180, -50)
+buai_spots = PackedVector3Array(-14, 0, 36, 24, 0, 28, -54, 0, 16, -40, 0, 36, 4, 0, -8, 24, 0, -16.5, 6, 4.8, 4, -4, 4.8, -16, -34, 4.8, -5, -46, 0, -20)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.4390, 0.1798, -0.8803, 0.0000, 0.9798, 0.2001, 0.8985, 0.0878, -0.4302, 0, 20, 0)
+light_color = Color(1, 0.6, 0.36, 1)
+light_energy = 1.25
+shadow_enabled = true
+shadow_bias = 0.04
+shadow_normal_bias = 1.5
+directional_shadow_mode = 0
+directional_shadow_max_distance = 50.0
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 44, 0, 54)
+
+[node name="HUD" parent="." instance=ExtResource("5_hud")]
+
+[node name="DebugOverlay" parent="." instance=ExtResource("4_overlay")]
+
+[node name="Navigation" type="NavigationRegion3D" parent="."]
+navigation_mesh = SubResource("NavMesh")
+
+[node name="StallG0" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.425, -27)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG0"]
+shape = SubResource("ShapeStallG0")
+
+[node name="StallGSacks1" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 0.9, -27)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallGSacks1"]
+shape = SubResource("ShapeStallGSacks1")
+
+[node name="StallG2" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 0.425, -27)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG2"]
+shape = SubResource("ShapeStallG2")
+
+[node name="StallG3" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 0.425, -22.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG3"]
+shape = SubResource("ShapeStallG3")
+
+[node name="StallG4" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.425, -22.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG4"]
+shape = SubResource("ShapeStallG4")
+
+[node name="StallG5" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 0.425, -22.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG5"]
+shape = SubResource("ShapeStallG5")
+
+[node name="StallGSacks6" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 0.9, -22.8)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallGSacks6"]
+shape = SubResource("ShapeStallGSacks6")
+
+[node name="StallG7" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.9, 0.425, -18.6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG7"]
+shape = SubResource("ShapeStallG7")
+
+[node name="StallG8" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 0.425, -18.6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG8"]
+shape = SubResource("ShapeStallG8")
+
+[node name="StallG9" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.425, -18.6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG9"]
+shape = SubResource("ShapeStallG9")
+
+[node name="StallG10" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 0.425, -18.6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG10"]
+shape = SubResource("ShapeStallG10")
+
+[node name="StallGSacks11" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 0.9, -18.6)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallGSacks11"]
+shape = SubResource("ShapeStallGSacks11")
+
+[node name="StallG12" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.9, 0.425, -14.4)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG12"]
+shape = SubResource("ShapeStallG12")
+
+[node name="StallG13" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 0.425, -14.4)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG13"]
+shape = SubResource("ShapeStallG13")
+
+[node name="StallG14" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.425, -14.4)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG14"]
+shape = SubResource("ShapeStallG14")
+
+[node name="StallG15" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 0.425, -14.4)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG15"]
+shape = SubResource("ShapeStallG15")
+
+[node name="StallGSacks16" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 0.9, -14.4)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallGSacks16"]
+shape = SubResource("ShapeStallGSacks16")
+
+[node name="StallG17" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.9, 0.425, -10.2)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG17"]
+shape = SubResource("ShapeStallG17")
+
+[node name="StallG18" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 0.425, -10.2)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG18"]
+shape = SubResource("ShapeStallG18")
+
+[node name="StallG19" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.425, -10.2)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG19"]
+shape = SubResource("ShapeStallG19")
+
+[node name="StallG20" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 0.425, -10.2)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG20"]
+shape = SubResource("ShapeStallG20")
+
+[node name="StallGSacks21" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 0.9, -10.2)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallGSacks21"]
+shape = SubResource("ShapeStallGSacks21")
+
+[node name="StallG22" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.9, 0.425, -6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG22"]
+shape = SubResource("ShapeStallG22")
+
+[node name="StallG23" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 0.425, -6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG23"]
+shape = SubResource("ShapeStallG23")
+
+[node name="StallG24" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.425, -6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG24"]
+shape = SubResource("ShapeStallG24")
+
+[node name="StallG25" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 0.425, -6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG25"]
+shape = SubResource("ShapeStallG25")
+
+[node name="StallGSacks26" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 0.9, -6)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallGSacks26"]
+shape = SubResource("ShapeStallGSacks26")
+
+[node name="StallG27" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 0.425, -1.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG27"]
+shape = SubResource("ShapeStallG27")
+
+[node name="StallG28" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.425, -1.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG28"]
+shape = SubResource("ShapeStallG28")
+
+[node name="StallG29" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 0.425, -1.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG29"]
+shape = SubResource("ShapeStallG29")
+
+[node name="StallG30" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 0.425, -1.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG30"]
+shape = SubResource("ShapeStallG30")
+
+[node name="StallGSacks31" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 0.9, 2.4)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallGSacks31"]
+shape = SubResource("ShapeStallGSacks31")
+
+[node name="StallG32" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.425, 2.4)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG32"]
+shape = SubResource("ShapeStallG32")
+
+[node name="StallG33" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 0.425, 2.4)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG33"]
+shape = SubResource("ShapeStallG33")
+
+[node name="StallG34" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 0.425, 2.4)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG34"]
+shape = SubResource("ShapeStallG34")
+
+[node name="StallG35" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 0.425, 6.6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG35"]
+shape = SubResource("ShapeStallG35")
+
+[node name="StallGSacks36" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.9, 6.6)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallGSacks36"]
+shape = SubResource("ShapeStallGSacks36")
+
+[node name="StallG37" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 0.425, 6.6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG37"]
+shape = SubResource("ShapeStallG37")
+
+[node name="StallG38" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 0.425, 6.6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG38"]
+shape = SubResource("ShapeStallG38")
+
+[node name="StallG39" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 0.425, 10.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG39"]
+shape = SubResource("ShapeStallG39")
+
+[node name="StallG40" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.425, 10.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG40"]
+shape = SubResource("ShapeStallG40")
+
+[node name="StallGSacks41" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 0.9, 10.8)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallGSacks41"]
+shape = SubResource("ShapeStallGSacks41")
+
+[node name="StallG42" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 0.425, 10.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG42"]
+shape = SubResource("ShapeStallG42")
+
+[node name="StallG43" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.9, 0.425, 15)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG43"]
+shape = SubResource("ShapeStallG43")
+
+[node name="StallG44" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 0.425, 15)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG44"]
+shape = SubResource("ShapeStallG44")
+
+[node name="StallG45" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.425, 15)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG45"]
+shape = SubResource("ShapeStallG45")
+
+[node name="StallGSacks46" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 0.9, 15)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallGSacks46"]
+shape = SubResource("ShapeStallGSacks46")
+
+[node name="StallG47" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 0.425, 15)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG47"]
+shape = SubResource("ShapeStallG47")
+
+[node name="StallG48" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.9, 0.425, 19.2)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG48"]
+shape = SubResource("ShapeStallG48")
+
+[node name="StallG49" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 0.425, 19.2)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG49"]
+shape = SubResource("ShapeStallG49")
+
+[node name="StallG50" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0.425, 19.2)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG50"]
+shape = SubResource("ShapeStallG50")
+
+[node name="StallGSacks51" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 0.9, 19.2)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallGSacks51"]
+shape = SubResource("ShapeStallGSacks51")
+
+[node name="StallG52" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 0.425, 19.2)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallG52"]
+shape = SubResource("ShapeStallG52")
+
+[node name="StallU0" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.9, 5.225, -27)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU0"]
+shape = SubResource("ShapeStallU0")
+
+[node name="StallUSacks1" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 5.7, -27)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallUSacks1"]
+shape = SubResource("ShapeStallUSacks1")
+
+[node name="StallU2" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 5.225, -27)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU2"]
+shape = SubResource("ShapeStallU2")
+
+[node name="StallU3" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 5.225, -27)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU3"]
+shape = SubResource("ShapeStallU3")
+
+[node name="StallU4" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 5.225, -27)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU4"]
+shape = SubResource("ShapeStallU4")
+
+[node name="StallUSacks5" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.9, 5.7, -22.8)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallUSacks5"]
+shape = SubResource("ShapeStallUSacks5")
+
+[node name="StallU6" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 5.225, -22.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU6"]
+shape = SubResource("ShapeStallU6")
+
+[node name="StallU7" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 5.225, -22.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU7"]
+shape = SubResource("ShapeStallU7")
+
+[node name="StallU8" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 5.225, -22.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU8"]
+shape = SubResource("ShapeStallU8")
+
+[node name="StallUSacks9" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 5.7, -22.8)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallUSacks9"]
+shape = SubResource("ShapeStallUSacks9")
+
+[node name="StallU10" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.9, 5.225, -18.6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU10"]
+shape = SubResource("ShapeStallU10")
+
+[node name="StallU11" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 5.225, -18.6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU11"]
+shape = SubResource("ShapeStallU11")
+
+[node name="StallU12" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 5.225, -18.6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU12"]
+shape = SubResource("ShapeStallU12")
+
+[node name="StallUSacks13" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 5.7, -18.6)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallUSacks13"]
+shape = SubResource("ShapeStallUSacks13")
+
+[node name="StallU14" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 5.225, -18.6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU14"]
+shape = SubResource("ShapeStallU14")
+
+[node name="StallU15" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.9, 5.225, -14.4)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU15"]
+shape = SubResource("ShapeStallU15")
+
+[node name="StallU16" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 5.225, -14.4)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU16"]
+shape = SubResource("ShapeStallU16")
+
+[node name="StallUSacks17" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 5.7, -14.4)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallUSacks17"]
+shape = SubResource("ShapeStallUSacks17")
+
+[node name="StallU18" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 5.225, -14.4)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU18"]
+shape = SubResource("ShapeStallU18")
+
+[node name="StallU19" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.9, 5.225, -10.2)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU19"]
+shape = SubResource("ShapeStallU19")
+
+[node name="StallU20" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 5.225, -10.2)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU20"]
+shape = SubResource("ShapeStallU20")
+
+[node name="StallUSacks21" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 5.7, -10.2)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallUSacks21"]
+shape = SubResource("ShapeStallUSacks21")
+
+[node name="StallU22" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 5.225, -10.2)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU22"]
+shape = SubResource("ShapeStallU22")
+
+[node name="StallU23" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 5.225, -10.2)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU23"]
+shape = SubResource("ShapeStallU23")
+
+[node name="StallU24" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.9, 5.225, -6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU24"]
+shape = SubResource("ShapeStallU24")
+
+[node name="StallUSacks25" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 5.7, -6)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallUSacks25"]
+shape = SubResource("ShapeStallUSacks25")
+
+[node name="StallU26" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 5.225, -6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU26"]
+shape = SubResource("ShapeStallU26")
+
+[node name="StallU27" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 5.225, -6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU27"]
+shape = SubResource("ShapeStallU27")
+
+[node name="StallU28" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 5.225, -6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU28"]
+shape = SubResource("ShapeStallU28")
+
+[node name="StallUSacks29" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 5.7, -1.8)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallUSacks29"]
+shape = SubResource("ShapeStallUSacks29")
+
+[node name="StallU30" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 5.225, -1.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU30"]
+shape = SubResource("ShapeStallU30")
+
+[node name="StallU31" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 5.225, -1.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU31"]
+shape = SubResource("ShapeStallU31")
+
+[node name="StallU32" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 5.225, -1.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU32"]
+shape = SubResource("ShapeStallU32")
+
+[node name="StallUSacks33" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 5.7, 2.4)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallUSacks33"]
+shape = SubResource("ShapeStallUSacks33")
+
+[node name="StallU34" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 5.225, 2.4)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU34"]
+shape = SubResource("ShapeStallU34")
+
+[node name="StallU35" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 5.225, 2.4)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU35"]
+shape = SubResource("ShapeStallU35")
+
+[node name="StallU36" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 5.225, 2.4)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU36"]
+shape = SubResource("ShapeStallU36")
+
+[node name="StallUSacks37" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 5.7, 6.6)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallUSacks37"]
+shape = SubResource("ShapeStallUSacks37")
+
+[node name="StallU38" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 5.225, 6.6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU38"]
+shape = SubResource("ShapeStallU38")
+
+[node name="StallU39" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 5.225, 6.6)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU39"]
+shape = SubResource("ShapeStallU39")
+
+[node name="StallU40" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 5.225, 10.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU40"]
+shape = SubResource("ShapeStallU40")
+
+[node name="StallUSacks41" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 5.7, 10.8)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallUSacks41"]
+shape = SubResource("ShapeStallUSacks41")
+
+[node name="StallU42" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 5.225, 10.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU42"]
+shape = SubResource("ShapeStallU42")
+
+[node name="StallU43" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 5.225, 10.8)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU43"]
+shape = SubResource("ShapeStallU43")
+
+[node name="StallU44" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.9, 5.225, 15)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU44"]
+shape = SubResource("ShapeStallU44")
+
+[node name="StallUSacks45" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 5.7, 15)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallUSacks45"]
+shape = SubResource("ShapeStallUSacks45")
+
+[node name="StallU46" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 5.225, 15)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU46"]
+shape = SubResource("ShapeStallU46")
+
+[node name="StallU47" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 5.225, 15)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU47"]
+shape = SubResource("ShapeStallU47")
+
+[node name="StallU48" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 5.225, 15)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU48"]
+shape = SubResource("ShapeStallU48")
+
+[node name="StallUSacks49" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.9, 5.7, 19.2)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallUSacks49"]
+shape = SubResource("ShapeStallUSacks49")
+
+[node name="StallU50" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 5.225, 19.2)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU50"]
+shape = SubResource("ShapeStallU50")
+
+[node name="StallU51" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 5.225, 19.2)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU51"]
+shape = SubResource("ShapeStallU51")
+
+[node name="StallU52" type="StaticBody3D" parent="Navigation" groups=["stall_row"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.7, 5.225, 19.2)
+metadata/surface = "wood"
+metadata/size = Vector3(7.2, 0.85, 1.1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallU52"]
+shape = SubResource("ShapeStallU52")
+
+[node name="StallUSacks53" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 5.7, 19.2)
+metadata/surface = "sandbag"
+metadata/size = Vector3(6, 1.8, 1.2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/StallUSacks53"]
+shape = SubResource("ShapeStallUSacks53")
+
+[node name="ShedASacks0" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -58, 0.9, 11)
+metadata/surface = "sandbag"
+metadata/size = Vector3(2.4, 1.8, 6)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/ShedASacks0"]
+shape = SubResource("ShapeShedASacks0")
+
+[node name="ShedASacks1" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -58, 0.9, 20)
+metadata/surface = "sandbag"
+metadata/size = Vector3(2.4, 1.8, 6)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/ShedASacks1"]
+shape = SubResource("ShapeShedASacks1")
+
+[node name="ShedASacks2" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -58, 0.9, 29)
+metadata/surface = "sandbag"
+metadata/size = Vector3(2.4, 1.8, 6)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/ShedASacks2"]
+shape = SubResource("ShapeShedASacks2")
+
+[node name="ShedASacks3" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -58, 0.9, 37)
+metadata/surface = "sandbag"
+metadata/size = Vector3(2.4, 1.8, 4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/ShedASacks3"]
+shape = SubResource("ShapeShedASacks3")
+
+[node name="ShedASacksW" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -62.4, 0.55, 22)
+metadata/surface = "sandbag"
+metadata/size = Vector3(1.4, 1.1, 4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/ShedASacksW"]
+shape = SubResource("ShapeShedASacksW")
+
+[node name="ShedASacksE" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -53.6, 0.55, 30)
+metadata/surface = "sandbag"
+metadata/size = Vector3(1.4, 1.1, 3)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/ShedASacksE"]
+shape = SubResource("ShapeShedASacksE")
+
+[node name="ShedBSacks0" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 0.9, 11)
+metadata/surface = "sandbag"
+metadata/size = Vector3(2.4, 1.8, 6)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/ShedBSacks0"]
+shape = SubResource("ShapeShedBSacks0")
+
+[node name="ShedBSacks1" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 0.9, 20)
+metadata/surface = "sandbag"
+metadata/size = Vector3(2.4, 1.8, 6)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/ShedBSacks1"]
+shape = SubResource("ShapeShedBSacks1")
+
+[node name="ShedBSacks2" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 0.9, 29)
+metadata/surface = "sandbag"
+metadata/size = Vector3(2.4, 1.8, 6)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/ShedBSacks2"]
+shape = SubResource("ShapeShedBSacks2")
+
+[node name="ShedBSacks3" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 0.9, 37)
+metadata/surface = "sandbag"
+metadata/size = Vector3(2.4, 1.8, 4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/ShedBSacks3"]
+shape = SubResource("ShapeShedBSacks3")
+
+[node name="ShedBSacksW" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44.4, 0.55, 22)
+metadata/surface = "sandbag"
+metadata/size = Vector3(1.4, 1.1, 4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/ShedBSacksW"]
+shape = SubResource("ShapeShedBSacksW")
+
+[node name="ShedBSacksE" type="StaticBody3D" parent="Navigation" groups=["sacks"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35.6, 0.55, 30)
+metadata/surface = "sandbag"
+metadata/size = Vector3(1.4, 1.1, 3)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/ShedBSacksE"]
+shape = SubResource("ShapeShedBSacksE")
+
+[node name="SandNorth1" type="StaticBody3D" parent="Navigation" groups=["sandbag_wall"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.5, -40)
+metadata/surface = "sandbag"
+metadata/size = Vector3(4, 1, 0.4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/SandNorth1"]
+shape = SubResource("ShapeSandNorth1")
+
+[node name="SandNorth2" type="StaticBody3D" parent="Navigation" groups=["sandbag_wall"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.5, -38)
+metadata/surface = "sandbag"
+metadata/size = Vector3(4, 1, 0.4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/SandNorth2"]
+shape = SubResource("ShapeSandNorth2")
+
+[node name="SandRoad" type="StaticBody3D" parent="Navigation" groups=["sandbag_wall"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 0.5, -12)
+metadata/surface = "sandbag"
+metadata/size = Vector3(0.4, 1, 4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/SandRoad"]
+shape = SubResource("ShapeSandRoad")
+
+[node name="SandShed" type="StaticBody3D" parent="Navigation" groups=["sandbag_wall"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26, 0.5, 24)
+metadata/surface = "sandbag"
+metadata/size = Vector3(0.4, 1, 4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/SandShed"]
+shape = SubResource("ShapeSandShed")
+
+[node name="SandCarPark" type="StaticBody3D" parent="Navigation" groups=["sandbag_wall"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0.5, -30)
+metadata/surface = "sandbag"
+metadata/size = Vector3(4, 1, 0.4)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/SandCarPark"]
+shape = SubResource("ShapeSandCarPark")
+
+[node name="SandPlaza" type="StaticBody3D" parent="Navigation" groups=["sandbag_wall"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 0.5, 30)
+metadata/surface = "sandbag"
+metadata/size = Vector3(0.4, 1, 3)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/SandPlaza"]
+shape = SubResource("ShapeSandPlaza")
+
+[node name="Median0" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, -54)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median0"]
+shape = SubResource("ShapeMedian0")
+
+[node name="Median1" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, -50)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median1"]
+shape = SubResource("ShapeMedian1")
+
+[node name="Median2" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, -46)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median2"]
+shape = SubResource("ShapeMedian2")
+
+[node name="Median3" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, -42)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median3"]
+shape = SubResource("ShapeMedian3")
+
+[node name="Median4" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, -38)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median4"]
+shape = SubResource("ShapeMedian4")
+
+[node name="Median5" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, -34)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median5"]
+shape = SubResource("ShapeMedian5")
+
+[node name="Median6" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, -30)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median6"]
+shape = SubResource("ShapeMedian6")
+
+[node name="Median7" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, -26)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median7"]
+shape = SubResource("ShapeMedian7")
+
+[node name="Median8" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, -22)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median8"]
+shape = SubResource("ShapeMedian8")
+
+[node name="Median9" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, -18)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median9"]
+shape = SubResource("ShapeMedian9")
+
+[node name="Median10" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, -14)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median10"]
+shape = SubResource("ShapeMedian10")
+
+[node name="Median11" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, -10)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median11"]
+shape = SubResource("ShapeMedian11")
+
+[node name="Median12" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, -6)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median12"]
+shape = SubResource("ShapeMedian12")
+
+[node name="Median15" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, 6)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median15"]
+shape = SubResource("ShapeMedian15")
+
+[node name="Median16" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, 10)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median16"]
+shape = SubResource("ShapeMedian16")
+
+[node name="Median17" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, 14)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median17"]
+shape = SubResource("ShapeMedian17")
+
+[node name="Median18" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, 18)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median18"]
+shape = SubResource("ShapeMedian18")
+
+[node name="Median19" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, 22)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median19"]
+shape = SubResource("ShapeMedian19")
+
+[node name="Median20" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, 26)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median20"]
+shape = SubResource("ShapeMedian20")
+
+[node name="Median21" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, 30)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median21"]
+shape = SubResource("ShapeMedian21")
+
+[node name="Median22" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, 34)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median22"]
+shape = SubResource("ShapeMedian22")
+
+[node name="Median23" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, 38)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median23"]
+shape = SubResource("ShapeMedian23")
+
+[node name="Median24" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, 42)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median24"]
+shape = SubResource("ShapeMedian24")
+
+[node name="Median25" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, 46)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median25"]
+shape = SubResource("ShapeMedian25")
+
+[node name="Median26" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, 50)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median26"]
+shape = SubResource("ShapeMedian26")
+
+[node name="Median27" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, 54)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median27"]
+shape = SubResource("ShapeMedian27")
+
+[node name="Median28" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.55, 58)
+metadata/surface = "concrete"
+metadata/size = Vector3(0.6, 1.1, 2)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Median28"]
+shape = SubResource("ShapeMedian28")
+
+[node name="BarrierN1" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.55, -44)
+metadata/surface = "concrete"
+metadata/size = Vector3(2, 1.1, 0.6)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/BarrierN1"]
+shape = SubResource("ShapeBarrierN1")
+
+[node name="BarrierW1" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26, 0.55, -2)
+metadata/surface = "concrete"
+metadata/size = Vector3(2, 1.1, 0.6)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/BarrierW1"]
+shape = SubResource("ShapeBarrierW1")
+
+[node name="BarrierS1" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0.55, 46)
+metadata/surface = "concrete"
+metadata/size = Vector3(2, 1.1, 0.6)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/BarrierS1"]
+shape = SubResource("ShapeBarrierS1")
+
+[node name="BarrierS2" type="StaticBody3D" parent="Navigation" groups=["jersey_barrier"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, 0.55, 46)
+metadata/surface = "concrete"
+metadata/size = Vector3(2, 1.1, 0.6)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/BarrierS2"]
+shape = SubResource("ShapeBarrierS2")
+
+[node name="Ground" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 1)
+use_collision = true
+size = Vector3(144, 1, 126)
+material = SubResource("Asphalt")
+metadata/surface = "concrete"
+
+[node name="Plaza" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -0.49, 33)
+use_collision = true
+size = Vector3(64, 1, 22)
+material = SubResource("Pavers")
+metadata/surface = "concrete"
+
+[node name="HallFloor" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, -0.485, -4)
+use_collision = true
+size = Vector3(56, 1.01, 52)
+material = SubResource("HallFloor")
+metadata/surface = "concrete"
+
+[node name="Road" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, -0.49, 1)
+use_collision = true
+size = Vector3(16, 0.98, 126)
+material = SubResource("Road")
+metadata/surface = "concrete"
+
+[node name="VergeE" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 67, -0.49, 1)
+use_collision = true
+size = Vector3(10, 0.98, 126)
+material = SubResource("Grass")
+metadata/surface = "dirt"
+
+[node name="ShedYard" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -47, -0.4925, 23)
+use_collision = true
+size = Vector3(38, 0.985, 42)
+material = SubResource("Dirt")
+metadata/surface = "dirt"
+
+[node name="Col0_0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 2.2, -30)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post0_0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 7.6, -30)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col0_1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 2.2, -21.3333)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post0_1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 7.6, -21.3333)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col0_2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 2.2, -12.6667)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post0_2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 7.6, -12.6667)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col0_3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 2.2, -4)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post0_3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 7.6, -4)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col0_4" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 2.2, 4.66667)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post0_4" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 7.6, 4.66667)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col0_5" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 2.2, 13.3333)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post0_5" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 7.6, 13.3333)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col0_6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 2.2, 22)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post0_6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 7.6, 22)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col1_0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.2, -30)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post1_0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 7.6, -30)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col1_1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.2, -21.3333)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Col1_2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.2, -12.6667)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Col1_3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.2, -4)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Col1_4" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.2, 4.66667)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Col1_5" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.2, 13.3333)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Col1_6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2.2, 22)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post1_6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 7.6, 22)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col2_0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 2.2, -30)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post2_0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 7.6, -30)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col2_1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 2.2, -21.3333)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post2_1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 7.6, -21.3333)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col2_2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 2.2, -12.6667)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post2_2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 7.6, -12.6667)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col2_3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 2.2, -4)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post2_3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 7.6, -4)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col2_4" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 2.2, 4.66667)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post2_4" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 7.6, 4.66667)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col2_5" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 2.2, 13.3333)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post2_5" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 7.6, 13.3333)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col2_6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 2.2, 22)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post2_6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 7.6, 22)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col3_0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2.2, -30)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post3_0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 7.6, -30)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col3_1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2.2, -21.3333)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Col3_2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2.2, -12.6667)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Col3_3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2.2, -4)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Col3_4" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2.2, 4.66667)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Col3_5" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2.2, 13.3333)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Col3_6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2.2, 22)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post3_6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 7.6, 22)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col4_0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2.2, -30)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post4_0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 7.6, -30)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col4_1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2.2, -21.3333)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post4_1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 7.6, -21.3333)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col4_2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2.2, -12.6667)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post4_2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 7.6, -12.6667)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col4_3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2.2, -4)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post4_3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 7.6, -4)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col4_4" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2.2, 4.66667)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post4_4" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 7.6, 4.66667)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col4_5" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2.2, 13.3333)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post4_5" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 7.6, 13.3333)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col4_6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2.2, 22)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post4_6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 7.6, 22)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col5_0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 2.2, -30)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post5_0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 7.6, -30)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col5_1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 2.2, -21.3333)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Col5_2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 2.2, -12.6667)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Col5_3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 2.2, -4)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Col5_4" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 2.2, 4.66667)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Col5_5" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 2.2, 13.3333)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Col5_6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 2.2, 22)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post5_6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 7.6, 22)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col6_0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 2.2, -30)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post6_0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 7.6, -30)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col6_1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 2.2, -21.3333)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post6_1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 7.6, -21.3333)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col6_2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 2.2, -12.6667)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post6_2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 7.6, -12.6667)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col6_3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 2.2, -4)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post6_3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 7.6, -4)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col6_4" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 2.2, 4.66667)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post6_4" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 7.6, 4.66667)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col6_5" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 2.2, 13.3333)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post6_5" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 7.6, 13.3333)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col6_6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 2.2, 22)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post6_6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 7.6, 22)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col7_0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 2.2, -30)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post7_0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 7.6, -30)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col7_1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 2.2, -21.3333)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post7_1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 7.6, -21.3333)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col7_2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 2.2, -12.6667)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post7_2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 7.6, -12.6667)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col7_3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 2.2, -4)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post7_3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 7.6, -4)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col7_4" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 2.2, 4.66667)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post7_4" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 7.6, 4.66667)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col7_5" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 2.2, 13.3333)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post7_5" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 7.6, 13.3333)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Col7_6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 2.2, 22)
+use_collision = true
+size = Vector3(0.6, 4.4, 0.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="Post7_6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 7.6, 22)
+use_collision = true
+size = Vector3(0.3, 5.6, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="Deck0" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.75, 4.6, -4)
+use_collision = true
+size = Vector3(2.5, 0.4, 52)
+material = SubResource("Deck")
+metadata/surface = "concrete"
+
+[node name="Deck1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 4.6, -16.5)
+use_collision = true
+size = Vector3(5, 0.4, 27)
+material = SubResource("Deck")
+metadata/surface = "concrete"
+
+[node name="Deck2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 4.6, 16.5)
+use_collision = true
+size = Vector3(5, 0.4, 11)
+material = SubResource("Deck")
+metadata/surface = "concrete"
+
+[node name="Deck3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 4.6, -4)
+use_collision = true
+size = Vector3(41, 0.4, 52)
+material = SubResource("Deck")
+metadata/surface = "concrete"
+
+[node name="Deck4" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33, 4.6, -28.5)
+use_collision = true
+size = Vector3(5, 0.4, 3)
+material = SubResource("Deck")
+metadata/surface = "concrete"
+
+[node name="Deck5" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33, 4.6, 4.5)
+use_collision = true
+size = Vector3(5, 0.4, 35)
+material = SubResource("Deck")
+metadata/surface = "concrete"
+
+[node name="Deck6" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.75, 4.6, -4)
+use_collision = true
+size = Vector3(2.5, 0.4, 52)
+material = SubResource("Deck")
+metadata/surface = "concrete"
+
+[node name="StairW" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 0.957826, -0.287348, 0, 0.287348, 0.957826, -13, 2.25633, 4.9569)
+use_collision = true
+size = Vector3(3, 0.3, 16.7045)
+material = SubResource("Stair")
+metadata/surface = "concrete"
+
+[node name="StairE" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 0.960195, -0.27933, 0, 0.27933, 0.960195, 33, 2.25597, -18.7919)
+use_collision = true
+size = Vector3(3, 0.3, 17.184)
+material = SubResource("Stair")
+metadata/surface = "concrete"
+
+[node name="WellWRailW" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.5, 5.35, 4)
+use_collision = true
+collision_layer = 32
+size = Vector3(0.1, 1.1, 14)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="WellWRailE" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, 5.35, 4)
+use_collision = true
+collision_layer = 32
+size = Vector3(0.1, 1.1, 14)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="WellWRailS" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 5.35, 11)
+use_collision = true
+collision_layer = 32
+size = Vector3(5, 1.1, 0.1)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="WellERailW" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30.5, 5.35, -20)
+use_collision = true
+collision_layer = 32
+size = Vector3(0.1, 1.1, 14)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="WellERailE" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.5, 5.35, -20)
+use_collision = true
+collision_layer = 32
+size = Vector3(0.1, 1.1, 14)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="WellERailS" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33, 5.35, -13)
+use_collision = true
+collision_layer = 32
+size = Vector3(5, 1.1, 0.1)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="UpRailN" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 5.35, -30)
+use_collision = true
+collision_layer = 32
+size = Vector3(56, 1.1, 0.1)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="UpRailE" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 5.35, -4)
+use_collision = true
+collision_layer = 32
+size = Vector3(0.1, 1.1, 52)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="UpRailS1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 5.35, 22)
+use_collision = true
+collision_layer = 32
+size = Vector3(20, 1.1, 0.1)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="UpRailS2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 5.35, 22)
+use_collision = true
+collision_layer = 32
+size = Vector3(30, 1.1, 0.1)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="UpRailW1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 5.35, -18.25)
+use_collision = true
+collision_layer = 32
+size = Vector3(0.1, 1.1, 23.5)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="UpRailW2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 5.35, 9.25)
+use_collision = true
+collision_layer = 32
+size = Vector3(0.1, 1.1, 25.5)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="FenceN1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 0.6, -30)
+use_collision = true
+collision_layer = 32
+size = Vector3(14, 1.2, 0.1)
+material = SubResource("Fence")
+metadata/surface = "steel"
+
+[node name="FenceN2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.6, -30)
+use_collision = true
+collision_layer = 32
+size = Vector3(20, 1.2, 0.1)
+material = SubResource("Fence")
+metadata/surface = "steel"
+
+[node name="FenceN3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33, 0.6, -30)
+use_collision = true
+collision_layer = 32
+size = Vector3(10, 1.2, 0.1)
+material = SubResource("Fence")
+metadata/surface = "steel"
+
+[node name="FenceE1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 0.6, -22)
+use_collision = true
+collision_layer = 32
+size = Vector3(0.1, 1.2, 16)
+material = SubResource("Fence")
+metadata/surface = "steel"
+
+[node name="FenceE2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 0.6, -1.5)
+use_collision = true
+collision_layer = 32
+size = Vector3(0.1, 1.2, 15)
+material = SubResource("Fence")
+metadata/surface = "steel"
+
+[node name="FenceE3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 0.6, 16.5)
+use_collision = true
+collision_layer = 32
+size = Vector3(0.1, 1.2, 11)
+material = SubResource("Fence")
+metadata/surface = "steel"
+
+[node name="FenceS1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.6, 22)
+use_collision = true
+collision_layer = 32
+size = Vector3(12, 1.2, 0.1)
+material = SubResource("Fence")
+metadata/surface = "steel"
+
+[node name="FenceS2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.6, 22)
+use_collision = true
+collision_layer = 32
+size = Vector3(14, 1.2, 0.1)
+material = SubResource("Fence")
+metadata/surface = "steel"
+
+[node name="FenceS3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29, 0.6, 22)
+use_collision = true
+collision_layer = 32
+size = Vector3(18, 1.2, 0.1)
+material = SubResource("Fence")
+metadata/surface = "steel"
+
+[node name="FenceW1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.6, -25)
+use_collision = true
+collision_layer = 32
+size = Vector3(0.1, 1.2, 10)
+material = SubResource("Fence")
+metadata/surface = "steel"
+
+[node name="FenceW2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.6, -6)
+use_collision = true
+collision_layer = 32
+size = Vector3(0.1, 1.2, 16)
+material = SubResource("Fence")
+metadata/surface = "steel"
+
+[node name="FenceW3" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.6, 15)
+use_collision = true
+collision_layer = 32
+size = Vector3(0.1, 1.2, 14)
+material = SubResource("Fence")
+metadata/surface = "steel"
+
+[node name="AdminN" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.85, 2.2, -29.55)
+use_collision = true
+size = Vector3(11.7, 4.4, 0.3)
+material = SubResource("Admin")
+metadata/surface = "concrete"
+
+[node name="AdminE1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.15, 2.2, -27.7)
+use_collision = true
+size = Vector3(0.3, 4.4, 3.4)
+material = SubResource("Admin")
+metadata/surface = "concrete"
+
+[node name="AdminE2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.15, 2.2, -22.9)
+use_collision = true
+size = Vector3(0.3, 4.4, 2.2)
+material = SubResource("Admin")
+metadata/surface = "concrete"
+
+[node name="AdminS1" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.35, 2.2, -21.65)
+use_collision = true
+size = Vector3(4.7, 4.4, 0.3)
+material = SubResource("Admin")
+metadata/surface = "concrete"
+
+[node name="AdminS2" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.65, 2.2, -21.65)
+use_collision = true
+size = Vector3(4.7, 4.4, 0.3)
+material = SubResource("Admin")
+metadata/surface = "concrete"
+
+[node name="AdminMid" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 2.2, -26.7)
+use_collision = true
+size = Vector3(0.3, 4.4, 5.4)
+material = SubResource("Admin")
+metadata/surface = "concrete"
+
+[node name="RampSouth" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(0.984563, 0.175033, 0, -0.175033, 0.984563, 0, 0, 0, 1, 22.4737, 2.25232, 25.5)
+use_collision = true
+size = Vector3(27.4233, 0.3, 3)
+material = SubResource("Deck")
+metadata/surface = "concrete"
+
+[node name="RampLanding" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 4.6, 24.5)
+use_collision = true
+size = Vector3(7, 0.4, 5)
+material = SubResource("Deck")
+metadata/surface = "concrete"
+
+[node name="RampRailOut" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.5, 0.55, 27.05)
+use_collision = true
+collision_layer = 32
+size = Vector3(27, 1.1, 0.1)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="LandingRailS" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 5.35, 27)
+use_collision = true
+collision_layer = 32
+size = Vector3(7, 1.1, 0.1)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="LandingRailW" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 5.35, 24.5)
+use_collision = true
+collision_layer = 32
+size = Vector3(0.1, 1.1, 5)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="Bridge" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29, 4.6, -5)
+use_collision = true
+size = Vector3(22, 0.4, 3)
+material = SubResource("Deck")
+metadata/surface = "concrete"
+
+[node name="BridgeRailN" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.5, 5.35, -6.5)
+use_collision = true
+collision_layer = 32
+size = Vector3(19, 1.1, 0.1)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="BridgeRailS" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.5, 5.35, -3.5)
+use_collision = true
+collision_layer = 32
+size = Vector3(19, 1.1, 0.1)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="TowerLanding" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 4.6, -5.75)
+use_collision = true
+size = Vector3(6, 0.4, 4.5)
+material = SubResource("Deck")
+metadata/surface = "concrete"
+
+[node name="TowerStair" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 0.938096, 0.346374, 0, -0.346374, 0.938096, -41, 2.25929, -14.448)
+use_collision = true
+size = Vector3(3, 0.3, 13.8578)
+material = SubResource("Stair")
+metadata/surface = "concrete"
+
+[node name="TowerPostA" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -43, 2.2, -8)
+use_collision = true
+size = Vector3(0.5, 4.4, 0.5)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="TowerPostB" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37, 2.2, -8)
+use_collision = true
+size = Vector3(0.5, 4.4, 0.5)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="TowerPostC" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -43, 2.2, -3.5)
+use_collision = true
+size = Vector3(0.5, 4.4, 0.5)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="TowerPostD" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37, 2.2, -3.5)
+use_collision = true
+size = Vector3(0.5, 4.4, 0.5)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="BridgePier" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29, 2.2, -5)
+use_collision = true
+size = Vector3(0.5, 4.4, 0.5)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="TowerRailW" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -43, 5.35, -5.75)
+use_collision = true
+collision_layer = 32
+size = Vector3(0.1, 1.1, 4.5)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="TowerRailS" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 5.35, -3.5)
+use_collision = true
+collision_layer = 32
+size = Vector3(6, 1.1, 0.1)
+material = SubResource("Railing")
+metadata/surface = "steel"
+
+[node name="KioskA" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 6.1, -14.4)
+use_collision = true
+size = Vector3(3.6, 2.6, 3)
+material = SubResource("Admin")
+metadata/surface = "concrete"
+
+[node name="KioskB" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.9, 6.1, 6.6)
+use_collision = true
+size = Vector3(3.6, 2.6, 3)
+material = SubResource("Admin")
+metadata/surface = "concrete"
+
+[node name="PlanterA" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.275, 31.5)
+use_collision = true
+size = Vector3(12, 0.55, 3)
+material = SubResource("Planter")
+metadata/surface = "concrete"
+
+[node name="PlanterB" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.275, 31.5)
+use_collision = true
+size = Vector3(12, 0.55, 3)
+material = SubResource("Planter")
+metadata/surface = "concrete"
+
+[node name="PlanterC" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27, 0.275, 35.5)
+use_collision = true
+size = Vector3(10, 0.55, 3)
+material = SubResource("Planter")
+metadata/surface = "concrete"
+
+[node name="PlanterD" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.275, 40.5)
+use_collision = true
+size = Vector3(8, 0.55, 3)
+material = SubResource("Planter")
+metadata/surface = "concrete"
+
+[node name="PlanterE" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.275, 40.5)
+use_collision = true
+size = Vector3(10, 0.55, 3)
+material = SubResource("Planter")
+metadata/surface = "concrete"
+
+[node name="Monument" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 36)
+use_collision = true
+size = Vector3(1.6, 0.6, 1.6)
+material = SubResource("Concrete")
+metadata/surface = "concrete"
+
+[node name="MonumentStone" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 36)
+use_collision = true
+size = Vector3(1.2, 1, 1)
+material = SubResource("Stone")
+metadata/surface = "concrete"
+
+[node name="MuralWall" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 1.8, 41.8)
+use_collision = true
+size = Vector3(12, 3.6, 0.4)
+material = SubResource("Mural")
+metadata/surface = "concrete"
+
+[node name="Interchange" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, -0.4925, 54)
+use_collision = true
+size = Vector3(84, 0.985, 16)
+material = SubResource("Road")
+metadata/surface = "concrete"
+
+[node name="IslandA" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0.25, 52)
+use_collision = true
+size = Vector3(24, 0.5, 1.2)
+material = SubResource("Planter")
+metadata/surface = "concrete"
+
+[node name="IslandB" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0.25, 52)
+use_collision = true
+size = Vector3(24, 0.5, 1.2)
+material = SubResource("Planter")
+metadata/surface = "concrete"
+
+[node name="CarPark" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -45, -0.4925, -33)
+use_collision = true
+size = Vector3(46, 0.985, 46)
+material = SubResource("Asphalt")
+metadata/surface = "concrete"
+
+[node name="ShedAPost0W" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -64, 2.1, 6)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedAPost0E" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -52, 2.1, 6)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedAPost1W" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -64, 2.1, 12.4)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedAPost1E" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -52, 2.1, 12.4)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedAPost2W" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -64, 2.1, 18.8)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedAPost2E" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -52, 2.1, 18.8)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedAPost3W" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -64, 2.1, 25.2)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedAPost3E" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -52, 2.1, 25.2)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedAPost4W" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -64, 2.1, 31.6)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedAPost4E" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -52, 2.1, 31.6)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedAPost5W" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -64, 2.1, 38)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedAPost5E" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -52, 2.1, 38)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedBPost0W" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46, 2.1, 6)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedBPost0E" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34, 2.1, 6)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedBPost1W" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46, 2.1, 12.4)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedBPost1E" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34, 2.1, 12.4)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedBPost2W" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46, 2.1, 18.8)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedBPost2E" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34, 2.1, 18.8)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedBPost3W" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46, 2.1, 25.2)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedBPost3E" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34, 2.1, 25.2)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedBPost4W" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46, 2.1, 31.6)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedBPost4E" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34, 2.1, 31.6)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedBPost5W" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46, 2.1, 38)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="ShedBPost5E" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34, 2.1, 38)
+use_collision = true
+size = Vector3(0.3, 4.2, 0.3)
+material = SubResource("SteelPaint")
+metadata/surface = "steel"
+
+[node name="KaiBar" type="CSGBox3D" parent="Navigation" groups=["store"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 1.7, -55)
+metadata/sign = "KAI BAR"
+metadata/sign_color = Color(0.85, 0.62, 0.16, 1)
+metadata/facing = Vector3(0, 0, 1)
+use_collision = true
+size = Vector3(12, 3.4, 8)
+material = SubResource("StoreKaiBar")
+metadata/surface = "concrete"
+
+[node name="HadwiaStoa" type="CSGBox3D" parent="Navigation" groups=["store"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, 1.7, -55)
+metadata/sign = "HADWIA STOA"
+metadata/sign_color = Color(0.2, 0.36, 0.62, 1)
+metadata/facing = Vector3(0, 0, 1)
+use_collision = true
+size = Vector3(14, 3.4, 8)
+material = SubResource("StoreHadwiaStoa")
+metadata/surface = "concrete"
+
+[node name="MarasinStoa" type="CSGBox3D" parent="Navigation" groups=["store"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 1.7, -55)
+metadata/sign = "MARASIN STOA"
+metadata/sign_color = Color(0.82, 0.83, 0.78, 1)
+metadata/facing = Vector3(0, 0, 1)
+use_collision = true
+size = Vector3(10, 3.4, 8)
+material = SubResource("StoreMarasinStoa")
+metadata/surface = "concrete"
+
+[node name="TradeStoa" type="CSGBox3D" parent="Navigation" groups=["store"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.7, -55)
+metadata/sign = "TRADE STOA"
+metadata/sign_color = Color(0.66, 0.16, 0.12, 1)
+metadata/facing = Vector3(0, 0, 1)
+use_collision = true
+size = Vector3(14, 3.4, 8)
+material = SubResource("StoreTradeStoa")
+metadata/surface = "concrete"
+
+[node name="Wholsel" type="CSGBox3D" parent="Navigation" groups=["store"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 1.7, -55)
+metadata/sign = "WHOLSEL KAI"
+metadata/sign_color = Color(0.15, 0.5, 0.3, 1)
+metadata/facing = Vector3(0, 0, 1)
+use_collision = true
+size = Vector3(14, 3.4, 8)
+material = SubResource("StoreWholsel")
+metadata/surface = "concrete"
+
+[node name="WallWest" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -71, 1.5, 1)
+use_collision = true
+size = Vector3(2, 3, 126)
+material = SubResource("Boundary")
+metadata/surface = "concrete"
+
+[node name="WallSouth" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.5, 63)
+use_collision = true
+size = Vector3(142, 3, 2)
+material = SubResource("Boundary")
+metadata/surface = "concrete"
+
+[node name="WallNorth" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.5, -60.5)
+use_collision = true
+size = Vector3(142, 3, 3)
+material = SubResource("Boundary")
+metadata/surface = "concrete"
+
+[node name="FenceEast" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 71, 1.5, 1.5)
+use_collision = true
+size = Vector3(2, 3, 121)
+material = SubResource("Boundary")
+metadata/surface = "concrete"
+
+[node name="PoleCarParkA" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 4, -40)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="PoleCarParkB" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 4, -18)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="PolePlazaW" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 4, 40)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="PolePlazaE" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 4, 40)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="PoleInterA" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 4, 56)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="PoleInterB" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 56)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="PoleInterC" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 4, 56)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="PoleShedYard" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 4, 42)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="PoleNorth" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 4, -42)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="StreetA" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.4, 4, -40)
+metadata/arm = Vector3(-1, 0, 0)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="StreetB" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.4, 4, 0)
+metadata/arm = Vector3(-1, 0, 0)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="StreetC" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.4, 4, 40)
+metadata/arm = Vector3(-1, 0, 0)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="StreetD" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44.6, 4, -20)
+metadata/arm = Vector3(1, 0, 0)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="StreetE" type="CSGCylinder3D" parent="Navigation" groups=["lamp_pole"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44.6, 4, 20)
+metadata/arm = Vector3(1, 0, 0)
+use_collision = true
+radius = 0.12
+height = 8.0
+sides = 10
+material = SubResource("PoleSteel")
+metadata/surface = "steel"
+
+[node name="PmvRoute11" type="StaticBody3D" parent="Navigation" groups=["pmv_bus"]]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -28, 0, 49)
+metadata/surface = "vehicle"
+metadata/livery = Color(0.16, 0.6, 0.6, 1)
+metadata/route = "11"
+metadata/plate = "P 1188"
+metadata/headlights = true
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/PmvRoute11"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("BusShape")
+
+[node name="PmvRoute9" type="StaticBody3D" parent="Navigation" groups=["pmv_bus"]]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -6, 0, 49)
+metadata/surface = "vehicle"
+metadata/livery = Color(0.82, 0.45, 0.12, 1)
+metadata/route = "9"
+metadata/plate = "P 9071"
+metadata/headlights = false
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/PmvRoute9"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("BusShape")
+
+[node name="PmvRoute4" type="StaticBody3D" parent="Navigation" groups=["pmv_bus"]]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 18, 0, 55)
+metadata/surface = "vehicle"
+metadata/livery = Color(0.52, 0.52, 0.82, 1)
+metadata/route = "4"
+metadata/plate = "P 3908"
+metadata/headlights = true
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/PmvRoute4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("BusShape")
+
+[node name="PmvRoute7" type="StaticBody3D" parent="Navigation" groups=["pmv_bus"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 0, 22)
+metadata/surface = "vehicle"
+metadata/livery = Color(0.7, 0.18, 0.15, 1)
+metadata/route = "7"
+metadata/plate = "P 7742"
+metadata/headlights = true
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/PmvRoute7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("BusShape")
+
+[node name="Taxi1" type="StaticBody3D" parent="Navigation" groups=["taxi"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 0, -46)
+metadata/surface = "vehicle"
+metadata/plate = "T 1146"
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Taxi1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
+shape = SubResource("TaxiShape")
+
+[node name="Taxi2" type="StaticBody3D" parent="Navigation" groups=["taxi"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -56, 0, -46)
+metadata/surface = "vehicle"
+metadata/plate = "T 2207"
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Taxi2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
+shape = SubResource("TaxiShape")
+
+[node name="Taxi3" type="StaticBody3D" parent="Navigation" groups=["taxi"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44, 0, -46)
+metadata/surface = "vehicle"
+metadata/plate = "T 3381"
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Taxi3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
+shape = SubResource("TaxiShape")
+
+[node name="Taxi4" type="StaticBody3D" parent="Navigation" groups=["taxi"]]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -36, 0, -30)
+metadata/surface = "vehicle"
+metadata/plate = "T 4419"
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Taxi4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
+shape = SubResource("TaxiShape")
+
+[node name="Taxi5" type="StaticBody3D" parent="Navigation" groups=["taxi"]]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 30, 0, 58)
+metadata/surface = "vehicle"
+metadata/plate = "T 5520"
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Taxi5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
+shape = SubResource("TaxiShape")
+
+[node name="Taxi6" type="StaticBody3D" parent="Navigation" groups=["taxi"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 0, -30)
+metadata/surface = "vehicle"
+metadata/plate = "T 6634"
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/Taxi6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
+shape = SubResource("TaxiShape")
+
+[node name="TruckA" type="StaticBody3D" parent="Navigation" groups=["truck"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -58, 0, 0)
+metadata/surface = "vehicle"
+metadata/cab_color = Color(0.82, 0.8, 0.74, 1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/TruckA"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
+shape = SubResource("TruckShape")
+
+[node name="TruckB" type="StaticBody3D" parent="Navigation" groups=["truck"]]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -40, 0, 44)
+metadata/surface = "vehicle"
+metadata/cab_color = Color(0.2, 0.32, 0.55, 1)
+
+[node name="Shape" type="CollisionShape3D" parent="Navigation/TruckB"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
+shape = SubResource("TruckShape")
+
+[node name="EnemySpawns" type="Node3D" parent="."]
+
+[node name="L1Rifle1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -10, 0, 50)
+metadata/enemy = "rifleman"
+metadata/level = 1
+
+[node name="L1Rifle2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 10, 0, 48)
+metadata/enemy = "rifleman"
+metadata/level = 1
+
+[node name="L1Rifle3" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 20, 0, 32)
+metadata/enemy = "rifleman"
+metadata/level = 1
+
+[node name="L1Rusher1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 30)
+metadata/enemy = "rusher"
+metadata/level = 1
+
+[node name="L1Rusher2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -25, 0, 53)
+metadata/enemy = "rusher"
+metadata/level = 1
+
+[node name="L1Machete1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 30, 0, 40)
+metadata/enemy = "machete"
+metadata/level = 1
+
+[node name="L2Rifle1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -56, 0, 12)
+metadata/enemy = "rifleman"
+metadata/level = 2
+
+[node name="L2Rifle2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -36, 0, 30)
+metadata/enemy = "rifleman"
+metadata/level = 2
+
+[node name="L2Rifle3" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -58, 0, 34)
+metadata/enemy = "rifleman"
+metadata/level = 2
+
+[node name="L2Rifle4" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -44, 0, 8)
+metadata/enemy = "rifleman"
+metadata/level = 2
+
+[node name="L2Machete1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -52, 0, 22)
+metadata/enemy = "machete"
+metadata/level = 2
+
+[node name="L2Machete2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -38, 0, 18)
+metadata/enemy = "machete"
+metadata/level = 2
+
+[node name="L2Machete3" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -60, 0, 28)
+metadata/enemy = "machete"
+metadata/level = 2
+
+[node name="L2Rusher1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -30, 0, 2)
+metadata/enemy = "rusher"
+metadata/level = 2
+
+[node name="L3Rifle1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -6, 0, -20)
+metadata/enemy = "rifleman"
+metadata/level = 3
+
+[node name="L3Rifle2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 10, 0, -6)
+metadata/enemy = "rifleman"
+metadata/level = 3
+
+[node name="L3Rifle3" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 26, 0, -24)
+metadata/enemy = "rifleman"
+metadata/level = 3
+
+[node name="L3Rifle4" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 30, 0, 10)
+metadata/enemy = "rifleman"
+metadata/level = 3
+
+[node name="L3Rifle5" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 14)
+metadata/enemy = "rifleman"
+metadata/level = 3
+
+[node name="L3Rusher1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 16, 0, -12.3)
+metadata/enemy = "rusher"
+metadata/level = 3
+
+[node name="L3Rusher2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -10, 0, 4)
+metadata/enemy = "rusher"
+metadata/level = 3
+
+[node name="L3Machete1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 20, 0, 4)
+metadata/enemy = "machete"
+metadata/level = 3
+
+[node name="L3Machete2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 6, 0, 18)
+metadata/enemy = "machete"
+metadata/level = 3
+
+[node name="L4Rifle1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 4.8, -20)
+metadata/enemy = "rifleman"
+metadata/level = 4
+
+[node name="L4Rifle2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 19, 4.8, -12.3)
+metadata/enemy = "rifleman"
+metadata/level = 4
+
+[node name="L4Rifle3" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 30, 4.8, 10)
+metadata/enemy = "rifleman"
+metadata/level = 4
+
+[node name="L4Rifle4" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 8, 4.8, 12)
+metadata/enemy = "rifleman"
+metadata/level = 4
+
+[node name="L4Rifle5" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -8, 4.8, -24)
+metadata/enemy = "rifleman"
+metadata/level = 4
+
+[node name="L4Rifle6" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -30, 4.8, -5)
+metadata/enemy = "rifleman"
+metadata/level = 4
+
+[node name="L4Rusher1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 14, 4.8, 0)
+metadata/enemy = "rusher"
+metadata/level = 4
+
+[node name="L4Rusher2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 26, 4.8, -24)
+metadata/enemy = "rusher"
+metadata/level = 4
+
+[node name="L4Machete1" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -6, 4.8, 4)
+metadata/enemy = "machete"
+metadata/level = 4
+
+[node name="L4Machete2" type="Marker3D" parent="EnemySpawns" groups=["enemy_spawn"]]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2, 4.8, -4)
+metadata/enemy = "machete"
+metadata/level = 4

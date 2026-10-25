@@ -66,7 +66,7 @@ Rules: gameplay is testable headless; every system exposes debug commands; tunin
 | 2 | Gunplay: three weapons from data, ADS, recoil, reloads, ballistics, impacts | Recoil repeatable; penetration test passes; playtest feels right |
 | 3 | Combat AI: two enemy types, cover, suppression, flanking, grenades; hit zones, ragdolls | AI fights without getting stuck; playtest "challenging, fair" |
 | 4 | Art pass: port environment, enemy models, FP animations | Screenshot review; still 60 fps |
-| 5 | Audio and feedback | Blind A/B vs reference recordings |
+| 5 | Audio and feedback | Listening check by ear (`sound.demo`) and a playtest; stays procedural, no recordings (chosen 2026-10-25, replacing the blind A/B vs reference recordings) |
 | 6 | Mission and polish | Full mission playable, performance budget met |
 
 ## Assets (adapted)

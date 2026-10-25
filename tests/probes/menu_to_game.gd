@@ -6,11 +6,12 @@ extends Node
 ## log with non-finite errors from the moment the level loaded, which probes
 ## that load the level directly never saw. Exit 0 = pass.
 ##
-##   $GODOT --path . res://tests/probes/menu_to_game.tscn [-- seconds=<n>]
+##   $GODOT --path . res://tests/probes/menu_to_game.tscn [-- seconds=<n>] [map=<index into GameMenu.MAPS>]
 
 const MENU := "res://ui/main_menu.tscn"
 
 var seconds := 40.0
+var map := 0
 
 
 class Watcher extends Node:
@@ -51,6 +52,8 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("seconds="):
 			seconds = float(arg.get_slice("=", 1))
+		elif arg.begins_with("map="):
+			map = int(arg.get_slice("=", 1))
 	watcher.name = "NonFiniteWatcher"
 	get_tree().root.add_child.call_deferred(watcher)
 	get_tree().create_timer(seconds + 90.0, true, false, true).timeout.connect(func() -> void:
@@ -73,8 +76,8 @@ func _run() -> void:
 		print("FAIL no GameMenu on the title screen")
 		tree.quit(1)
 		return
-	print("menu up at frame %d, starting stage 1" % watcher.frame)
-	menu[0].call("_start", 1)
+	print("menu up at frame %d, starting %s stage 2" % [watcher.frame, GameMenu.MAPS[map][0]])
+	menu[0].call("_start", 1, GameMenu.MAPS[map][1])
 	var level: Node = null
 	while level == null or not level.has_signal("combat_ready"):
 		await tree.process_frame
@@ -101,6 +104,12 @@ func _run() -> void:
 		await tree.process_frame
 	Input.action_release("fire")
 	Input.action_release("move_forward")
-	var ok := watcher.reports.is_empty()
+	var bus := AudioServer.get_bus_index("Music")
+	var track: AudioStreamPlayer = MusicPlayer._track
+	var music_ok: bool = track.playing and track.stream != null and track.stream == MusicPlayer._covert or track.stream == MusicPlayer._tension
+	print("%s in-game music plays: playing %s, stream %s, track %.1f dB, bus %.1f dB muted %s, set %s" % [
+		"PASS" if music_ok else "FAIL", track.playing, "covert" if track.stream == MusicPlayer._covert else ("tension" if track.stream == MusicPlayer._tension else str(track.stream)),
+		track.volume_db, AudioServer.get_bus_volume_db(bus), AudioServer.is_bus_mute(bus), MusicPlayer._set])
+	var ok := watcher.reports.is_empty() and music_ok
 	print("\n%s: %d non-finite node(s) seen" % ["PASS" if ok else "FAIL", watcher.reports.size()])
 	tree.quit(0 if ok else 1)

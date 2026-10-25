@@ -1,10 +1,11 @@
 class_name ProceduralAudio
 extends RefCounted
-## Placeholder sound synthesis: gunshots, material impacts, ricochets,
-## casings and weapon mechanics, built from noise bursts, damped modal rings
-## and thumps. Every recipe reads its character from data (WeaponDefinition,
-## SurfaceMaterial). Real recordings replace these in Milestone 5; callers
-## only ever see AudioStreams, so nothing else changes then.
+## Sound synthesis: gunshots (close and distant layers), bullet snaps,
+## material impacts, ricochets, casings, footsteps, weapon mechanics and the
+## player-feedback cues, built from noise bursts, damped modal rings and
+## thumps. Every recipe reads its character from data (WeaponDefinition,
+## SurfaceMaterial). Callers only ever see AudioStreams, so recordings could
+## replace any recipe without changing them.
 
 const MIX_RATE := 22050
 const PEAK := 0.85
@@ -35,13 +36,122 @@ static func store(key: String, stream: AudioStreamWAV) -> void:
 
 # --- Recipes -----------------------------------------------------------------
 
+## A shot heard up close (the shooter, or anyone within a few tens of metres):
+## the muzzle's sharp crack, the felt body of the blast, its midrange roar
+## and the action cycling just after.
 static func gunshot(weapon: WeaponDefinition) -> AudioStreamWAV:
 	var rng := _rng("shot:" + weapon.id)
 	var length := weapon.shot_sound_length
 	var buffer := _buffer(length)
-	add_noise(buffer, 0.0, length / 9.0, 0.6, 7000.0, 0.0, rng)
-	add_thump(buffer, 0.0, weapon.shot_thump_hz, length / 5.0, 0.8)
-	add_noise(buffer, 0.01, length / 3.0, 0.25, 900.0, 0.0, rng)  # muffled tail
+	add_noise(buffer, 0.0, 0.003, 2.2, 10000.0, 2000.0, rng)  # crack: it leads, before the body swells
+	add_thump(buffer, 0.0, weapon.shot_thump_hz, length / 5.0, 0.85)
+	add_noise(buffer, 0.0, length / 7.0, 0.55, 4500.0, 150.0, rng)  # blast
+	add_noise(buffer, 0.01, length / 3.0, 0.22, 900.0, 0.0, rng)  # muffled tail
+	add_click(buffer, minf(0.012, length * 0.5), weapon.mech_click_hz, 0.18, rng)  # action
+	return to_stream(buffer)
+
+
+## The same shot from across the yard: highs gone, a soft-onset low boom and
+## its reflections rolling back off stacks and buildings for a second or more.
+static func gunshot_distant(weapon: WeaponDefinition, length: float) -> AudioStreamWAV:
+	var rng := _rng("shot_far:" + weapon.id)
+	var buffer := _buffer(length)
+	add_thump(buffer, 0.0, weapon.shot_thump_hz * 0.7, 0.16, 1.0)
+	add_noise(buffer, 0.0, 0.12, 0.8, 650.0, 35.0, rng, 0.004)  # the report
+	var at := 0.12
+	var amplitude := 0.45
+	while at < length * 0.65:
+		add_noise(buffer, at, rng.randf_range(0.08, 0.16), amplitude, rng.randf_range(350.0, 600.0), 30.0,
+				rng, rng.randf_range(0.02, 0.05))  # an echo off something far away
+		at += rng.randf_range(0.12, 0.3)
+		amplitude *= rng.randf_range(0.6, 0.8)
+	add_noise(buffer, 0.05, length / 4.0, 0.2, 280.0, 0.0, rng, 0.1)  # the long roll
+	return to_stream(buffer)
+
+
+## A supersonic round passing close by: the sharp snap of its shock wave and
+## a short tearing whizz as it goes.
+static func bullet_snap(variant: int) -> AudioStreamWAV:
+	var rng := _rng("snap:%d" % variant)
+	var buffer := _buffer(0.22)
+	add_noise(buffer, 0.0, 0.0012, 1.0, 11000.0, 3500.0, rng)  # the shock wave
+	add_noise(buffer, 0.0018, 0.0015, 0.7, 11000.0, 3500.0, rng)  # and its back edge
+	add_noise(buffer, 0.002, 0.03, 0.35, 7000.0, 1800.0, rng, 0.006)
+	add_sweep(buffer, 0.003, rng.randf_range(2200.0, 2800.0), rng.randf_range(900.0, 1300.0), 0.12, 0.22)
+	return to_stream(buffer)
+
+
+## One footfall on `surface`: led by the slap of a sole on hard ground (a
+## short bright crack of noise), a light thud under it, the scuff and grit,
+## a boom and ring on hollow metal, then the toe's smaller slap.
+static func footstep(surface: SurfaceMaterial, variant: int) -> AudioStreamWAV:
+	var rng := _rng("step:%s:%d" % [surface.id, variant])
+	var buffer := _buffer(0.3)
+	var hz := surface.footstep_hz * rng.randf_range(0.9, 1.1)
+	var hard := 1.0 - surface.footstep_grit * 0.6  # earth and sand soak up some of the slap
+	add_noise(buffer, 0.0, 0.006, 1.0 * hard, 7500.0, 900.0, rng)  # the slap
+	add_noise(buffer, 0.002, 0.018, 0.35 * hard, 3500.0, 400.0, rng)  # its short slapback off the ground
+	add_thump(buffer, 0.0, hz * 1.6, 0.01, 0.3)
+	add_noise(buffer, 0.0, 0.03, 0.18, 2200.0 + surface.footstep_grit * 4000.0, 200.0, rng, 0.004)
+	if surface.footstep_grit > 0.0:
+		add_grains(buffer, 0.004, 0.07, int(surface.footstep_grit * 16.0), 0.001, 0.004,
+				1500.0, 7000.0, 0.05 * surface.footstep_grit, 0.18 * surface.footstep_grit, rng)
+	if surface.footstep_ring_hz > 0.0:
+		var ring := surface.footstep_ring_hz * rng.randf_range(0.95, 1.05)
+		add_thump(buffer, 0.0, 55.0, 0.07, 0.6)  # the whole panel booms
+		add_ring(buffer, 0.0, PackedFloat32Array([ring, ring * 1.47, ring * 2.09, ring * 3.3]), 0.07, 0.45)
+	var toe := rng.randf_range(0.045, 0.07)
+	add_noise(buffer, toe, 0.005, 0.5 * hard, 7000.0, 1100.0, rng)  # the toe's slap
+	add_noise(buffer, toe, 0.015, 0.15, 3000.0 + surface.footstep_grit * 3000.0, 300.0, rng)
+	return to_stream(buffer)
+
+
+## Fruit or vegetables bursting: a wet slap, the pulp tearing, drops
+## pattering down.
+static func produce_splat(variant: int) -> AudioStreamWAV:
+	var rng := _rng("splat:%d" % variant)
+	var buffer := _buffer(0.45)
+	add_noise(buffer, 0.0, 0.012, 1.0, 3500.0, 300.0, rng)  # the slap
+	add_thump(buffer, 0.0, rng.randf_range(160.0, 220.0), 0.03, 0.6)
+	add_noise(buffer, 0.01, 0.06, 0.45, 1400.0, 150.0, rng, 0.01)  # pulp tearing
+	add_grains(buffer, 0.06, 0.3, 14, 0.002, 0.006, 1500.0, 5000.0, 0.08, 0.25, rng)  # drops landing
+	return to_stream(buffer)
+
+
+## The player's round landed on someone: a short meaty tick.
+static func hit_confirm() -> AudioStreamWAV:
+	var rng := _rng("cue:hit")
+	var buffer := _buffer(0.12)
+	add_thump(buffer, 0.0, 190.0, 0.014, 0.8)
+	add_noise(buffer, 0.0, 0.008, 0.6, 6000.0, 1800.0, rng)
+	return to_stream(buffer)
+
+
+## The player's round finished someone: a low, quiet double knock.
+static func kill_cue() -> AudioStreamWAV:
+	var rng := _rng("cue:kill")
+	var buffer := _buffer(0.35)
+	add_thump(buffer, 0.0, 120.0, 0.04, 0.8)
+	add_ring(buffer, 0.0, PackedFloat32Array([880.0, 1320.0]), 0.04, 0.35)
+	add_thump(buffer, 0.09, 95.0, 0.05, 0.6)
+	add_noise(buffer, 0.0, 0.006, 0.25, 5000.0, 1500.0, rng)
+	return to_stream(buffer)
+
+
+## One laboured breath: a rasping in-breath, then a longer out-breath.
+static func breath(variant: int) -> AudioStreamWAV:
+	var rng := _rng("breath:%d" % variant)
+	var buffer := _buffer(1.6)
+	var inhale := rng.randf_range(0.3, 0.4)
+	add_noise(buffer, 0.0, 0.08, 0.35, 1600.0, 350.0, rng, inhale)
+	add_noise(buffer, inhale + 0.25, 0.22, 0.45, 1000.0, 180.0, rng, 0.12)
+	return to_stream(buffer)
+
+
+## Ringing ears after a blast close by: a high whine that dies away slowly.
+static func ear_ring() -> AudioStreamWAV:
+	var buffer := _buffer(3.5)
+	add_ring(buffer, 0.0, PackedFloat32Array([3600.0, 3655.0]), 1.1, 0.6)
 	return to_stream(buffer)
 
 

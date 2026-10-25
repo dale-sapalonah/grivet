@@ -17,3 +17,7 @@ dust_color = Color(0.4, 0.06, 0.05, 0.5)
 impact_volume_db = -9.0
 areal_density_thick = 300.0
 casing_brightness = 0.0
+footstep_hz = 80.0
+footstep_ring_hz = 0.0
+footstep_grit = 0.0
+footstep_volume_db = -6.0

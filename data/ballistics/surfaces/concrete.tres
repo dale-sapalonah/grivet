@@ -24,3 +24,7 @@ crumble_seconds_light = 0.15
 crumble_seconds_heavy = 0.6
 chunk_count = 6
 casing_brightness = 1.0
+footstep_hz = 115.0
+footstep_ring_hz = 0.0
+footstep_grit = 0.3
+footstep_volume_db = 0.0

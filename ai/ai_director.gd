@@ -115,10 +115,11 @@ func spawn(kind: String, at: Transform3D, parent: Node, stage: CampaignStage = n
 
 # --- Cover -----------------------------------------------------------------------
 
-func build_cover(space: PhysicsDirectSpaceState3D, map: RID, bounds: AABB) -> int:
+func build_cover(space: PhysicsDirectSpaceState3D, map: RID, bounds: AABB,
+		floors: PackedFloat32Array = PackedFloat32Array()) -> int:
 	nav_map = map
 	cover = CoverMap.new(settings)
-	return cover.build(space, map, bounds)
+	return cover.build(space, map, bounds, floors)
 
 
 func cover_protection(point: CoverMap.Point, threat: Vector3) -> float:
@@ -165,6 +166,8 @@ func request_cover(soldier: Soldier, mode: String) -> CoverMap.Point:
 	for point in cover.within(here, radius):
 		if point.blocked_until > now:
 			continue
+		if absf(point.position.y - here.y) > settings.cover_max_climb:
+			continue  # another storey: the slab between hides it "perfectly", but it's a long walk via the stairs
 		var range_to_threat := CoverScoring.flat_distance(point.position, threat)
 		if mode == "push" and range_to_threat > current_range - 2.0:
 			continue
@@ -190,8 +193,7 @@ func request_cover(soldier: Soldier, mode: String) -> CoverMap.Point:
 		var path := NavigationServer3D.map_get_path(nav_map, here, point.position, true)
 		if path.is_empty() or CoverScoring.flat_distance(path[path.size() - 1], point.position) > settings.cover_reach_tolerance:
 			continue  # can't actually get there (sealed room, other side of a wall)
-		cover.release(soldier)
-		point.reserved_by = soldier
+		cover.reserve(point, soldier)
 		return point
 	return null
 

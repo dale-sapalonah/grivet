@@ -8,6 +8,9 @@ signal combat_ready
 
 ## Area the cover map scans.
 @export var bounds := AABB(Vector3(-31, -0.5, -31), Vector3(62, 4, 62))
+## Floor heights the cover map scans (empty: just the ground). A level with
+## an upper storey lists each floor so it gets cover of its own.
+@export var cover_floors := PackedFloat32Array()
 ## Spawn the marker enemies automatically (probes may turn this off).
 @export var spawn_on_ready := true
 
@@ -45,7 +48,7 @@ func _on_baked() -> void:
 		await get_tree().physics_frame
 		if NavigationServer3D.map_get_iteration_id(map) > _iteration_before_bake:
 			break
-	cover_points = AI.build_cover(get_world_3d().direct_space_state, map, bounds)
+	cover_points = AI.build_cover(get_world_3d().direct_space_state, map, bounds, cover_floors)
 	Debug.log_line("arena: navmesh %d polygons, %d cover points" % [
 			_navigation.navigation_mesh.get_polygon_count(), cover_points])
 	if spawn_on_ready:

@@ -58,10 +58,19 @@ extends Resource
 
 @export_group("Cover map")
 @export var cover_grid_spacing := 1.0
+## On a level with several floors, a navmesh point within this (m) of a
+## floor's height belongs to it.
+@export var cover_floor_tolerance := 1.2
+## Cover more than this (m) above or below a soldier is on another storey:
+## not considered (a stair climb away, and "hidden" only by the floor slab).
+@export var cover_max_climb := 2.5
 @export var cover_probe_length := 0.9
 ## Half cover must be solid at this height (waist): a hunched soldier hides behind it.
 @export var cover_low_height := 0.95
 @export var cover_high_height := 1.4
+## Cover must block rays this far (m) either side of a soldier's middle too:
+## a thin column or pole hides less than a wall.
+@export var cover_body_half_width := 0.25
 ## A cover direction protects against threats within this angle of it.
 @export var cover_protect_angle := 40.0
 @export var half_cover_value := 0.6

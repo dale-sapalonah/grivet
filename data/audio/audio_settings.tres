@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="AudioSettings" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://feedback/audio_settings.gd" id="1_audio"]
+
+[resource]
+script = ExtResource("1_audio")
+pool_size = 32
+max_hear_distance = 450.0
+shot_close_unit_size = 12.0
+shot_distant_unit_size = 90.0
+shot_distant_start = 15.0
+shot_distant_full = 110.0
+shot_distant_db = -3.0
+own_shot_tail_db = -14.0
+distant_shot_length = 1.6
+snap_radius = 3.5
+snap_volume_db = -2.0
+snap_unit_size = 3.0
+snap_min_interval = 0.045
+snap_variants = 4
+probe_interval = 0.25
+probe_rays = 8
+probe_range = 40.0
+roof_height = 9.0
+blend_speed = 3.0
+open_wet = 0.12
+enclosed_wet = 0.32
+roof_wet_bonus = 0.12
+small_room = 0.25
+large_room = 0.85
+open_damping = 0.7
+enclosed_damping = 0.25
+min_predelay_ms = 12.0
+max_predelay_ms = 240.0
+open_echo_feedback = 0.35
+enclosed_echo_feedback = 0.15
+reverb_hipass = 0.15
+footstep_variants = 4
+step_walk_db = -15.0
+step_sprint_db = -9.0
+step_crouch_db = -24.0
+step_unit_size = 4.0
+soldier_step_length = 0.75
+soldier_step_db = -11.0
+soldier_run_step_db = -6.0
+soldier_run_speed = 3.5
+soldier_step_max_distance = 45.0
+soldier_step_unit_size = 5.0
+ground_probe = 1.2
+hit_confirm_db = -10.0
+kill_cue_db = -12.0
+low_health_fraction = 0.3
+breath_db = -14.0
+breath_period = 1.9
+breath_variants = 3
+deafen_radius = 9.0
+deafen_seconds = 3.5
+deafen_lowpass_hz = 500.0
+ear_ring_db = -12.0

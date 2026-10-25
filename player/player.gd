@@ -28,6 +28,7 @@ var _mantle_time := 0.0
 var _mantle_duration := 0.0
 var _spawn := Transform3D.IDENTITY
 var _dead_time := 0.0
+var _step_distance := 0.0
 var _zone_rest: Dictionary = {}  # hitbox shape -> standing local position
 
 @onready var health: Health = $Health
@@ -275,6 +276,26 @@ func _move_normally(delta: float) -> void:
 	if is_on_floor() and not was_grounded:
 		model.land(fall_speed)
 		_rig.add_landing(fall_speed)
+		Soundscape.footstep(global_position, Soundscape.settings.step_sprint_db, Soundscape.settings.step_unit_size)
+	_step(delta)
+
+
+## A footstep every camera step_length of ground covered (in time with the
+## head bob), as loud as the gait: sprints thump, crouched steps are soft.
+func _step(delta: float) -> void:
+	if not is_on_floor() or model.gait == MovementModel.Gait.SLIDE:
+		return
+	_step_distance += Vector2(velocity.x, velocity.z).length() * delta
+	if _step_distance < camera_tuning.step_length:
+		return
+	_step_distance = 0.0
+	var audio := Soundscape.settings
+	var level := audio.step_walk_db
+	if model.gait == MovementModel.Gait.SPRINT or model.gait == MovementModel.Gait.TAC_SPRINT:
+		level = audio.step_sprint_db
+	elif model.stance != MovementModel.Stance.STAND:
+		level = audio.step_crouch_db
+	Soundscape.footstep(global_position, level, audio.step_unit_size)
 
 
 func _read_intent() -> void:

@@ -20,3 +20,7 @@ panel_knock_hz = 380.0
 splinter_count = 14
 thud_hz = 140.0
 casing_brightness = 0.5
+footstep_hz = 150.0
+footstep_ring_hz = 0.0
+footstep_grit = 0.1
+footstep_volume_db = 0.0

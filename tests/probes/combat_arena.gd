@@ -6,7 +6,7 @@ extends Node
 ## damage, death and respawn, and the AI frame-time budget.
 ## Exit code 0 = all passed.
 ##
-##   $GODOT --headless --path . res://tests/probes/combat_arena.tscn [-- level=res://levels/port/port_yard.tscn]
+##   $GODOT --headless --path . res://tests/probes/combat_arena.tscn [-- level=res://levels/port/port_yard.tscn] [stage=<n>] [player=x,y,z]
 ##   (any level built on the arena's layout and script; default the greybox arena)
 
 const ARENA := "res://levels/greybox/arena.tscn"
@@ -26,7 +26,8 @@ var _flanked := false
 var _worst_stall := 0
 var _worst_stall_detail := ""
 var _stall: Dictionary = {}  # soldier -> [last position, seconds stalled]
-var _reached_cover: Dictionary = {}  # soldiers that have been in cover (or charged) at least once
+var _reached_cover: Dictionary = {}
+var _player_at := Vector3.INF  # player=x,y,z: where to stand (else the level's start)  # soldiers that have been in cover (or charged) at least once
 
 
 func _ready() -> void:
@@ -34,6 +35,11 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("level="):
 			level = arg.trim_prefix("level=")
+		elif arg.begins_with("player="):
+			var at := arg.trim_prefix("player=").split(",")
+			_player_at = Vector3(at[0].to_float(), at[1].to_float(), at[2].to_float())
+		elif arg.begins_with("stage="):
+			Settings.requested_stage = int(arg.trim_prefix("stage=")) - 1  # campaign maps field that stage's squad
 	print("level: %s" % level)
 	arena = load(level).instantiate()
 	add_child(arena)
@@ -46,12 +52,14 @@ func _ready() -> void:
 
 func _run() -> void:
 	await arena.combat_ready
+	if _player_at != Vector3.INF:
+		player.global_position = _player_at
 	player.health.invulnerable = true
 	player.health.damaged.connect(func(_info: Dictionary) -> void: _hits_on_player += 1)
 
 	await _check("navmesh, cover map and squad are set up", func() -> String:
 		var polygons: int = arena.get_node("Navigation").navigation_mesh.get_polygon_count()
-		var ok: bool = polygons > 100 and arena.cover_points > 200 and AI.soldiers.size() == 5
+		var ok: bool = polygons > 100 and arena.cover_points > 200 and AI.soldiers.size() >= 5
 		print("  %d navmesh polygons, %d cover points, %d soldiers" % [polygons, arena.cover_points, AI.soldiers.size()])
 		return "" if ok else "polygons %d, cover %d, soldiers %d" % [polygons, arena.cover_points, AI.soldiers.size()])
 
@@ -114,7 +122,8 @@ func _run() -> void:
 
 	await _check("a near miss makes a peeking soldier duck", func() -> String:
 		var peeker: Soldier = null
-		for second in 15:
+		# Up to 15 s: behind a row of columns a peek is often still screened by the next one.
+		for second in 30:
 			await get_tree().create_timer(0.5).timeout
 			for soldier in AI.soldiers:
 				# Peeking and actually out of cover: a soldier still stepping out
@@ -126,9 +135,18 @@ func _run() -> void:
 		if peeker == null:
 			return "nobody peeked into the open"
 		var head: Vector3 = peeker.mannequin.parts.head.global_position
-		var beside := head + peeker.global_basis.x * 0.6 + Vector3.UP * 0.3
-		var kestrel := load("res://data/weapons/kestrel.tres") as WeaponDefinition
 		var shot_from := player.head_point()
+		# A miss that really passes them: the first spot beside the head with a
+		# clear line from the player (a railing or post can stop the round short).
+		var space := player.get_world_3d().direct_space_state
+		var beside := head + peeker.global_basis.x * 0.6 + Vector3.UP * 0.3
+		for offset: Vector3 in [peeker.global_basis.x * 0.6 + Vector3.UP * 0.3, -peeker.global_basis.x * 0.6 + Vector3.UP * 0.3,
+				Vector3.UP * 0.7]:
+			var query := PhysicsRayQueryParameters3D.create(shot_from, head + offset, PhysicsLayers.WORLD)
+			if space.intersect_ray(query).is_empty():
+				beside = head + offset
+				break
+		var kestrel := load("res://data/weapons/kestrel.tres") as WeaponDefinition
 		Ballistics.fire(shot_from, (beside - shot_from).normalized(), kestrel, player, player.bullet_exclude())
 		await get_tree().create_timer(0.25).timeout
 		if not is_instance_valid(peeker):
@@ -208,7 +226,11 @@ func _run() -> void:
 			for body: RigidBody3D in ragdoll.bodies.values():
 				fastest = maxf(fastest, body.linear_velocity.length())
 		var settled := await _watch(8.0, func() -> bool: return ragdoll.settled())
-		var torso_height: float = ragdoll.bodies.torso.global_position.y
+		# Above the floor it fell on (an upper storey counts as floor too).
+		var torso: Vector3 = ragdoll.bodies.torso.global_position
+		var below := player.get_world_3d().direct_space_state.intersect_ray(
+				PhysicsRayQueryParameters3D.create(torso, torso + Vector3.DOWN * 3.0, PhysicsLayers.WORLD))
+		var torso_height: float = torso.y - (below.position as Vector3).y if not below.is_empty() else torso.y
 		var knees := [ragdoll.bend("thigh_l", "shin_l"), ragdoll.bend("thigh_r", "shin_r")]
 		var elbows := [ragdoll.bend("upper_arm_l", "lower_arm_l"), ragdoll.bend("upper_arm_r", "lower_arm_r")]
 		print("  ragdoll settled %s, torso at %.2f m, fastest part %.1f m/s, knees %+.0f/%+.0f, elbows %+.0f/%+.0f" % [
@@ -225,7 +247,9 @@ func _run() -> void:
 		var before: float = soldier.health.model.health + soldier.health.model.armor
 		AI.frozen = true
 		var frag := load("res://data/grenades/frag.tres") as GrenadeDefinition
-		Grenade.throw(frag, arena, soldier.global_position + Vector3(0.5, 0.3, 0), Vector3.ZERO, player)
+		# Beside them on walkable floor: half a metre "east" can be over a railing upstairs.
+		var beside := NavigationServer3D.map_get_closest_point(AI.nav_map, soldier.global_position + Vector3(0.5, 0, 0))
+		Grenade.throw(frag, arena, Vector3(beside.x, soldier.global_position.y + 0.3, beside.z), Vector3.ZERO, player)
 		await get_tree().create_timer(frag.fuse_time + 0.3).timeout
 		AI.frozen = false
 		if not is_instance_valid(soldier) or soldier.dead:
@@ -324,7 +348,10 @@ func _watch(seconds: float, done: Callable) -> bool:
 func _sample() -> void:
 	_ai_ms_samples.append(AI.frame_ms)
 	for soldier in AI.soldiers:
-		if soldier._facts.in_cover or soldier.brain.action == SoldierBrain.Action.CHARGE:
+		# Settled: in cover, charging, or (no cover within reach, as on an open
+		# upper floor) crouched and fighting where it stands.
+		var fighting_in_open: bool = soldier.cover == null and soldier.target_visible and soldier._want_crouch 				and soldier.brain.action == SoldierBrain.Action.TAKE_COVER
+		if soldier._facts.in_cover or soldier.brain.action == SoldierBrain.Action.CHARGE or fighting_in_open:
 			_reached_cover[soldier] = true
 		if soldier.brain.action == SoldierBrain.Action.FLANK and soldier.cover != null and soldier.cover_mode == "flank":
 			_flanked = true
@@ -356,7 +383,9 @@ func _states(which: Callable) -> String:
 	var states := PackedStringArray()
 	for soldier in AI.soldiers:
 		if which.call(soldier):
-			states.append("%s %s" % [soldier.profile.display_name, SoldierBrain.Action.keys()[soldier.brain.action]])
+			var target: String = "no cover" if soldier.cover == null else "cover at %s" % soldier.cover.position.snapped(Vector3.ONE * 0.1)
+			states.append("%s %s at %s, %s" % [soldier.profile.display_name, SoldierBrain.Action.keys()[soldier.brain.action],
+					soldier.global_position.snapped(Vector3.ONE * 0.1), target])
 	return ", ".join(states)
 
 
