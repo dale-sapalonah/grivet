@@ -103,6 +103,10 @@ extends Resource
 @export var max_flankers := 1
 @export var grenade_cooldown := 8.0
 @export var max_corpses := 10
+## A corpse stops simulating (freezes where it lies) once it has settled, or
+## this long after death at most (s): jointed ragdolls jitter and never sleep,
+## and ten of them at 120 ticks/s lagged the game. Blasts wake them.
+@export var corpse_freeze_after := 5.0
 @export var stuck_seconds := 2.5
 ## A cover point someone failed to reach is skipped for this long (s).
 @export var blocked_cover_seconds := 10.0

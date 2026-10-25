@@ -143,6 +143,9 @@ func _shove_loose_bodies(space: PhysicsDirectSpaceState3D, center: Vector3) -> v
 		var body := result.collider as RigidBody3D
 		if body == null:
 			continue
+		var ragdoll := body.get_parent() as Ragdoll
+		if ragdoll != null and ragdoll.frozen:
+			ragdoll.wake()
 		var offset := body.global_position - center
 		var strength := 1.0 - clampf(offset.length() / definition.blast_radius, 0.0, 1.0)
 		body.apply_central_impulse((offset.normalized() + Vector3.UP * 0.5).normalized()

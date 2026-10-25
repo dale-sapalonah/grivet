@@ -29,8 +29,16 @@ const JOINTS := [
 const LINEAR_DAMP := 0.6
 const ANGULAR_DAMP := 4.0
 const GUN_MASS := 3.5
+## A settled corpse is frozen no sooner than this after death or a wake (s),
+## so the killing push plays out first.
+const MIN_FALL_TIME := 0.75
 
 var bodies: Dictionary = {}  # part name -> RigidBody3D
+## Freeze where it lies once settled, or this long after death at most (s).
+## Jointed parts jitter and never sleep, so an unfrozen corpse simulates forever.
+var freeze_after := 5.0
+var frozen := false
+var _age := 0.0
 
 
 ## Builds a ragdoll in `parent` from the mannequin's current pose. `velocity`
@@ -137,11 +145,34 @@ func bend(parent: String, child: String) -> float:
 
 
 ## Physics can't recover a body that went non-finite (it floods the log
-## every step): report it once and remove the corpse.
-func _physics_process(_delta: float) -> void:
+## every step): report it once and remove the corpse. Otherwise freeze the
+## corpse once it has settled (or run out of time) so it stops costing physics.
+func _physics_process(delta: float) -> void:
 	for body: RigidBody3D in bodies.values():
 		if is_instance_valid(body) and not (body.global_position.is_finite() and body.linear_velocity.is_finite()):
 			push_error("Ragdoll %s part %s went non-finite: position %s velocity %s - removed" % [
 					name, body.name, body.global_position, body.linear_velocity])
 			queue_free()
 			return
+	_age += delta
+	if _age >= freeze_after or (_age >= MIN_FALL_TIME and settled()):
+		_set_frozen(true)
+
+
+## Lets a frozen corpse move again (a blast); it refreezes once it settles.
+func wake() -> void:
+	_age = 0.0
+	_set_frozen(false)
+
+
+func _set_frozen(value: bool) -> void:
+	frozen = value
+	set_physics_process(not value)
+	for child in get_children():
+		var body := child as RigidBody3D
+		if body == null:
+			continue
+		body.freeze_mode = RigidBody3D.FREEZE_MODE_STATIC
+		body.freeze = value
+		if not value:
+			body.sleeping = false

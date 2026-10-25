@@ -42,6 +42,7 @@ var _traces: Array[Dictionary] = []  # {"points": PackedVector3Array, "until": f
 var _tracer_mesh := ImmediateMesh.new()
 var _tracer_material := StandardMaterial3D.new()
 var _effects := ImpactEffects.new()
+var _reported_bad_shot := false
 
 
 func _ready() -> void:
@@ -62,6 +63,12 @@ func _ready() -> void:
 func fire(origin: Vector3, direction: Vector3, weapon: WeaponDefinition, shooter: Node,
 		exclude: Array[RID] = []) -> void:
 	if _bullets.size() >= settings.max_bullets:
+		return
+	if not (origin.is_finite() and direction.is_finite()) or direction.is_zero_approx():
+		if not _reported_bad_shot:
+			_reported_bad_shot = true
+			push_error("Ballistics: refused a non-finite %s shot from %s: origin %s direction %s" % [
+					weapon.id, shooter.name if is_instance_valid(shooter) else "?", origin, direction])
 		return
 	var bullet: Bullet = _pool.pop_back() if not _pool.is_empty() else Bullet.new()
 	bullet.position = origin

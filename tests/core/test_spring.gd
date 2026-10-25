@@ -33,6 +33,16 @@ func test_frame_rate_does_not_change_the_motion() -> void:
 	assert_true(slow <= fast * 1.05, "15 fps peak %f above 144 fps peak %f" % [slow, fast])
 
 
+func test_soldier_flinch_settles_when_posed_rarely() -> void:
+	# Mannequin's flinch (120 / 14): far soldiers pose every other frame, so a
+	# step can be 0.1 s and more; one Euler step per pose turned bodies to NaN.
+	for step_time in [0.05, 0.1, 0.2, 0.35]:
+		var state := Vector2(0.0, 3.0)  # a hit: Soldier flinches with strength 3
+		for i in int(4.0 / step_time):
+			state = SpringMath.step(state, 120.0, 14.0, step_time)
+		assert_true(absf(state.x) < 1e-3, "flinch did not settle with %.2f s steps: %s" % [step_time, state])
+
+
 func test_hitch_and_bad_input_stay_finite() -> void:
 	var state := SpringMath.step(Vector2(0.1, 30.0), STIFFNESS, DAMPING, 5.0)
 	assert_true(state.is_finite(), "hitch gave %s" % state)

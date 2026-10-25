@@ -59,6 +59,7 @@ pinned_radius = 2.5
 max_flankers = 1
 grenade_cooldown = 8.0
 max_corpses = 10
+corpse_freeze_after = 5.0
 stuck_seconds = 2.5
 blocked_cover_seconds = 10.0
 flash_energy = 10.0

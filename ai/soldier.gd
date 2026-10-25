@@ -279,16 +279,25 @@ func _alert() -> void:
 ## enough context to find the cause, then puts the soldier back where it was
 ## last sane. False when it had to.
 func _sane() -> bool:
-	if global_position.is_finite() and velocity.is_finite():
+	# The pose counts too: a NaN rotation, aim or body part leaves the position
+	# finite but makes every shot and casing NaN.
+	var spine: Node3D = mannequin.pivots.spine
+	var posed := is_finite(rotation.y) and is_finite(_aim_pitch) \
+			and spine.global_transform.is_finite() and mannequin.muzzle.global_position.is_finite()
+	if global_position.is_finite() and velocity.is_finite() and posed:
 		_last_good_position = global_position
 		return true
 	if not _reported_insane:
 		_reported_insane = true
-		push_error("Soldier %s (%s) went non-finite: position %s velocity %s action %s move target %s last known %s path %d points" % [
-				name, profile.display_name, global_position, velocity, SoldierBrain.Action.keys()[_action], _move_target,
+		push_error("Soldier %s (%s) went non-finite: position %s velocity %s rotation %s aim pitch %s spine %s action %s move target %s last known %s path %d points" % [
+				name, profile.display_name, global_position, velocity, rotation, _aim_pitch,
+				spine.transform, SoldierBrain.Action.keys()[_action], _move_target,
 				last_known, _path.size()])
-	global_position = _last_good_position
+	global_position = _last_good_position if _last_good_position.is_finite() else global_position
 	velocity = Vector3.ZERO
+	rotation = Vector3(0.0, rotation.y if is_finite(rotation.y) else 0.0, 0.0)
+	_aim_pitch = 0.0
+	mannequin.reset_pose()
 	_path = PackedVector3Array()
 	_move_target = Vector3.INF
 	_requested_target = Vector3.INF
@@ -867,6 +876,7 @@ func _on_died(info: Dictionary) -> void:
 	var energy: float = info.get("energy", 0.5)
 	var push := direction * profile.death_push_speed * (0.5 + energy)
 	var ragdoll := Ragdoll.from_mannequin(mannequin, get_parent(), velocity, part, push)
+	ragdoll.freeze_after = AI.settings.corpse_freeze_after
 	AI.add_corpse(ragdoll)
 	AI.soldier_died.emit(self)
 	queue_free()

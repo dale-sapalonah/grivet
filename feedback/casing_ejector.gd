@@ -45,6 +45,7 @@ var _meshes: Dictionary = {}  # weapon id -> CylinderMesh
 var _players: Array[AudioStreamPlayer3D] = []
 var _prewarm_task := -1  # WorkerThreadPool task id, waited on before we go
 var _next_player := 0
+var _reported_bad := false
 
 
 func _ready() -> void:
@@ -66,6 +67,12 @@ func _ready() -> void:
 
 ## Throws one casing from `port` (the ejection port's world transform).
 func eject(weapon: WeaponDefinition, port: Transform3D, velocity: Vector3) -> void:
+	# A NaN casing never lands, so it would warn every tick for ever.
+	if not (port.is_finite() and velocity.is_finite()):
+		if not _reported_bad:
+			_reported_bad = true
+			push_error("CasingEjector: refused a non-finite %s casing: port %s velocity %s" % [weapon.id, port, velocity])
+		return
 	var casing := _casings[_next]
 	_next = (_next + 1) % _casings.size()
 	casing.weapon = weapon
@@ -95,6 +102,11 @@ func _physics_process(delta: float) -> void:
 			continue
 		casing.velocity += Vector3.DOWN * gravity * delta
 		var from := casing.node.global_position
+		if not (from.is_finite() and casing.velocity.is_finite()) or casing.age > lifetime:
+			casing.active = false  # bad, or fell out of the world: recycle it
+			casing.node.visible = false
+			continue
+		casing.age += delta
 		var to := from + casing.velocity * delta
 		var query := PhysicsRayQueryParameters3D.create(from, to, PhysicsLayers.WORLD, exclude)
 		query.hit_back_faces = false
@@ -116,6 +128,7 @@ func _bounce(casing: Casing, hit: Dictionary) -> void:
 	casing.node.global_position = (hit.position as Vector3) + normal * surface_offset
 	if casing.bounces > max_bounces or casing.velocity.length() < rest_speed:
 		casing.resting = true
+		casing.age = 0.0
 		casing.velocity = Vector3.ZERO
 		# Lie on its side: case axis (+Y of the cylinder) across the surface.
 		var along := normal.cross(Vector3.FORWARD if absf(normal.dot(Vector3.FORWARD)) < 0.9 else Vector3.RIGHT)

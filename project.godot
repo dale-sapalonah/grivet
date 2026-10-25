@@ -24,6 +24,10 @@ AI="*res://ai/ai_director.gd"
 Settings="*res://core/settings.gd"
 MusicPlayer="*res://feedback/music_player.gd"
 
+[debug]
+
+file_logging/max_log_files=30
+
 [display]
 
 window/size/viewport_width=1600

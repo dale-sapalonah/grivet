@@ -20,6 +20,8 @@ const STRIDE := 1.4
 const BODY_SHADER := preload("res://ai/soldier_body.gdshader")
 const UPPER_ARM := 0.29  # shoulder to elbow
 const FOREARM := 0.29  # elbow to the middle of the hand
+const FLINCH_SPRING := 120.0
+const FLINCH_DAMPING := 14.0
 
 ## Part name -> [pivot name, hit zone, mass kg] for hitboxes and the ragdoll.
 const PARTS := {
@@ -302,9 +304,12 @@ func pose(delta: float, crouch: float, aim_pitch: float, speed: float, aiming: b
 		pivots["hip" + side[0]].rotation.x = thigh
 		pivots["knee" + side[0]].rotation.x = knee
 
-	# Flinch spring: hits push the torso around, it recovers.
-	_flinch_velocity += (-120.0 * _flinch - 14.0 * _flinch_velocity) * delta
-	_flinch += _flinch_velocity * delta
+	# Flinch spring: hits push the torso around, it recovers. Sub-stepped: far
+	# soldiers pose every other frame, and one step per pose blew up (NaN body).
+	var bend := Spring.step(Vector2(_flinch.x, _flinch_velocity.x), FLINCH_SPRING, FLINCH_DAMPING, delta)
+	var sway := Spring.step(Vector2(_flinch.y, _flinch_velocity.y), FLINCH_SPRING, FLINCH_DAMPING, delta)
+	_flinch = Vector2(bend.x, sway.x)
+	_flinch_velocity = Vector2(bend.y, sway.y)
 	var lean := deg_to_rad(8.0) * clampf(speed / 5.0, 0.0, 1.0) * (1.0 - crouch)
 	pivots.spine.rotation = Vector3(aim_pitch * 0.5 - lean - deg_to_rad(40.0) * hunker + _flinch.x, 0.0, _flinch.y)
 	pivots.neck.rotation.x = aim_pitch * 0.5 - deg_to_rad(15.0) * hunker
@@ -381,10 +386,19 @@ func neutral_pose() -> void:
 		pivot.force_update_transform()
 
 
+## Back to the neutral pose with no flinch left: recovery from a NaN pose.
+func reset_pose() -> void:
+	_flinch = Vector2.ZERO
+	_flinch_velocity = Vector2.ZERO
+	_walk_phase = 0.0
+	neutral_pose()
+
+
 ## Knocks the torso away from a hit (direction in world space).
 func flinch(direction: Vector3, strength: float) -> void:
 	var local := global_basis.inverse() * direction
-	_flinch_velocity += Vector2(-local.z, local.x) * strength
+	if local.is_finite():
+		_flinch_velocity += Vector2(-local.z, local.x) * strength
 
 
 func _pivot(pivot_name: String, parent: Node3D, at: Vector3) -> Node3D:
