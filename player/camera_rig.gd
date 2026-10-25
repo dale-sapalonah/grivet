@@ -47,9 +47,9 @@ func update_rig(delta: float, model: MovementModel, intent: MovementModel.Intent
 		horizontal_speed: float, grounded: bool) -> void:
 	var bob := _update_bob(delta, model, horizontal_speed, grounded)
 
-	var spring := -tuning.landing_spring * _dip - tuning.landing_damping * _dip_velocity
-	_dip_velocity += spring * delta
-	_dip += _dip_velocity * delta
+	var dip := Spring.step(Vector2(_dip, _dip_velocity), tuning.landing_spring, tuning.landing_damping, delta)
+	_dip = dip.x
+	_dip_velocity = dip.y
 
 	var lean_x := _clamp_lean(model.lean * tuning.lean_offset)
 	position = Vector3(bob.x + lean_x, bob.y + _dip, 0.0)
@@ -59,8 +59,9 @@ func update_rig(delta: float, model: MovementModel, intent: MovementModel.Intent
 	_roll = lerpf(_roll, target_roll, 1.0 - exp(-tuning.roll_blend_speed * delta))
 	rotation.z = _roll
 
-	_kick_velocity += (-tuning.kick_spring * _kick - tuning.kick_damping * _kick_velocity) * delta
-	_kick += _kick_velocity * delta
+	var kick := Spring.step(Vector2(_kick, _kick_velocity), tuning.kick_spring, tuning.kick_damping, delta)
+	_kick = kick.x
+	_kick_velocity = kick.y
 	_shake = move_toward(_shake, 0.0, tuning.shake_decay * delta)
 	var jitter := deg_to_rad(_shake)
 	rotation.x = _kick + randf_range(-jitter, jitter)

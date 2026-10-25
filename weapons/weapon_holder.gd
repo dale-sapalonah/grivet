@@ -222,6 +222,8 @@ func _build_mechanism(sound: String, definition: WeaponDefinition) -> AudioStrea
 
 func _eject_casing(definition: WeaponDefinition) -> void:
 	var port := _view.ejection_port()
+	if not port.is_finite():  # a broken pose must not spawn bodies at NaN
+		return
 	var jitter := Vector3(randf_range(0.85, 1.15), randf_range(0.85, 1.15), randf_range(0.7, 1.3))
 	var throw := port.basis * (definition.casing_eject_velocity * jitter)
 	_casings.eject(definition, port, throw + _player.velocity)

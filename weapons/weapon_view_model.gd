@@ -144,10 +144,12 @@ func update_pose(delta: float, weapon: WeaponModel, aim_blend: float, sprinting:
 	var sway_target := (-look_delta * _definition.sway_amount).limit_length(_definition.sway_limit)
 	_sway = _sway.lerp(sway_target, blend)
 
-	_kick_back_velocity += (-tuning.kick_spring * _kick_back - tuning.kick_damping * _kick_back_velocity) * delta
-	_kick_back += _kick_back_velocity * delta
-	_kick_pitch_velocity += (-tuning.kick_spring * _kick_pitch - tuning.kick_damping * _kick_pitch_velocity) * delta
-	_kick_pitch += _kick_pitch_velocity * delta
+	var recoil_back := Spring.step(Vector2(_kick_back, _kick_back_velocity), tuning.kick_spring, tuning.kick_damping, delta)
+	_kick_back = recoil_back.x
+	_kick_back_velocity = recoil_back.y
+	var recoil_pitch := Spring.step(Vector2(_kick_pitch, _kick_pitch_velocity), tuning.kick_spring, tuning.kick_damping, delta)
+	_kick_pitch = recoil_pitch.x
+	_kick_pitch_velocity = recoil_pitch.y
 
 	var equip_offset := 0.0
 	if weapon.state == WeaponModel.State.EQUIPPING:
