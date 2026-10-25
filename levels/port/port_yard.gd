@@ -324,12 +324,16 @@ func _cmd_stage(args: PackedStringArray) -> String:
 		# Still loading (no floor or navmesh yet): start there once ready.
 		Settings.requested_stage = args[0].to_int() - 1
 		return "stage %s once the level is ready" % args[0]
+	_restart_at_stage.call_deferred(args[0].to_int() - 1)  # the console doesn't wait for async commands
+	return "stage %s" % args[0]
+
+
+func _restart_at_stage(index: int) -> void:
 	_stage_live = false
 	for soldier in AI.soldiers.duplicate():
 		soldier.queue_free()
 	await get_tree().process_frame
-	_start_stage(args[0].to_int() - 1, true)
-	return "stage %s" % args[0]
+	_start_stage(index, true)
 
 
 func _cmd_visual(args: PackedStringArray) -> String:

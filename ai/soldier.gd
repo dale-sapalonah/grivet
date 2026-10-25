@@ -43,6 +43,8 @@ var _want_crouch := false
 var _advancing_low := false  # set each frame by the action
 var _muzzle_flash: MuzzleFlash
 var _action := SoldierBrain.Action.IDLE
+var _last_good_position := Vector3.ZERO
+var _reported_insane := false
 var _think_timer := 0.0
 var _think_delta := 0.0
 var _pose_delta := 0.0
@@ -143,6 +145,8 @@ func eye_point() -> Vector3:
 
 func _physics_process(delta: float) -> void:
 	if dead or AI.frozen:
+		return
+	if not _sane():
 		return
 	var started := Time.get_ticks_usec()
 	var target := AI.target()
@@ -268,6 +272,27 @@ func hear(position: Vector3, radius: float, source: Node) -> void:
 func _alert() -> void:
 	awareness = maxf(awareness, 1.0)
 	_alerted = true
+
+
+## Guards against non-finite state (it once flooded the log with "Vector3
+## cannot be normalized" and froze the game): reports the first time with
+## enough context to find the cause, then puts the soldier back where it was
+## last sane. False when it had to.
+func _sane() -> bool:
+	if global_position.is_finite() and velocity.is_finite():
+		_last_good_position = global_position
+		return true
+	if not _reported_insane:
+		_reported_insane = true
+		push_error("Soldier %s (%s) went non-finite: position %s velocity %s action %s move target %s last known %s path %d points" % [
+				name, profile.display_name, global_position, velocity, SoldierBrain.Action.keys()[_action], _move_target,
+				last_known, _path.size()])
+	global_position = _last_good_position
+	velocity = Vector3.ZERO
+	_path = PackedVector3Array()
+	_move_target = Vector3.INF
+	_requested_target = Vector3.INF
+	return false
 
 
 ## The target vanished (respawned elsewhere): drop what we knew, stay wary.
@@ -700,6 +725,8 @@ func _facing(point: Vector3) -> bool:
 ## points never get small enough). Repaths when the destination moves.
 func _move(delta: float) -> void:
 	var desired := Vector3.ZERO
+	if _move_target != Vector3.INF and not _move_target.is_finite():
+		_move_target = Vector3.INF  # never path towards an unknown (infinite) point
 	if _move_target != Vector3.INF:
 		if _requested_target == Vector3.INF or _requested_target.distance_to(_move_target) > 0.5:
 			_path = NavigationServer3D.map_get_path(get_world_3d().navigation_map, global_position, _move_target, true)

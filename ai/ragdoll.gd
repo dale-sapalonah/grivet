@@ -134,3 +134,14 @@ func bend(parent: String, child: String) -> float:
 	var a := -upper.global_basis.y
 	var b := -lower.global_basis.y
 	return rad_to_deg(atan2(a.cross(b).dot(lateral), a.dot(b)))
+
+
+## Physics can't recover a body that went non-finite (it floods the log
+## every step): report it once and remove the corpse.
+func _physics_process(_delta: float) -> void:
+	for body: RigidBody3D in bodies.values():
+		if is_instance_valid(body) and not (body.global_position.is_finite() and body.linear_velocity.is_finite()):
+			push_error("Ragdoll %s part %s went non-finite: position %s velocity %s - removed" % [
+					name, body.name, body.global_position, body.linear_velocity])
+			queue_free()
+			return

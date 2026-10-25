@@ -71,6 +71,10 @@ func _exit_tree() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if not global_position.is_finite() or not linear_velocity.is_finite():
+		push_error("Grenade went non-finite: position %s velocity %s - removed" % [global_position, linear_velocity])
+		queue_free()
+		return
 	fuse_left -= delta
 	if fuse_left <= 0.0:
 		_explode()

@@ -144,7 +144,10 @@ func _unhandled_input(event: InputEvent) -> void:
 func _physics_process(delta: float) -> void:
 	# Out of the world (a gap in a level): put the player back rather than
 	# letting them fall forever.
-	if global_position.y < tuning.fall_reset_height and not dead:
+	if (global_position.y < tuning.fall_reset_height or not global_position.is_finite() or not velocity.is_finite()) and not dead:
+		if not global_position.is_finite() or not velocity.is_finite():
+			push_error("Player went non-finite: position %s velocity %s - respawning" % [global_position, velocity])
+		velocity = Vector3.ZERO
 		respawn()
 		return
 	if dead:
