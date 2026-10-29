@@ -11,6 +11,8 @@ extends RefCounted
 ## them on the "Music" bus.
 
 const RATE := ProceduralAudio.MIX_RATE
+## How hard _glue drives the dark tracks into tanh (1 is clean, 3 is crunchy).
+const GLUE_DRIVE := 2.5
 const BPM := 100.0
 ## Samples in one cycle of the oscillators' wavetable.
 const SAW_TABLE := 2048
@@ -198,14 +200,17 @@ static func covert_ops() -> AudioStreamWAV:
 			[16, 0, 146.83, 3.0], [17, 0, 174.61, 2.0], [17, 2, 196.0, 2.0], [18, 0, 220.0, 2.0], [18, 2, 207.65, 2.0], [19, 0, 146.83, 4.0],
 			[20, 0, 116.54, 4.0], [22, 0, 110.0, 4.0], [23, 0, 138.59, 4.0]]:
 		_pad(buffer, saw, float(note[0]) * bar + float(note[1]) * beat, note[2], float(note[3]) * beat, 0.16, 2400.0, rng)
+	_glue(buffer)
 	var stream := ProceduralAudio.to_stream(buffer)
 	_loop(stream, buffer.size())
 	return stream
 
 
 ## The quieter dark track (16 bars at 70 BPM, about 55 s): a drone, a
-## heartbeat on the low drum, tremolo strings swelling and fading, and
-## distant metallic pings with long tails. For between the fights.
+## heartbeat on the low drum with a knock on top, tremolo strings swelling and
+## fading, a ticking pulse from bar 5, and distant metallic pings with long
+## tails. For between the fights. Drone, heartbeat and slow swells alone sat
+## below 80 Hz or under the gunfire: in game the player couldn't hear it.
 static func tension() -> AudioStreamWAV:
 	var beat := 60.0 / 70.0
 	var bar := beat * 4.0
@@ -215,34 +220,60 @@ static func tension() -> AudioStreamWAV:
 	var saw := _saw_table()
 	var buffer := _silence(bars * bar)
 	var drone := _silence(bars * bar * 0.5)
-	_drone(drone, bars * bar * 0.5, [36.71, 73.42, 77.78], 0.06)  # the minor second rubs
+	_drone(drone, bars * bar * 0.5, [73.42, 146.83, 155.56, 293.66], 0.06)  # the minor second rubs
 	_stamp(buffer, drone, 0.0, 1.0)
 	_stamp(buffer, drone, bars * bar * 0.5, 1.0)
 	var lub := _hit(func(buf: PackedFloat32Array) -> void: _war_drum(buf, 0.0, 50.0, 0.35, rng), 1.2)
 	var dub := _hit(func(buf: PackedFloat32Array) -> void: _war_drum(buf, 0.0, 58.0, 0.22, rng), 1.2)
 	var roots := [146.83, 146.83, 155.56, 146.83, 130.81, 146.83, 116.54, 110.0]
+	# A knock on the heartbeat, high enough for small speakers to carry it.
+	var knock := _hit(func(buf: PackedFloat32Array) -> void: _war_drum(buf, 0.0, 130.0, 0.3, rng), 0.6)
 	var strings := {}  # root -> two bars of tremolo minor triad, rendered once
+	var pulses := {}  # root -> one ticking eighth, rendered once
 	for b in bars:
 		var start := b * bar
 		for q in [0.0, 2.0]:  # heartbeat: lub-dub on beats 1 and 3
 			_stamp(buffer, lub, start + q * beat, 1.0)
 			_stamp(buffer, dub, start + (q + 0.28) * beat, 1.0)
+			_stamp(buffer, knock, start + q * beat, 1.0)
+		var root: float = roots[(b / 2) % roots.size()]
 		if b % 2 == 0:
-			var root: float = roots[(b / 2) % roots.size()]
 			if not strings.has(root):
 				var chord := _silence(bar * 2.0)
 				for hz in [root, root * 1.189, root * 1.498]:  # minor triad
-					_tremolo(chord, saw, 0.0, hz * 2.0, bar * 2.0, 0.1, rng)
+					_tremolo(chord, saw, 0.0, hz * 2.0, bar * 2.0, 0.16, rng)
+				_tremolo(chord, saw, 0.0, root * 4.0, bar * 2.0, 0.07, rng)  # an octave on top
 				strings[root] = chord
 			_stamp(buffer, strings[root], start, 1.0)
+		if b >= 4:
+			if not pulses.has(root):
+				var tick := _silence(beat * 0.3)
+				_pulse(tick, saw, 0.0, root, beat * 0.3, 0.22, 1400.0)
+				pulses[root] = tick
+			for e in 8:
+				_stamp(buffer, pulses[root], start + e * beat * 0.5, 1.0 if e % 2 == 0 else 0.6)
 		if b % 3 == 1:
 			var hz := rng.randf_range(900.0, 1300.0)
 			var ping := _hit(func(buf: PackedFloat32Array) -> void:
 					ProceduralAudio.add_ring(buf, 0.0, PackedFloat32Array([hz, hz * 1.52, hz * 2.37]), 1.4, 0.12), 6.0)
 			_stamp(buffer, ping, start + rng.randf_range(0.5, 2.5) * beat, 1.0)
+	_glue(buffer)
 	var stream := ProceduralAudio.to_stream(buffer)
 	_loop(stream, buffer.size())
 	return stream
+
+
+## Soft-saturates a dark track (tanh) so drum peaks stop setting its level:
+## at a peak-to-RMS of ~19 dB the game tracks were lost under gunfire.
+static func _glue(buffer: PackedFloat32Array) -> void:
+	var loudest := 0.0
+	for sample in buffer:
+		loudest = maxf(loudest, absf(sample))
+	if loudest <= 0.0:
+		return
+	var scale := GLUE_DRIVE / loudest
+	for i in buffer.size():
+		buffer[i] = tanh(buffer[i] * scale)
 
 
 ## `seconds` of silence to render into.

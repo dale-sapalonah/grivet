@@ -54,6 +54,7 @@ func _ready() -> void:
 		var tag := "blender" if blender else "code"
 		await _shot(camera, Vector3(0, 1.3, 5.2), Vector3(0, 1.0, 0), "body_row_%s.png" % tag)
 		await _shot(camera, Vector3(2.2, 1.6, 2.6), Vector3(0.6, 1.1, 0), "body_quarter_%s.png" % tag)
+		await _shot(camera, Vector3(1.4, 1.6, 1.5), Vector3(0.55, 1.35, 0), "body_shoulders_%s.png" % tag)
 	get_tree().quit(0)
 
 

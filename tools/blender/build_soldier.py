@@ -66,10 +66,13 @@ def colorize(obj, class_of):
             attribute.data[loop].color = (code[0], code[1], code[2], 1.0)
 
 
-def organic(name, elements, budget, class_of=None):
+def organic(name, elements, budget, class_of=None, hems=()):
     """Metaball object from elements [(kind, godot centre, radius or (rx, ry, rz), class)];
     converted to a mesh, decimated to `budget` triangles, coloured by nearest
-    element (or by class_of(godot position), e.g. a sleeve ending at a height)."""
+    element (or by class_of(godot position), e.g. a sleeve ending at a height).
+    `hems` are Godot heights cut into the mesh after decimating, so a class
+    edge there runs straight round the limb (coloured per face, a sleeve or
+    boot top ending between decimated faces came out zigzag)."""
     ball = bpy.data.metaballs.new("mb_" + name)
     ball.resolution = RESOLUTION
     ball.render_resolution = RESOLUTION
@@ -98,21 +101,32 @@ def organic(name, elements, budget, class_of=None):
         decimate = obj.modifiers.new("decimate", "DECIMATE")
         decimate.ratio = budget / faces
         bpy.ops.object.modifier_apply(modifier=decimate.name)
+    if hems:
+        mesh = bmesh.new()
+        mesh.from_mesh(obj.data)
+        for y in hems:
+            geom = mesh.verts[:] + mesh.edges[:] + mesh.faces[:]
+            bmesh.ops.bisect_plane(mesh, geom=geom, plane_co=g(0, y, 0), plane_no=(0, 0, 1))
+        bmesh.ops.triangulate(mesh, faces=mesh.faces[:])
+        mesh.to_mesh(obj.data)
+        mesh.free()
 
-    def nearest(p):
-        best, best_d = elements[0][3], 1e9
-        for kind, center, size, klass in elements:
-            radii = (size, size, size) if kind == "ball" else size
-            d = Vector(((p.x - center[0]) / radii[0], (p.y - center[1]) / radii[1], (p.z - center[2]) / radii[2])).length
-            if d < best_d:
-                best, best_d = klass, d
-        return best
-
-    colorize(obj, class_of or nearest)
+    colorize(obj, class_of or (lambda p: _nearest(elements, p)))
     for polygon in obj.data.polygons:
         polygon.use_smooth = True
     obj.select_set(False)
     return obj
+
+
+def _nearest(elements, p):
+    """The class of the element whose (scaled) centre is nearest p."""
+    best, best_d = elements[0][3], 1e9
+    for kind, center, size, klass in elements:
+        radii = (size, size, size) if kind == "ball" else size
+        d = Vector(((p.x - center[0]) / radii[0], (p.y - center[1]) / radii[1], (p.z - center[2]) / radii[2])).length
+        if d < best_d:
+            best, best_d = klass, d
+    return best
 
 
 def hard(kind, center, size, klass, rotation=(0, 0, 0), bevel=0.006):
@@ -185,8 +199,8 @@ def military():
     """Rifleman / rusher: uniform, plate carrier, helmet, knee pads, gloves, boots."""
     # --- pelvis (origin: hips) -------------------------------------------------------------
     pelvis = organic("pelvis", [
-        ("ellipsoid", (0, 0.03, 0), (0.17, 0.13, 0.125), "cloth"),
-        ("ellipsoid", (0, -0.08, 0.01), (0.16, 0.08, 0.12), "cloth"),
+        ("ellipsoid", (0, 0.05, 0), (0.16, 0.12, 0.122), "cloth"),
+        ("ellipsoid", (0, -0.07, 0.01), (0.155, 0.08, 0.118), "cloth"),
     ], BUDGET["pelvis"])
     join(pelvis, [hard("torus", (0, 0.08, 0), (0.168, 0.024, 0.78), "gear_dark"),
                   hard("box", (0, 0.08, -0.137), (0.05, 0.04, 0.02), "gear"),
@@ -195,11 +209,14 @@ def military():
 
     # --- torso (origin: spine, same as hips) ------------------------------------------------------
     torso = organic("torso", [
-        ("ellipsoid", (0, 0.09, 0), (0.15, 0.13, 0.105), "cloth"),
-        ("ellipsoid", (0, 0.27, 0), (0.168, 0.13, 0.115), "cloth"),
-        ("ellipsoid", (0, 0.41, 0), (0.2, 0.12, 0.13), "cloth"),
-        ("ellipsoid", (-0.17, 0.47, 0), (0.08, 0.07, 0.075), "cloth"),
-        ("ellipsoid", (0.17, 0.47, 0), (0.08, 0.07, 0.075), "cloth"),
+        ("ellipsoid", (0, 0.05, 0), (0.165, 0.11, 0.115), "cloth"),  # waist, down into the belt
+        ("ellipsoid", (0, 0.16, 0), (0.172, 0.12, 0.118), "cloth"),
+        ("ellipsoid", (0, 0.29, 0), (0.185, 0.13, 0.124), "cloth"),
+        ("ellipsoid", (0, 0.41, 0), (0.205, 0.12, 0.132), "cloth"),
+        ("ellipsoid", (-0.162, 0.45, 0), (0.076, 0.066, 0.078), "cloth"),
+        ("ellipsoid", (0.162, 0.45, 0), (0.076, 0.066, 0.078), "cloth"),
+        ("ellipsoid", (-0.085, 0.5, 0), (0.085, 0.045, 0.07), "cloth"),  # trapezius
+        ("ellipsoid", (0.085, 0.5, 0), (0.085, 0.045, 0.07), "cloth"),
         ("ellipsoid", (0, 0.535, 0), (0.07, 0.05, 0.065), "cloth"),
     ], BUDGET["torso"])
     torso_gear = [hard("box", (0, 0.36, -0.118), (0.3, 0.3, 0.05), "gear", bevel=0.012),
@@ -233,36 +250,43 @@ def military():
 
     # --- limbs, both sides (origins: shoulder, elbow, hip, knee) -----------------------------------------
     for side, suffix in ((-1.0, "_l"), (1.0, "_r")):
-        arm = organic("upper_arm" + suffix, [("ellipsoid", (0, -0.02, 0), (0.066, 0.06, 0.062), "cloth")]
-                      + taper(-0.06, -0.29, 0.058, 0.043, "cloth", depth=0.92), BUDGET["upper_arm"])
-        join(arm, [hard("box", (side * 0.054, -0.08, 0), (0.012, 0.07, 0.06), "gear_dark")])
+        organic("upper_arm" + suffix, [("ellipsoid", (-side * 0.02, -0.035, 0), (0.08, 0.072, 0.078), "cloth")]  # deltoid, leaning into the torso
+                + taper(-0.07, -0.29, 0.066, 0.05, "cloth", depth=0.94), BUDGET["upper_arm"])
 
-        organic("lower_arm" + suffix, [("ellipsoid", (0, 0.0, 0), (0.046, 0.046, 0.044), "cloth")]
-                + taper(-0.04, -0.24, 0.05, 0.034, "cloth", depth=0.86)
-                + [("ellipsoid", (0, -0.29, -0.005), (0.038, 0.055, 0.03), "gloves"),
-                   ("ellipsoid", (0, -0.33, -0.02), (0.032, 0.03, 0.025), "gloves")], BUDGET["lower_arm"])
+        organic("lower_arm" + suffix, [("ellipsoid", (0, 0.0, 0), (0.054, 0.052, 0.05), "cloth"),
+                                       ("ellipsoid", (0, -0.08, 0), (0.062, 0.085, 0.058), "cloth")]
+                + taper(-0.04, -0.24, 0.056, 0.04, "cloth", depth=0.88)
+                + [("ellipsoid", (0, -0.29, -0.005), (0.04, 0.056, 0.032), "gloves"),
+                   ("ellipsoid", (0, -0.33, -0.02), (0.034, 0.031, 0.026), "gloves")], BUDGET["lower_arm"],
+                class_of=lambda p: "gloves" if p.y < -0.255 else "cloth", hems=(-0.255,))
 
-        thigh = organic("thigh" + suffix, taper(0.03, -0.42, 0.092, 0.06, "cloth", steps=8, depth=0.95), BUDGET["thigh"])
-        join(thigh, [hard("box", (side * 0.08, -0.24, 0), (0.03, 0.12, 0.09), "cloth")])
+        thigh = organic("thigh" + suffix, taper(0.03, -0.42, 0.102, 0.07, "cloth", steps=8, depth=0.96), BUDGET["thigh"])
+        join(thigh, [hard("box", (side * 0.09, -0.24, 0), (0.03, 0.12, 0.095), "cloth")])
 
-        shin = organic("shin" + suffix, [("ellipsoid", (0, 0.0, -0.035), (0.068, 0.075, 0.048), "gear")]
-                       + taper(-0.05, -0.34, 0.068, 0.05, "cloth", depth=0.94)
-                       + [("ellipsoid", (0, -0.4, 0), (0.054, 0.06, 0.054), "boots"),
-                          ("ellipsoid", (0, -0.445, -0.06), (0.05, 0.035, 0.1), "boots")], BUDGET["shin"])
+        shin = organic("shin" + suffix, [("ellipsoid", (0, 0.0, 0), (0.07, 0.07, 0.068), "cloth"),
+                                         ("ellipsoid", (0, -0.13, 0.015), (0.08, 0.11, 0.08), "cloth")]  # calf
+                       + taper(-0.05, -0.34, 0.076, 0.056, "cloth", depth=0.95)
+                       + [("ellipsoid", (0, -0.4, 0), (0.058, 0.062, 0.058), "boots"),
+                          ("ellipsoid", (0, -0.445, -0.06), (0.054, 0.036, 0.104), "boots")], BUDGET["shin"],
+                       class_of=lambda p: "boots" if p.y < -0.33 else "cloth", hems=(-0.33,))
+        join(shin, [hard("sphere", (0, -0.005, -0.058), (0.07, 0.078, 0.036), "gear", bevel=0.0)])
         join(shin, [hard("box", (0, -0.47, -0.045), (0.1, 0.02, 0.245), "sole", bevel=0.004)])
 
 
 def civilian():
     """Machete gang member: T-shirt, shorts, bare arms and legs, rubber sandals.
     The bilum, its strap and the odd headband are added by Mannequin in code."""
-    organic("pelvis", [("ellipsoid", (0, 0.03, 0), (0.165, 0.13, 0.12), "gear"),
-                       ("ellipsoid", (0, -0.08, 0.01), (0.155, 0.08, 0.115), "gear")], BUDGET["pelvis"])
+    organic("pelvis", [("ellipsoid", (0, 0.05, 0), (0.158, 0.12, 0.118), "gear"),
+                       ("ellipsoid", (0, -0.07, 0.01), (0.152, 0.08, 0.114), "gear")], BUDGET["pelvis"])
     organic("torso", [
-        ("ellipsoid", (0, 0.09, 0), (0.145, 0.13, 0.1), "cloth"),
-        ("ellipsoid", (0, 0.27, 0), (0.16, 0.13, 0.11), "cloth"),
-        ("ellipsoid", (0, 0.41, 0), (0.19, 0.12, 0.12), "cloth"),
-        ("ellipsoid", (-0.17, 0.47, 0), (0.075, 0.065, 0.07), "cloth"),
-        ("ellipsoid", (0.17, 0.47, 0), (0.075, 0.065, 0.07), "cloth"),
+        ("ellipsoid", (0, 0.05, 0), (0.16, 0.11, 0.11), "cloth"),  # waist, over the shorts
+        ("ellipsoid", (0, 0.16, 0), (0.165, 0.12, 0.112), "cloth"),
+        ("ellipsoid", (0, 0.29, 0), (0.178, 0.13, 0.118), "cloth"),
+        ("ellipsoid", (0, 0.41, 0), (0.198, 0.12, 0.125), "cloth"),
+        ("ellipsoid", (-0.16, 0.45, 0), (0.073, 0.064, 0.074), "cloth"),
+        ("ellipsoid", (0.16, 0.45, 0), (0.073, 0.064, 0.074), "cloth"),
+        ("ellipsoid", (-0.083, 0.5, 0), (0.082, 0.044, 0.068), "cloth"),  # trapezius
+        ("ellipsoid", (0.083, 0.5, 0), (0.082, 0.044, 0.068), "cloth"),
         ("ellipsoid", (0, 0.535, 0), (0.065, 0.05, 0.06), "cloth"),
     ], BUDGET["torso"])
     head = organic("head", HEAD, BUDGET["head"])
@@ -271,19 +295,22 @@ def civilian():
                 hard("dome", (0, 0.168, 0.008), (0.093, 0.09, 0.105), "gear_dark")])  # short tight hair
     for side, suffix in ((-1.0, "_l"), (1.0, "_r")):
         # Short sleeve over the shoulder, bare arm below it.
-        organic("upper_arm" + suffix, [("ellipsoid", (0, -0.02, 0), (0.068, 0.062, 0.064), "cloth"),
-                                       ("ellipsoid", (0, -0.09, 0), (0.066, 0.05, 0.062), "cloth")]
-                + taper(-0.06, -0.29, 0.055, 0.041, "skin", depth=0.9), BUDGET["upper_arm"],
-                class_of=lambda p: "cloth" if p.y > -0.13 else "skin")
-        organic("lower_arm" + suffix, [("ellipsoid", (0, 0.0, 0), (0.044, 0.044, 0.042), "skin")]
-                + taper(-0.04, -0.24, 0.047, 0.033, "skin", depth=0.86)
+        organic("upper_arm" + suffix, [("ellipsoid", (-side * 0.02, -0.035, 0), (0.078, 0.07, 0.076), "cloth"),  # deltoid, leaning into the torso
+                                       ("ellipsoid", (0, -0.09, 0), (0.072, 0.054, 0.068), "cloth")]
+                + taper(-0.06, -0.29, 0.062, 0.047, "skin", depth=0.92), BUDGET["upper_arm"],
+                class_of=lambda p: "cloth" if p.y > -0.13 else "skin", hems=(-0.13,))
+        organic("lower_arm" + suffix, [("ellipsoid", (0, 0.0, 0), (0.05, 0.05, 0.047), "skin"),
+                                       ("ellipsoid", (0, -0.08, 0), (0.058, 0.085, 0.054), "skin")]
+                + taper(-0.04, -0.24, 0.053, 0.038, "skin", depth=0.88)
                 + [("ellipsoid", (0, -0.29, -0.005), (0.037, 0.055, 0.03), "skin"),
                    ("ellipsoid", (0, -0.33, -0.02), (0.031, 0.03, 0.024), "skin")], BUDGET["lower_arm"])
         # Shorts to above the knee, bare leg below.
-        organic("thigh" + suffix, taper(0.03, -0.25, 0.096, 0.08, "gear", steps=5, depth=0.97)
-                + taper(-0.28, -0.42, 0.072, 0.058, "skin", steps=4, depth=0.92), BUDGET["thigh"],
-                class_of=lambda p: "gear" if p.y > -0.27 else "skin")
-        shin = organic("shin" + suffix, taper(0.0, -0.36, 0.064, 0.045, "skin", depth=0.92)
+        organic("thigh" + suffix, taper(0.03, -0.25, 0.106, 0.09, "gear", steps=5, depth=0.97)
+                + taper(-0.28, -0.42, 0.08, 0.064, "skin", steps=4, depth=0.93), BUDGET["thigh"],
+                class_of=lambda p: "gear" if p.y > -0.27 else "skin", hems=(-0.27,))
+        shin = organic("shin" + suffix, [("ellipsoid", (0, 0.0, 0), (0.07, 0.07, 0.068), "skin"),
+                                         ("ellipsoid", (0, -0.13, 0.018), (0.074, 0.11, 0.076), "skin")]  # calf
+                       + taper(0.0, -0.36, 0.07, 0.05, "skin", depth=0.93)
                        + [("ellipsoid", (0, -0.425, -0.05), (0.045, 0.03, 0.1), "skin")], BUDGET["shin"])
         join(shin, [hard("box", (0, -0.455, -0.045), (0.095, 0.014, 0.25), "boots", bevel=0.004),
                     hard("box", (0, -0.44, -0.12), (0.008, 0.03, 0.05), "sole", rotation=(30, 0, 0), bevel=0.0)])

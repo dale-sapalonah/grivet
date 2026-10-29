@@ -56,6 +56,7 @@ func get_value(key: String) -> Variant:
 
 
 func set_value(key: String, value: Variant) -> void:
+	print("setting %s = %s" % [key, value])  # playtest logs show what the player changed
 	values[key] = value
 	_apply(key)
 	_save()

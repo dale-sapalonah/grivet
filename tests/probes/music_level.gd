@@ -5,14 +5,16 @@ extends Node
 ## dBFS. Diagnostic: the music "played" by every check yet the player
 ## couldn't hear it.
 ##
-##   $GODOT --path . res://tests/probes/music_level.tscn
+##   $GODOT --path . res://tests/probes/music_level.tscn [-- track=tension] [fight]
+## `fight` lets the squad engage (god mode on) and also measures the SFX bus.
 
 const SECONDS := 8.0
 
 var _music := AudioEffectCapture.new()
 var _master := AudioEffectCapture.new()
-var _sums := {"music": 0.0, "master": 0.0}
-var _counts := {"music": 0, "master": 0}
+var _sfx := AudioEffectCapture.new()
+var _sums := {"music": 0.0, "master": 0.0, "sfx": 0.0}
+var _counts := {"music": 0, "master": 0, "sfx": 0}
 var _capturing := false
 
 
@@ -28,19 +30,26 @@ func _run() -> void:
 	add_child(level)
 	await level.combat_ready
 	Debug.execute("god")
-	Debug.execute("notarget")
+	if not "fight" in OS.get_cmdline_user_args():
+		Debug.execute("notarget")
 	while MusicPlayer._covert == null:
 		await get_tree().create_timer(0.5).timeout
 	await get_tree().create_timer(5.0).timeout  # past the fade-in
-	for capture: AudioEffectCapture in [_music, _master]:
+	if "track=tension" in OS.get_cmdline_user_args():
+		MusicPlayer._track.stream = MusicPlayer._tension
+		MusicPlayer._track.play()
+		MusicPlayer._last_position = 0.0
+		await get_tree().create_timer(1.0).timeout
+	for capture: AudioEffectCapture in [_music, _master, _sfx]:
 		capture.buffer_length = 0.5
 	AudioServer.add_bus_effect(AudioServer.get_bus_index("Music"), _music)
 	AudioServer.add_bus_effect(0, _master)
+	AudioServer.add_bus_effect(AudioServer.get_bus_index("SFX"), _sfx)
 	_capturing = true
 	await get_tree().create_timer(SECONDS).timeout
 	_capturing = false
 	var track: AudioStreamPlayer = MusicPlayer._track
-	print("game: music bus %.1f dBFS, master mix %.1f dBFS (%s at %.1f dB, Music bus %.1f dB)" % [_db("music"), _db("master"),
+	print("game: music bus %.1f dBFS, sfx bus %.1f dBFS, master mix %.1f dBFS (%s at %.1f dB, Music bus %.1f dB)" % [_db("music"), _db("sfx"), _db("master"),
 			"covert" if track.stream == MusicPlayer._covert else "tension", track.volume_db,
 			AudioServer.get_bus_volume_db(AudioServer.get_bus_index("Music"))])
 	get_tree().quit(0)
@@ -49,7 +58,7 @@ func _run() -> void:
 func _process(_delta: float) -> void:
 	if not _capturing:
 		return
-	for pair in [["music", _music], ["master", _master]]:
+	for pair in [["music", _music], ["master", _master], ["sfx", _sfx]]:
 		var capture: AudioEffectCapture = pair[1]
 		var frames := capture.get_buffer(capture.get_frames_available())
 		for frame in frames:
