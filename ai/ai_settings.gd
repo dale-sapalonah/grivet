@@ -112,6 +112,12 @@ extends Resource
 @export var max_flankers := 1
 @export var grenade_cooldown := 8.0
 @export var max_corpses := 10
+## Stragglers: with this many soldiers or fewer left and no contact (seen, or
+## anyone shot) for straggler_reveal_seconds, the HUD marks them and they come
+## hunting the player, told where the player is every straggler_hunt_interval.
+@export var straggler_count := 3
+@export var straggler_reveal_seconds := 25.0
+@export var straggler_hunt_interval := 8.0
 ## A corpse stops simulating (freezes where it lies) once it has settled, or
 ## this long after death at most (s): jointed ragdolls jitter and never sleep,
 ## and ten of them at 120 ticks/s lagged the game. Blasts wake them.

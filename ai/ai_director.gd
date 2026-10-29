@@ -26,6 +26,8 @@ var frozen := false
 var show_debug := false
 ## Smoothed total AI time per physics frame (ms), for budgets and probes.
 var frame_ms := 0.0
+var _last_contact := 0.0
+var _next_hunt := 0.0
 var grenades_thrown := 0
 
 var _player: Player
@@ -50,12 +52,14 @@ func _ready() -> void:
 	casings.prewarm(enemy_weapons)
 	Ballistics.bullet_moved.connect(_on_bullet_moved)
 	Ballistics.impact.connect(_on_impact)
+	Ballistics.target_hit.connect(func(_info: Dictionary) -> void: note_contact())
 	Debug.register("spawn", _cmd_spawn, "spawn <rifleman|rusher> [count] [distance]: spawn enemies ahead of you (default 20 m).")
 	Debug.register("ai.show", _cmd_show, "Toggle AI state labels above enemies.")
 	Debug.register("ai.freeze", _cmd_freeze, "Freeze / unfreeze all enemies.")
 	Debug.register("ai.kill", _cmd_kill, "Kill every enemy.")
 	Debug.register("notarget", _cmd_notarget, "Enemies ignore you.")
 	Debug.register("ai.time", _cmd_time, "AI cost per frame.")
+	Debug.register("ai.stragglers", _cmd_stragglers, "Reveal the remaining enemies now (as if the last few had gone quiet).")
 
 
 func _physics_process(delta: float) -> void:
@@ -63,6 +67,36 @@ func _physics_process(delta: float) -> void:
 	_frame_usec = 0
 	_find_player()
 	_track_pinning(delta)
+	_hunt_stragglers()
+
+
+## Contact: a soldier saw the target, or anyone shot anyone. Stragglers are
+## revealed after a long enough quiet.
+func note_contact() -> void:
+	if _last_contact != -INF:  # ai.stragglers forced the reveal: keep it
+		_last_contact = Time.get_ticks_msec() / 1000.0
+
+
+## True when the last few soldiers have gone quiet long enough to be marked
+## (the HUD shows them) and sent after the player.
+func stragglers_revealed() -> bool:
+	if soldiers.is_empty() or (soldiers.size() > settings.straggler_count and _last_contact != -INF):
+		return false
+	return Time.get_ticks_msec() / 1000.0 - _last_contact >= settings.straggler_reveal_seconds
+
+
+func _hunt_stragglers() -> void:
+	if not stragglers_revealed():
+		return
+	var now := Time.get_ticks_msec() / 1000.0
+	if now < _next_hunt:
+		return
+	_next_hunt = now + settings.straggler_hunt_interval
+	var player := target()
+	if player == null:
+		return
+	for soldier in soldiers:
+		soldier.receive_report(player.global_position)  # come and find them
 
 
 func add_frame_time(usec: int) -> void:
@@ -79,6 +113,7 @@ func target() -> Player:
 func register(soldier: Soldier) -> void:
 	if not soldiers.has(soldier):
 		soldiers.append(soldier)
+	note_contact()  # a squad arriving starts the quiet clock afresh
 
 
 func unregister(soldier: Soldier) -> void:
@@ -267,6 +302,7 @@ func target_pinned_time() -> float:
 
 
 func share_sighting(spotter: Soldier, position: Vector3) -> void:
+	note_contact()
 	for soldier in soldiers:
 		if soldier != spotter and soldier.global_position.distance_to(spotter.global_position) <= settings.share_radius:
 			soldier.receive_report(position)
@@ -303,7 +339,7 @@ func _find_player() -> void:
 
 func _track_pinning(delta: float) -> void:
 	var player := target()
-	if player == null:
+	if player == null or not player.is_inside_tree():  # the level is going away
 		_pinned_time = 0.0
 		_pin_anchor = Vector3.INF
 		return
@@ -385,6 +421,11 @@ func _cmd_kill(_args: PackedStringArray) -> String:
 	for soldier in soldiers.duplicate():
 		soldier.health.take_hit(INF, DamageModel.Zone.HEAD, {})
 	return "killed %d" % count
+
+
+func _cmd_stragglers(_args: PackedStringArray) -> String:
+	_last_contact = -INF
+	return "%d enemies marked" % soldiers.size()
 
 
 func _cmd_time(_args: PackedStringArray) -> String:

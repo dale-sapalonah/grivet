@@ -28,6 +28,9 @@ const SLAB_UNDERSIDE := 0.45
 @export var hall_light_color := Color(0.86, 0.92, 1.0)
 @export var hall_light_energy := 2.2
 @export var hall_light_range := 9.0
+## Sack piles: rounded sacks this close (m), simple blocks out to sack_draw_distance.
+@export var sack_detail_distance := 25.0
+@export var sack_draw_distance := 45.0
 ## Stalls and their tarps are fine detail: drawn only this close (m).
 @export var stall_draw_distance := 60.0
 
@@ -389,13 +392,16 @@ func _start_stage(index: int, move_player: bool) -> void:
 
 
 ## Every "sacks" body: woven poly sacks (white, a few blue-striped) and brown
-## copra sacks, stacked like bricks, the top layer plump.
+## copra sacks, stacked like bricks, the top layer plumper. Up close, soft
+## rounded sacks (SackMesh, instanced per pile); past sack_detail_distance a
+## cheap pile of blocks, which reads the same from there.
 func _build_sacks() -> void:
-	var B := MeshBaker
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 404
-	var sacks := MeshBaker.new()
 	var colors := [Color(0.88, 0.87, 0.82), Color(0.82, 0.8, 0.72), Color(0.5, 0.38, 0.24), Color(0.62, 0.7, 0.82)]
+	var packed_mesh := SackMesh.lying(0.12)  # packed tight: squarer, so a stack end reads as sacks, not tyres
+	var plump_mesh := SackMesh.lying(0.75)
+	var material := _sack_material()
 	for node: Node in get_tree().get_nodes_in_group("sacks"):
 		var stack := node as Node3D
 		if stack == null or not is_ancestor_of(stack):
@@ -403,29 +409,62 @@ func _build_sacks() -> void:
 		var size: Vector3 = stack.get_meta("size")
 		var base := stack.global_position - Vector3.UP * size.y * 0.5
 		var rows := int(round(size.y / 0.28))
+		var row_height := size.y / rows
+		var packed: Array = []  # [Transform3D local to the pile, Color]
+		var plump: Array = []
+		var blocks := MeshBaker.new()
 		for row in rows:
 			var along := 0.0
 			var offset := 0.3 * (row % 2)
 			while along < size.z - 0.2:
 				for across in range(int(size.x / 0.62)):
-					var center := Vector3(-size.x * 0.5 + 0.31 + across * 0.62, (row + 0.5) * size.y / rows, -size.z * 0.5 + along + 0.45 - offset * 0.5)
+					var center := Vector3(-size.x * 0.5 + 0.31 + across * 0.62, (row + 0.5) * row_height, -size.z * 0.5 + along + 0.45 - offset * 0.5)
 					if center.z > size.z * 0.5 - 0.2:
 						continue
+					var tilt := Basis.from_euler(Vector3(deg_to_rad(rng.randf_range(-3, 3)), deg_to_rad(rng.randf_range(-7, 7)), deg_to_rad(rng.randf_range(-3, 3))))
+					# Filled to fit: a little proud of the row so the layers press together.
+					var fit := Vector3(rng.randf_range(0.95, 1.05), row_height * 1.04 / 0.32, rng.randf_range(0.88, 0.96))
 					var color: Color = colors[rng.randi() % colors.size()]
-					var tilt := Vector3(rng.randf_range(-3, 3), rng.randf_range(-7, 7), rng.randf_range(-3, 3))
-					if row < rows - 1:
-						# Packed sacks are slabs with soft edges: a box reads better than a ball.
-						sacks.add(B.box(Vector3(0.6, size.y / rows * 0.92, 0.86)), B.at(base + center, tilt), color)
-					else:
-						# The top layer bulges like a pillow.
-						sacks.add(B.sphere(1.0, 6), B.at(base + center, tilt, Vector3(0.32, size.y / rows * 0.5, 0.46)), color)
+					(plump if row == rows - 1 else packed).append([Transform3D(tilt.scaled(fit), center), color])
+					blocks.add(MeshBaker.box(Vector3(0.6, row_height * 0.95, 0.86)), Transform3D(tilt, center), color)
 				along += 0.9
-	var material := _props.duplicate() as StandardMaterial3D
-	material.metallic = 0.0
+		var pile := Node3D.new()
+		pile.name = "SackPile"
+		add_child(pile)
+		pile.global_position = base
+		for layer in [[packed, packed_mesh], [plump, plump_mesh]]:
+			var entries: Array = layer[0]
+			if entries.is_empty():
+				continue
+			var multimesh := MultiMesh.new()
+			multimesh.transform_format = MultiMesh.TRANSFORM_3D
+			multimesh.use_colors = true
+			multimesh.mesh = layer[1]
+			multimesh.instance_count = entries.size()
+			for i in entries.size():
+				multimesh.set_instance_transform(i, entries[i][0])
+				multimesh.set_instance_color(i, entries[i][1])
+			var near := MultiMeshInstance3D.new()
+			near.multimesh = multimesh
+			near.material_override = material
+			near.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF  # thousands of sacks: no shadow pass
+			near.visibility_range_end = sack_detail_distance
+			pile.add_child(near)
+		var far := MeshInstance3D.new()
+		far.mesh = blocks.commit(_props)
+		far.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		far.visibility_range_begin = sack_detail_distance
+		far.visibility_range_end = sack_draw_distance
+		pile.add_child(far)
+
+
+## Woven sacking: matt, coloured per instance.
+func _sack_material() -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.vertex_color_use_as_albedo = true
+	material.vertex_color_is_srgb = true
 	material.roughness = 0.95
-	var instance := _mesh(self, sacks.commit(material), true)
-	instance.name = "Sacks"
-	instance.visibility_range_end = sandbag_draw_distance
+	return material
 
 
 ## A small flatbed truck on every "truck" body: cab, bed with a load of sacks.

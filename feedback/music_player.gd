@@ -6,8 +6,9 @@ extends Node
 ## Settings controls volume and mute.
 
 @export var track_volume_db := -8.0
-## The game's tracks play this much louder than the menu's (they sit under gunfire).
-@export var game_boost_db := 3.0
+## The game's tracks play this much louder than the menu's: measured, the game set sat
+## at -25 dBFS under gunfire peaks near 0 and the player couldn't hear it at +3.
+@export var game_boost_db := 8.0
 @export var ambience_volume_db := -14.0
 @export var fade_seconds := 2.5
 

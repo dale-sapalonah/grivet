@@ -34,6 +34,14 @@ extends Control
 @export var damage_marker_time := 1.2
 @export var damage_color := Color(0.95, 0.15, 0.1, 0.9)
 
+@export_group("Enemies left")
+@export var enemies_label_color := Color(0.98, 0.97, 0.94, 0.95)
+@export var enemies_top := 18.0
+## Revealed stragglers: a marker over each, an arrow at the screen edge if behind.
+@export var straggler_color := Color(1.0, 0.2, 0.12, 0.95)
+@export var straggler_marker_size := 9.0
+@export var straggler_edge_margin := 40.0
+
 @export_group("Grenade warning")
 @export var grenade_warning_range := 8.0
 @export var grenade_marker_radius := 95.0
@@ -160,6 +168,7 @@ func _draw() -> void:
 		_draw_damage_markers(center)
 		_draw_grenade_warnings(center)
 		_draw_vitals()
+		_draw_enemies(center)
 		if _player.dead:
 			_draw_death_screen(center)
 			return
@@ -174,6 +183,42 @@ func _draw() -> void:
 		for diagonal in [Vector2(1, 1), Vector2(-1, 1), Vector2(1, -1), Vector2(-1, -1)]:
 			draw_line(center + diagonal * inner, center + diagonal * (inner + hitmarker_size),
 					color, crosshair_thickness)
+
+
+## ENEMIES LEFT while a squad is in the field; once the last few have gone
+## quiet, each is marked (through walls) so nobody hides for ever.
+func _draw_enemies(center: Vector2) -> void:
+	var left := AI.soldiers.size()
+	if left == 0:
+		return
+	var revealed := AI.stragglers_revealed()
+	var text := "ENEMIES LEFT  %d" % left + ("   -   MARKED" if revealed else "")
+	draw_string(_heavy, Vector2(0, enemies_top + 22), text, HORIZONTAL_ALIGNMENT_CENTER, size.x, 22,
+			straggler_color if revealed else enemies_label_color)
+	if not revealed:
+		return
+	var camera := get_viewport().get_camera_3d()
+	if camera == null:
+		return
+	for soldier in AI.soldiers:
+		var at: Vector3 = soldier.global_position + Vector3.UP * 2.0
+		var distance := camera.global_position.distance_to(at)
+		var screen := camera.unproject_position(at)
+		var on_screen := not camera.is_position_behind(at) and Rect2(Vector2.ZERO, size).grow(-straggler_edge_margin).has_point(screen)
+		if on_screen:
+			var s := straggler_marker_size
+			draw_colored_polygon(PackedVector2Array([screen + Vector2(0, -s), screen + Vector2(s, 0), screen + Vector2(0, s), screen + Vector2(-s, 0)]), straggler_color)
+			draw_string(_heavy, screen + Vector2(-40, -s - 4), "%d m" % roundi(distance), HORIZONTAL_ALIGNMENT_CENTER, 80, 14, straggler_color)
+		else:
+			# Off screen or behind: an arrow on the edge, pointing the way.
+			var local := camera.global_transform.affine_inverse() * at
+			var direction := Vector2(local.x, -local.y).normalized() if Vector2(local.x, local.y).length() > 0.01 else Vector2.DOWN
+			var half := size * 0.5 - Vector2.ONE * straggler_edge_margin
+			var reach := minf(half.x / maxf(absf(direction.x), 0.001), half.y / maxf(absf(direction.y), 0.001))
+			var tip := center + direction * reach
+			var side := direction.orthogonal() * straggler_marker_size
+			draw_colored_polygon(PackedVector2Array([tip, tip - direction * straggler_marker_size * 2.0 + side,
+					tip - direction * straggler_marker_size * 2.0 - side]), straggler_color)
 
 
 func _status_text(weapon: WeaponModel) -> String:

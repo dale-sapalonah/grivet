@@ -53,6 +53,7 @@ var _chunks: MultiMesh
 var _chunk_state: Array[Dictionary] = []  # {velocity, life, position, size}
 var _next_chunk := 0
 var _rng := RandomNumberGenerator.new()
+var _standing_sacks: Array = []  # [Transform3D, Color], instanced once laid out
 
 
 ## Lays produce on every "stall_row" body under `level`.
@@ -111,6 +112,7 @@ func build(level: Node) -> void:
 		add_child(drawn)
 		_multimeshes.append(multimesh)
 	_build_far_lumps()
+	_build_standing_sacks()
 	var mats := MeshInstance3D.new()
 	mats.mesh = static_baker.commit(_material)
 	mats.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -246,10 +248,10 @@ func _lay_table(top: Vector3, depth: float, body: StaticBody3D, pending: Diction
 
 
 ## A sack standing under a table edge, its label facing the aisle.
-func _labelled_sack(at: Vector3, facing: float, baker: MeshBaker) -> void:
-	var B := MeshBaker
-	baker.add(B.sphere(1.0, 6), B.at(at + Vector3(0, 0.3, 0), Vector3(0, _rng.randf_range(-10, 10), 0), Vector3(0.24, 0.3, 0.2)),
-			Color(0.9, 0.89, 0.84) if _rng.randf() < 0.7 else Color(0.62, 0.48, 0.3))
+func _labelled_sack(at: Vector3, facing: float, _baker: MeshBaker) -> void:
+	var turn := Basis(Vector3.UP, _rng.randf_range(-0.2, 0.2) + (0.0 if facing > 0.0 else PI))
+	_standing_sacks.append([Transform3D(turn.scaled(Vector3(1, _rng.randf_range(0.9, 1.08), 1)), at),
+			Color(0.9, 0.89, 0.84) if _rng.randf() < 0.7 else Color(0.62, 0.48, 0.3)])
 	var label := Label3D.new()
 	label.text = SACK_LABELS[_rng.randi() % SACK_LABELS.size()]
 	label.font_size = 64
@@ -347,6 +349,30 @@ func _along(axis: Vector3) -> Basis:
 	var y := axis.normalized()
 	var x := y.cross(Vector3.FORWARD if absf(y.dot(Vector3.FORWARD)) < 0.9 else Vector3.RIGHT).normalized()
 	return Basis(x, y, x.cross(y)).orthonormalized()
+
+
+## The sacks standing under the tables, tied at the neck (SackMesh.standing).
+func _build_standing_sacks() -> void:
+	if _standing_sacks.is_empty():
+		return
+	var multimesh := MultiMesh.new()
+	multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	multimesh.use_colors = true
+	multimesh.mesh = SackMesh.standing()
+	multimesh.instance_count = _standing_sacks.size()
+	for i in _standing_sacks.size():
+		multimesh.set_instance_transform(i, _standing_sacks[i][0])
+		multimesh.set_instance_color(i, _standing_sacks[i][1])
+	var drawn := MultiMeshInstance3D.new()
+	drawn.multimesh = multimesh
+	var material := StandardMaterial3D.new()
+	material.vertex_color_use_as_albedo = true
+	material.roughness = 0.95
+	drawn.material_override = material
+	drawn.visibility_range_end = draw_distance
+	drawn.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	drawn.name = "StandingSacks"
+	add_child(drawn)
 
 
 ## Distant level of detail: one squashed sphere per unit, in its skin colour
