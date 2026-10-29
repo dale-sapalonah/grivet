@@ -32,6 +32,10 @@ enum Outfit {
 @export var skin_color := Color(0.33, 0.22, 0.16)
 ## Face covered (gear colour) instead of bare skin.
 @export var balaclava := false
+## A body modelled in Blender (tools/blender/build_soldier.py): one mesh per
+## Mannequin part, vertex colours carrying material classes that are painted
+## from this profile. Unset: the body is built in code.
+@export var body_model: PackedScene
 
 @export_group("Movement (m/s)")
 @export var walk_speed := 2.0

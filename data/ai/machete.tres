@@ -1,8 +1,9 @@
-[gd_resource type="Resource" script_class="EnemyProfile" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="EnemyProfile" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://ai/enemy_profile.gd" id="1"]
 [ext_resource type="Resource" path="res://data/weapons/machete.tres" id="2_weapon"]
 [ext_resource type="Resource" path="res://data/damage/machete.tres" id="3_health"]
+[ext_resource type="PackedScene" path="res://assets/models/soldier_civilian.glb" id="4_body"]
 
 [resource]
 script = ExtResource("1")
@@ -60,3 +61,4 @@ grenade_range_min = 8.0
 grenade_range_max = 30.0
 cover_search_radius = 22.0
 death_push_speed = 1.5
+body_model = ExtResource("4_body")

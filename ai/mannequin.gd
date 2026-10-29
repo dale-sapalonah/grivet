@@ -55,6 +55,10 @@ var swing_windup := 0.3
 var muzzle: Node3D
 
 var _material: ShaderMaterial
+## Part name -> mesh from the profile's body_model, painted for this profile.
+var _imported := {}
+## Painted model meshes shared by every soldier with the same model and palette.
+static var _painted := {}
 var _instances: Array[MeshInstance3D] = []
 var _shadows_on := true
 var _grip := Vector3.ZERO  # hand holds, in the gun's frame
@@ -86,6 +90,17 @@ func build(profile: EnemyProfile, variant: int = 0) -> void:
 	var gloves := Color(0.07, 0.07, 0.07, 0.0)
 	var hands := skin if civilian else gloves
 	var B := MeshBaker
+	var eye := Color(0.04, 0.03, 0.03, 0.0)
+	if profile.body_model != null and civilian:
+		# The civilian model's classes: cloth = T-shirt, gear = shorts, gear_dark = hair, boots/sole = sandals.
+		var sandal := Color(0.08, 0.08, 0.09, 0.0)
+		_imported = _model_parts(profile.body_model, {
+			"cloth": cloth, "gear": legs, "gear_dark": Color(0.04, 0.035, 0.03, 0.0), "skin": skin, "gloves": skin,
+			"boots": sandal, "sole": sandal, "eye": eye})
+	elif profile.body_model != null:
+		_imported = _model_parts(profile.body_model, {
+			"cloth": cloth, "gear": gear, "gear_dark": gear_dark, "skin": face, "gloves": hands, "boots": boots,
+			"sole": Color(0.06, 0.05, 0.04, 0.0), "eye": eye})
 
 	var hips := _pivot("hips", self, Vector3(0, HIP_HEIGHT, 0))
 	var spine := _pivot("spine", hips, Vector3.ZERO)
@@ -93,15 +108,19 @@ func build(profile: EnemyProfile, variant: int = 0) -> void:
 
 	_part("pelvis", hips, BoxShape3D.new(), Vector3(0.32, 0.18, 0.2), Vector3.ZERO)
 	var pelvis := MeshBaker.new()
+	# Things carried or worn over a part (bilum, strap, headband) bake on their
+	# own, so a Blender-made body part can replace the body but keep them.
+	var extras := MeshBaker.new()
 	pelvis.add(B.lathe(_profile([-0.13, 0.12, -0.07, 0.16, 0.02, 0.172, 0.1, 0.158]), 16), B.at(Vector3.ZERO, Vector3.ZERO, Vector3(1, 1, 0.74)), legs)
 	if civilian:
-		_bilum_bag(pelvis, Vector3(0.2, -0.06, 0.03), variant)
+		_bilum_bag(extras, Vector3(0.2, -0.06, 0.03), variant)
 	else:
 		pelvis.add(B.cylinder(0.165, 0.165, 0.05, 14), B.at(Vector3(0, 0.08, 0), Vector3.ZERO, Vector3(1, 1, 0.78)), gear_dark)  # belt
 		pelvis.add(B.box(Vector3(0.05, 0.04, 0.02)), B.at(Vector3(0, 0.08, -0.135)), Color(0.35, 0.33, 0.28, 0))  # buckle
 		for side in [-1.0, 1.0]:
 			pelvis.add(B.box(Vector3(0.05, 0.09, 0.07)), B.at(Vector3(side * 0.16, 0.02, 0.03)), gear)  # belt pouches
 	_bake(parts.pelvis, pelvis)
+	extras = _bake_extras(parts.pelvis, extras)
 
 	_part("torso", spine, CapsuleShape3D.new(), Vector3(0.17, 0.55, 0), Vector3(0, 0.32, 0))
 	var torso := MeshBaker.new()
@@ -115,7 +134,7 @@ func build(profile: EnemyProfile, variant: int = 0) -> void:
 		for depth in [-1.0, 1.0]:
 			var from := Vector3(-0.13, 0.53, depth * 0.06)
 			var to := Vector3(0.17, -0.06, depth * 0.12)
-			torso.add(B.box(Vector3(0.035, from.distance_to(to), 0.012)), Transform3D(_along(to - from), (from + to) * 0.5), strap)
+			extras.add(B.box(Vector3(0.035, from.distance_to(to), 0.012)), Transform3D(_along(to - from), (from + to) * 0.5), strap)
 	else:
 		torso.add(B.box(Vector3(0.3, 0.3, 0.05)), B.at(Vector3(0, 0.36, -0.115)), gear)  # front plate
 		torso.add(B.box(Vector3(0.3, 0.32, 0.05)), B.at(Vector3(0, 0.37, 0.115)), gear)  # back plate
@@ -127,6 +146,7 @@ func build(profile: EnemyProfile, variant: int = 0) -> void:
 		torso.add(B.box(Vector3(0.08, 0.16, 0.05)), B.at(Vector3(-0.09, 0.4, 0.165)), gear_dark)  # radio
 		torso.add(B.cylinder(0.006, 0.006, 0.22, 4), B.at(Vector3(-0.11, 0.56, 0.17)), gloves)  # antenna
 	_bake(parts.torso, torso)
+	extras = _bake_extras(parts.torso, extras)
 
 	_part("head", neck, SphereShape3D.new(), Vector3(0.11, 0, 0), Vector3(0, 0.12, 0))
 	var head := MeshBaker.new()
@@ -148,7 +168,7 @@ func build(profile: EnemyProfile, variant: int = 0) -> void:
 		# Short tight hair over the crown, and a headband on some.
 		head.add(B.sphere(0.1, 14, true), B.at(Vector3(0, 0.166, 0.006), Vector3.ZERO, Vector3(0.98, 0.98, 1.11)), Color(0.04, 0.035, 0.03, 0.0))
 		if variant % 3 == 0:
-			head.add(B.torus(0.091, 0.1), B.at(Vector3(0, 0.178, 0.0), Vector3.ZERO, Vector3(0.97, 0.6, 1.1)), Color(0.7, 0.08, 0.06, 0.0))
+			extras.add(B.torus(0.091, 0.1), B.at(Vector3(0, 0.178, 0.0), Vector3.ZERO, Vector3(0.97, 0.6, 1.1)), Color(0.7, 0.08, 0.06, 0.0))
 	else:
 		head.add(B.sphere(0.125, 16, true), B.at(Vector3(0, 0.165, 0.008), Vector3.ZERO, Vector3(1, 0.9, 1.06)), gear)  # helmet
 		head.add(B.torus(0.118, 0.134), B.at(Vector3(0, 0.168, 0.008), Vector3.ZERO, Vector3(1, 0.35, 1.06)), gear_dark)  # brim
@@ -156,6 +176,7 @@ func build(profile: EnemyProfile, variant: int = 0) -> void:
 		head.add(B.box(Vector3(0.02, 0.07, 0.015)), B.at(Vector3(0.09, 0.12, 0.02)), gear_dark)  # chin strap
 		head.add(B.box(Vector3(0.02, 0.07, 0.015)), B.at(Vector3(-0.09, 0.12, 0.02)), gear_dark)
 	_bake(parts.head, head)
+	extras = _bake_extras(parts.head, extras)
 
 	for side in [-1.0, 1.0]:
 		var suffix := "_l" if side < 0.0 else "_r"
@@ -436,6 +457,43 @@ static func _profile(values: Array) -> PackedVector2Array:
 
 
 ## Switches every part's shadow on or off (distance LOD; cheap to call often).
+## Vertex-colour class codes in a body model (each channel 0 or 1):
+## index = r*4 + g*2 + b. See tools/blender/build_soldier.py CLASSES.
+const BODY_CLASSES := ["eye", "skin", "gear", "gear_dark", "cloth", "boots", "gloves", "sole"]
+
+
+## The model's part meshes with each vertex's class painted from `palette`
+## (class -> colour, alpha as the body shader reads it). Shared per palette.
+static func _model_parts(model: PackedScene, palette: Dictionary) -> Dictionary:
+	var key := "%s|%s" % [model.resource_path, var_to_str(palette)]
+	if _painted.has(key):
+		return (_painted[key] as Dictionary).duplicate()
+	var meshes := {}
+	var scene := model.instantiate()
+	for node in scene.find_children("*", "MeshInstance3D", true, false):
+		var source := (node as MeshInstance3D).mesh
+		if source == null or source.get_surface_count() == 0:
+			continue
+		var arrays := source.surface_get_arrays(0)
+		var codes: PackedColorArray = arrays[Mesh.ARRAY_COLOR] if arrays[Mesh.ARRAY_COLOR] != null else PackedColorArray()
+		if codes.is_empty():
+			push_warning("body model part %s has no vertex colours: built in code instead" % node.name)
+			continue
+		var painted := PackedColorArray()
+		painted.resize(codes.size())
+		for i in codes.size():
+			var c := codes[i]
+			var index := (roundi(c.r) << 2) | (roundi(c.g) << 1) | roundi(c.b)
+			painted[i] = palette.get(BODY_CLASSES[index], Color.MAGENTA)
+		arrays[Mesh.ARRAY_COLOR] = painted
+		var mesh := ArrayMesh.new()
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		meshes[str(node.name)] = mesh
+	scene.free()
+	_painted[key] = meshes
+	return meshes.duplicate()
+
+
 func cast_shadows(on: bool) -> void:
 	if on == _shadows_on:
 		return
@@ -444,8 +502,21 @@ func cast_shadows(on: bool) -> void:
 		instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if on else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
+## Bakes `extras` onto `part` if it holds anything; returns a fresh baker.
+func _bake_extras(part: Node3D, extras: MeshBaker) -> MeshBaker:
+	if not extras.is_empty():
+		_imported.erase(part.name)  # already used by the body: this bake is the extras' own
+		_bake(part, extras)
+	return MeshBaker.new()
+
+
 func _bake(part: Node3D, baker: MeshBaker) -> void:
 	var instance := MeshInstance3D.new()
-	instance.mesh = baker.commit(_material)
+	if _imported.has(part.name):
+		instance.mesh = _imported[part.name]  # the Blender-made part replaces the code-built one
+		instance.material_override = _material
+		_imported.erase(part.name)  # once: a second bake on the part (a blade) is its own
+	else:
+		instance.mesh = baker.commit(_material)
 	part.add_child(instance)
 	_instances.append(instance)
