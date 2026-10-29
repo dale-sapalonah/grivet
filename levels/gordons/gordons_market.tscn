@@ -9,6 +9,7 @@
 [ext_resource type="Shader" path="res://levels/port/materials/asphalt.gdshader" id="shader_asphalt"]
 [ext_resource type="Shader" path="res://levels/port/materials/concrete.gdshader" id="shader_concrete"]
 [ext_resource type="Shader" path="res://levels/port/materials/dirt.gdshader" id="shader_dirt"]
+[ext_resource type="Shader" path="res://levels/port/materials/crate.gdshader" id="shader_crate"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
 sky_top_color = Color(0.06, 0.08, 0.19, 1)
@@ -140,6 +141,10 @@ shader = ExtResource("shader_dirt")
 shader_parameter/noise_tex = ExtResource("6_noise")
 shader_parameter/grass = 1.0
 
+[sub_resource type="ShaderMaterial" id="Crate"]
+shader = ExtResource("shader_crate")
+shader_parameter/noise_tex = ExtResource("6_noise")
+
 [sub_resource type="ShaderMaterial" id="StoreKaiBar"]
 shader = ExtResource("shader_concrete")
 shader_parameter/noise_tex = ExtResource("6_noise")
@@ -169,6 +174,34 @@ shader_parameter/panel_width = 0.0
 shader_parameter/grime_height = 0.9
 
 [sub_resource type="ShaderMaterial" id="StoreWholsel"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.15, 0.5, 0.3, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.9
+
+[sub_resource type="ShaderMaterial" id="StoreBoothW"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.2, 0.3, 0.55, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.9
+
+[sub_resource type="ShaderMaterial" id="StoreBoothE"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.2, 0.3, 0.55, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.9
+
+[sub_resource type="ShaderMaterial" id="StoreKioskFon"]
+shader = ExtResource("shader_concrete")
+shader_parameter/noise_tex = ExtResource("6_noise")
+shader_parameter/base_color = Color(0.85, 0.15, 0.12, 1)
+shader_parameter/panel_width = 0.0
+shader_parameter/grime_height = 0.9
+
+[sub_resource type="ShaderMaterial" id="StoreKioskBuai"]
 shader = ExtResource("shader_concrete")
 shader_parameter/noise_tex = ExtResource("6_noise")
 shader_parameter/base_color = Color(0.15, 0.5, 0.3, 1)
@@ -3410,6 +3443,80 @@ metadata/facing = Vector3(0, 0, 1)
 use_collision = true
 size = Vector3(14, 3.4, 8)
 material = SubResource("StoreWholsel")
+metadata/surface = "concrete"
+
+[node name="BoothW" type="CSGBox3D" parent="Navigation" groups=["store"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 1.45, 26)
+metadata/sign = "SEKURITI"
+metadata/sign_color = Color(0.2, 0.3, 0.55, 1)
+metadata/facing = Vector3(1, 0, 0)
+use_collision = true
+size = Vector3(2.4, 2.9, 2.4)
+material = SubResource("StoreBoothW")
+metadata/surface = "concrete"
+
+[node name="BoothE" type="CSGBox3D" parent="Navigation" groups=["store"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 1.45, 26)
+metadata/sign = "SEKURITI"
+metadata/sign_color = Color(0.2, 0.3, 0.55, 1)
+metadata/facing = Vector3(-1, 0, 0)
+use_collision = true
+size = Vector3(2.4, 2.9, 2.4)
+material = SubResource("StoreBoothE")
+metadata/surface = "concrete"
+
+[node name="KioskFon" type="CSGBox3D" parent="Navigation" groups=["store"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1.5, 37)
+metadata/sign = "FON KAD"
+metadata/sign_color = Color(0.85, 0.15, 0.12, 1)
+metadata/facing = Vector3(1, 0, 0)
+use_collision = true
+size = Vector3(3.2, 3, 2.4)
+material = SubResource("StoreKioskFon")
+metadata/surface = "concrete"
+
+[node name="KioskBuai" type="CSGBox3D" parent="Navigation" groups=["store"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34, 1.5, 32.5)
+metadata/sign = "BUAI STOA"
+metadata/sign_color = Color(0.15, 0.5, 0.3, 1)
+metadata/facing = Vector3(-1, 0, 0)
+use_collision = true
+size = Vector3(3.2, 3, 2.4)
+material = SubResource("StoreKioskBuai")
+metadata/surface = "concrete"
+
+[node name="CratesPlazaA" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.9, 28.6)
+instance_shader_parameters/box_size = Vector3(2.4, 1.8, 1.2)
+instance_shader_parameters/seed = 31
+use_collision = true
+size = Vector3(2.4, 1.8, 1.2)
+material = SubResource("Crate")
+metadata/surface = "wood"
+
+[node name="CratesPlazaB" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.9, 45.2)
+instance_shader_parameters/box_size = Vector3(2.4, 1.8, 1.2)
+instance_shader_parameters/seed = 32
+use_collision = true
+size = Vector3(2.4, 1.8, 1.2)
+material = SubResource("Crate")
+metadata/surface = "wood"
+
+[node name="CratesPlazaC" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0.9, 45.2)
+instance_shader_parameters/box_size = Vector3(2.4, 1.8, 1.2)
+instance_shader_parameters/seed = 33
+use_collision = true
+size = Vector3(2.4, 1.8, 1.2)
+material = SubResource("Crate")
+metadata/surface = "wood"
+
+[node name="ShelterWallW" type="CSGBox3D" parent="Navigation"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 1.1, 55.5)
+use_collision = true
+size = Vector3(12, 2.2, 0.2)
+material = SubResource("Concrete")
 metadata/surface = "concrete"
 
 [node name="WallWest" type="CSGBox3D" parent="Navigation"]

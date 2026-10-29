@@ -27,6 +27,7 @@ var _worst_stall := 0
 var _worst_stall_detail := ""
 var _stall: Dictionary = {}  # soldier -> [last position, seconds stalled]
 var _reached_cover: Dictionary = {}
+var _seen_reported := 0
 var _player_at := Vector3.INF  # player=x,y,z: where to stand (else the level's start)  # soldiers that have been in cover (or charged) at least once
 
 
@@ -117,6 +118,11 @@ func _run() -> void:
 				var query := PhysicsRayQueryParameters3D.create(player.head_point(), head, PhysicsLayers.WORLD)
 				if not space.intersect_ray(query).is_empty():
 					hidden += 1
+				elif _seen_reported < 6:
+					_seen_reported += 1
+					print("  seen: %s at %s, cover %s (full %s), hunker %.2f, head %.2f m up" % [soldier.profile.display_name,
+							soldier.global_position.snapped(Vector3.ONE * 0.1), soldier.cover.position.snapped(Vector3.ONE * 0.1),
+							AI.cover_is_full(soldier.cover, player.global_position), soldier._hunker, head.y - soldier.global_position.y])
 		print("  %d of %d hiding samples had the head out of the player's sight" % [hidden, hiding])
 		return "" if hiding > 0 and hidden >= hiding * 0.8 else "%d of %d hidden" % [hidden, hiding])
 

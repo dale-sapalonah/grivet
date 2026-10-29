@@ -230,8 +230,23 @@ stores = [("KaiBar", -50, -55, 12, 8, "KAI BAR", "Color(0.85, 0.62, 0.16, 1)"),
           ("MarasinStoa", -12, -55, 10, 8, "MARASIN STOA", "Color(0.82, 0.83, 0.78, 1)"),
           ("TradeStoa", 8, -55, 14, 8, "TRADE STOA", "Color(0.66, 0.16, 0.12, 1)"),
           ("Wholsel", 28, -55, 14, 8, "WHOLSEL KAI", "Color(0.15, 0.5, 0.3, 1)")]
+# Plaza and interchange: security booths at the entrances and two closed kiosks
+# (dressed as shopfronts), real cover where the planters and islands are too low.
+# (name, x, z, sx, sz, sign, colour, facing, height)
+plaza_stores = [("BoothW", -18, 26, 2.4, 2.4, "SEKURITI", "Color(0.2, 0.3, 0.55, 1)", "Vector3(1, 0, 0)", 2.9),
+                ("BoothE", 42, 26, 2.4, 2.4, "SEKURITI", "Color(0.2, 0.3, 0.55, 1)", "Vector3(-1, 0, 0)", 2.9),
+                ("KioskFon", -8, 37, 3.2, 2.4, "FON KAD", "Color(0.85, 0.15, 0.12, 1)", "Vector3(1, 0, 0)", 3.0),
+                ("KioskBuai", 34, 32.5, 3.2, 2.4, "BUAI STOA", "Color(0.15, 0.5, 0.3, 1)", "Vector3(-1, 0, 0)", 3.0)]
 for name, x, z, sx, sz, sign, color in stores:
     box(name, x, 0, z, sx, 3.4, sz, "Store" + name, "concrete")
+for name, x, z, sx, sz, sign, color, facing, height in plaza_stores:
+    box(name, x, 0, z, sx, height, sz, "Store" + name, "concrete")
+stores = [st + ("Vector3(0, 0, 1)",) for st in stores] + [st[:8] for st in plaza_stores]
+# Produce crates stacked for the morning trucks: full cover (1.8 m), crate look.
+for name, x, z, seed in [("CratesPlazaA", 6, 28.6, 31), ("CratesPlazaB", -2, 45.2, 32), ("CratesPlazaC", 24, 45.2, 33)]:
+    box(name, x, 0, z, 2.4, 1.8, 1.2, "Crate", "wood", box_size=(2.4, 1.8, 1.2), seed=seed)
+# The west PMV shelter gets a solid back wall (the east one has the bus in its bay).
+span("ShelterWallW", -26, -14, 0, 2.2, 55.4, 55.6, "Concrete", "concrete")
 
 # --- Boundary: concrete fence walls (west, south) and the road's far verge fence (east) ---------
 span("WallWest", -72, -70, 0, 3.0, -62, 64, "Boundary", "concrete")
@@ -305,8 +320,8 @@ materials = [
     ("Boundary", "concrete", {"base_color": "Color(0.62, 0.6, 0.56, 1)", "panel_width": 3.0, "grime_height": 1.0}),
     ("Dirt", "dirt", {}),
     ("Grass", "dirt", {"grass": 1.0}),
-] + [("Store" + name, "concrete", {"base_color": color, "panel_width": 0.0, "grime_height": 0.9})
-     for name, x, z, sx, sz, sign, color in stores]
+    ("Crate", "crate", {}),
+] + [("Store" + st[0], "concrete", {"base_color": st[6], "panel_width": 0.0, "grime_height": 0.9}) for st in stores]
 
 JERSEY = [(-0.3, 0.0), (0.3, 0.0), (0.3, 0.08), (0.16, 0.3), (0.09, 1.1), (-0.09, 1.1), (-0.16, 0.3), (-0.3, 0.08)]
 
@@ -356,7 +371,7 @@ w('[ext_resource type="PackedScene" path="res://ui/debug_overlay.tscn" id="4_ove
 w('[ext_resource type="PackedScene" path="res://ui/hud.tscn" id="5_hud"]')
 w('[ext_resource type="Texture2D" path="res://levels/port/materials/noise.tres" id="6_noise"]')
 w('[ext_resource type="Resource" path="res://data/levels/gordons_campaign.tres" id="7_campaign"]')
-for shader in ["asphalt", "concrete", "dirt"]:
+for shader in ["asphalt", "concrete", "dirt", "crate"]:
     w(f'[ext_resource type="Shader" path="res://levels/port/materials/{shader}.gdshader" id="shader_{shader}"]')
 w("")
 w('[sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]')
@@ -482,7 +497,7 @@ for name, (x, y, z), (sx, sy, sz), material, surface, params, rows in boxes:
     if store:
         w(f'metadata/sign = "{store[5]}"')
         w(f"metadata/sign_color = {store[6]}")
-        w("metadata/facing = Vector3(0, 0, 1)")
+        w(f"metadata/facing = {store[7]}")
     for key, value in params.items():
         w(f"instance_shader_parameters/{key} = {vec(value) if isinstance(value, tuple) else f'{value:g}'}")
     w("use_collision = true")
