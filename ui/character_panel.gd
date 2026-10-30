@@ -5,7 +5,7 @@ extends SubViewportContainer
 ## coloured rim light) rendered for a few frames, then frozen, and drawn
 ## through comic_panel.gdshader.
 
-enum Subject { RIFLE_AIM, MACHETE_SWING, SHOTGUN, TAXI, MACHETE_CLOSE, RIFLE_FIRE }
+enum Subject { RIFLE_AIM, MACHETE_SWING, SHOTGUN, TAXI, MACHETE_CLOSE, RIFLE_FIRE, HEROES }
 
 const COMIC := preload("res://ui/comic_panel.gdshader")
 const PROFILES := {"rifleman": "res://data/ai/rifleman.tres", "rusher": "res://data/ai/rusher.tres",
@@ -24,6 +24,7 @@ var kind := ""
 
 var _viewport := SubViewport.new()
 var _mannequin: Mannequin
+var _partner: Mannequin  # HEROES: the second officer
 var _frames := 0
 
 
@@ -33,7 +34,9 @@ func _ready() -> void:
 	comic.shader = COMIC
 	material = comic
 	_viewport.own_world_3d = true
-	_viewport.transparent_bg = false
+	# HEROES stands on the menu's sunset: no backdrop, cut out by the shader.
+	_viewport.transparent_bg = subject == Subject.HEROES
+	comic.set_shader_parameter("cutout", subject == Subject.HEROES)
 	_viewport.msaa_3d = Viewport.MSAA_2X
 	_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(_viewport)
@@ -44,6 +47,8 @@ func _process(delta: float) -> void:
 	_frames += 1
 	if _mannequin != null:
 		_pose(delta)
+	if _partner != null:
+		_partner.pose(delta, 0.0, -0.15, 0.0, false)
 	if _frames > 12:
 		# Art, not animation: keep the last frame and stop rendering.
 		_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
@@ -54,7 +59,7 @@ func _build_scene() -> void:
 	var world := Node3D.new()
 	_viewport.add_child(world)
 	var environment := Environment.new()
-	environment.background_mode = Environment.BG_COLOR
+	environment.background_mode = Environment.BG_CLEAR_COLOR if subject == Subject.HEROES else Environment.BG_COLOR
 	environment.background_color = backdrop
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = backdrop.lerp(Color.WHITE, 0.3)
@@ -77,6 +82,9 @@ func _build_scene() -> void:
 	world.add_child(camera)
 	var target := Vector3.ZERO
 	match subject:
+		Subject.HEROES:
+			_build_heroes(world, camera, key, rim)
+			return
 		Subject.TAXI:
 			var taxi := KamfotTaxi.new()
 			world.add_child(taxi)
@@ -122,6 +130,37 @@ func _build_scene() -> void:
 	burst.look_at(camera.position)
 
 
+## The two officers, the player and Kori, in front of a Kamfot taxi at sunset:
+## warm sun from the right, a magenta sky rim from the left, seen from low down.
+func _build_heroes(world: Node3D, camera: Camera3D, key: DirectionalLight3D, rim: DirectionalLight3D) -> void:
+	key.light_color = Color(1.0, 0.72, 0.45)
+	key.light_energy = 1.8
+	key.rotation_degrees = Vector3(-22, 28, 0)  # low sun from the front right
+	rim.light_color = Color(0.95, 0.45, 0.85)
+	rim.light_energy = 1.4
+	rim.rotation_degrees = Vector3(-12, 205, 0)  # sky glow from behind left
+	var taxi := KamfotTaxi.new()
+	world.add_child(taxi)
+	taxi.build("T 9925")
+	taxi.position = Vector3(0.3, 0, -2.1)
+	taxi.rotation_degrees.y = 72.0
+	var profile: EnemyProfile = (load(PROFILES.police) as EnemyProfile).duplicate()
+	profile.uniform_color = POLICE_SHIRT
+	_mannequin = Mannequin.new()
+	world.add_child(_mannequin)
+	_mannequin.build(profile, 0)
+	_mannequin.position = Vector3(-0.42, 0, 0)
+	_mannequin.rotation_degrees.y = 192.0
+	_partner = Mannequin.new()
+	world.add_child(_partner)
+	_partner.build(profile, 7)
+	_partner.position = Vector3(0.5, 0, -0.45)
+	_partner.rotation_degrees.y = 160.0
+	camera.fov = 34.0
+	camera.position = Vector3(0.0, 0.85, 3.15)
+	camera.look_at(Vector3(0.05, 1.15, -0.3))
+
+
 func _pose(delta: float) -> void:
 	match subject:
 		Subject.MACHETE_SWING:
@@ -132,6 +171,8 @@ func _pose(delta: float) -> void:
 			_mannequin.pose(delta, 0.0, 0.1, 0.0, false)
 		Subject.SHOTGUN:
 			_mannequin.pose(delta, 0.3, -0.1, 0.0, false)
+		Subject.HEROES:
+			_mannequin.pose(delta, 0.0, -0.05, 0.0, false)
 		_:
 			_mannequin.pose(delta, 0.0, 0.05, 0.0, true)
 
