@@ -34,6 +34,8 @@ const SLAB_UNDERSIDE := 0.45
 ## Stalls and their tarps are fine detail: drawn only this close (m).
 @export var stall_draw_distance := 60.0
 
+## One tile of the facade screens' pattern (m): a panel column wide, one repeat high.
+const SCREEN_TILE := Vector2(0.9, 1.25)
 var _screen: StandardMaterial3D
 var _produce: MarketProduce
 var _tube: StandardMaterial3D
@@ -41,7 +43,7 @@ var _tube: StandardMaterial3D
 
 func _dress_level() -> void:
 	_tube = _emissive(hall_light_color, 3.0)
-	_screen = _screen_material(2.4)
+	_screen = _screen_material(SCREEN_TILE)
 	_build_occluders()
 	_build_roof()
 	_build_screens()
@@ -146,7 +148,8 @@ func _build_roof() -> void:
 
 ## The white screens: a band round the upper floor from rail height to the
 ## eaves, and the raised bay's tall gables, cut in an original PNG-style
-## motif (nested diamonds, chevrons and crosses, like tapa and carved panels).
+## pattern of the real panels (from photos): stacked hexagons with an H in
+## each, a star where they meet, H's across the column joins, side dashes.
 func _build_screens() -> void:
 	var screens := MeshBaker.new()
 	var B := MeshBaker
@@ -171,51 +174,83 @@ func _build_screens() -> void:
 	_mesh(self, tips.commit(_props), false).name = "GableTips"
 
 
-## A tile of the screen motif: white panel, holes where the light comes
+## A tile of the screen motif: pale grey panel, holes where the light comes
 ## through. Built once at load into a small texture (cheaper than shader maths
 ## on this GPU); the material maps it in world space so every panel lines up.
-func _screen_material(tile_metres: float) -> StandardMaterial3D:
-	var size := 128
-	var image := Image.create_empty(size, size, true, Image.FORMAT_RGBA8)
-	for y in size:
-		for x in size:
-			var u := (x + 0.5) / size
-			var v := (y + 0.5) / size
-			image.set_pixel(x, y, Color(1, 1, 1, 0.0 if _screen_hole(u, v) else 1.0))
+func _screen_material(tile: Vector2) -> StandardMaterial3D:
+	var width := 120
+	var height := int(width * tile.y / tile.x)
+	var image := Image.create_empty(width, height, true, Image.FORMAT_RGBA8)
+	for y in height:
+		for x in width:
+			# Holes are cut in tile units: one column wide, one repeat high.
+			var hole := _screen_hole(Vector2((x + 0.5) / width, (y + 0.5) / height), tile.x / tile.y)
+			image.set_pixel(x, y, Color(1, 1, 1, 0.0 if hole else 1.0))
 	image.generate_mipmaps()
 	var material := StandardMaterial3D.new()
 	material.albedo_texture = ImageTexture.create_from_image(image)
-	material.albedo_color = Color(0.95, 0.95, 0.92)
+	material.albedo_color = Color(0.82, 0.84, 0.86)
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 	material.alpha_scissor_threshold = 0.5
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	material.uv1_triplanar = true
 	material.uv1_world_triplanar = true
-	material.uv1_scale = Vector3.ONE / tile_metres
+	material.uv1_scale = Vector3(1.0 / tile.x, 1.0 / tile.y, 1.0 / tile.x)
 	material.roughness = 0.6
 	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	return material
 
 
-## The motif in one tile (u, v in 0..1): a diamond ring round a small diamond,
-## chevrons in the corners and a cross bar between tiles.
-func _screen_hole(u: float, v: float) -> bool:
-	var du := absf(u - 0.5)
-	var dv := absf(v - 0.5)
-	var diamond := du + dv
-	if diamond < 0.07:
-		return true  # the eye
-	if diamond > 0.16 and diamond < 0.25:
-		return true  # the ring
-	if diamond > 0.33 and diamond < 0.4 and (du < 0.08 or dv < 0.08):
-		return false  # the ring's ties out to the tile edge
-	if diamond > 0.33 and diamond < 0.4:
-		return true  # the outer ring's arcs
-	# Chevrons stacked in each corner.
-	var corner := minf(du, dv)
-	if diamond > 0.52 and corner > 0.06 and fmod(diamond * 12.0, 1.0) < 0.45:
+## The motif in one tile (p in 0..1, x across one column, y down one repeat;
+## `aspect` = tile width / height keeps strokes even): an elongated hexagon
+## outline, an I-beam "H" inside it, an asterisk star where hexagons meet
+## (top and bottom edge), half H's at the corners that join across columns
+## into whole ones, and dashes down the sides. Every stroke is a separate slot
+## with a bridge at its ends, as a cut panel needs.
+func _screen_hole(p: Vector2, aspect: float) -> bool:
+	var q := Vector2(p.x * aspect, p.y)  # square units: x scaled to the height
+	var w := aspect
+	var stroke := 0.03
+	# Hexagon: points top and bottom, straight sides; gaps at every corner.
+	var hexagon := [Vector2(0.5, 0.13), Vector2(0.86, 0.33), Vector2(0.86, 0.67), Vector2(0.5, 0.87), Vector2(0.14, 0.67), Vector2(0.14, 0.33)]
+	for i in hexagon.size():
+		var a: Vector2 = hexagon[i]
+		var b: Vector2 = hexagon[(i + 1) % hexagon.size()]
+		a = Vector2(a.x * w, a.y)
+		b = Vector2(b.x * w, b.y)
+		var along := (b - a).normalized() * 0.035
+		if _near_segment(q, a + along, b - along, stroke):
+			return true
+	# The H inside (an I-beam: two crossbars and a stem, bridged apart).
+	var middle := Vector2(0.5 * w, 0.5)
+	if absf(q.x - middle.x) < 0.19 * w and (absf(q.y - 0.39) < stroke or absf(q.y - 0.61) < stroke):
 		return true
+	if absf(q.x - middle.x) < stroke and absf(q.y - 0.5) < 0.065:
+		return true
+	# The star where two hexagons meet: six spokes round a solid hub.
+	for hub in [Vector2(0.5 * w, 0.0), Vector2(0.5 * w, 1.0)]:
+		var offset: Vector2 = q - hub
+		var reach := offset.length()
+		if reach > 0.035 and reach < 0.11:
+			var angle := fposmod(rad_to_deg(offset.angle()), 60.0)
+			if angle < 11.0 or angle > 49.0:
+				return true
+	# Half H's at the corners: a bar out to the column join, a post across it.
+	for corner in [Vector2(0.0, 0.0), Vector2(w, 0.0), Vector2(0.0, 1.0), Vector2(w, 1.0)]:
+		var offset: Vector2 = q - corner
+		if absf(offset.y) < stroke and absf(offset.x) < 0.085:
+			return true
+		if absf(absf(offset.x) - 0.115) < stroke and absf(offset.y) < 0.09:
+			return true
+	# Dashes down the column joins, beside the hexagons' straight sides.
+	for edge in [0.0, w]:
+		if absf(q.x - edge) < stroke * 0.8 and (absf(q.y - 0.4) < 0.065 or absf(q.y - 0.6) < 0.065):
+			return true
 	return false
+
+
+func _near_segment(point: Vector2, a: Vector2, b: Vector2, half_width: float) -> bool:
+	return point.distance_to(Geometry2D.get_closest_point_to_segment(point, a, b)) < half_width
 
 
 ## Columns' feet, the north entrance's sign, the mezzanine fascia sign and
