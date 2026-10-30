@@ -1,11 +1,11 @@
 extends Node3D
-## Windowed look check: rifleman, rusher and machete with their Blender-made
+## Windowed look check: rifleman, rusher, machete and the police squadmate with their Blender-made
 ## bodies, then the same built in code, same pose and light, photographed from
 ## the front and three-quarter. Not a pass/fail probe.
 ##
 ##   $GODOT --path . res://tests/probes/body_compare.tscn -- out=<dir>
 
-const PROFILES := [preload("res://data/ai/rifleman.tres"), preload("res://data/ai/rusher.tres"), preload("res://data/ai/machete.tres")]
+const PROFILES := [preload("res://data/ai/rifleman.tres"), preload("res://data/ai/rusher.tres"), preload("res://data/ai/machete.tres"), preload("res://data/ai/squadmate.tres")]
 
 var out := "user://"
 
@@ -41,7 +41,7 @@ func _ready() -> void:
 			var body := Mannequin.new()
 			add_child(body)
 			body.build(profile, 1)
-			body.position = Vector3(-1.1 + i * 1.1, 0, 0)
+			body.position = Vector3(-1.65 + i * 1.1, 0, 0)
 			body.rotation_degrees.y = 180.0  # face the camera (+Z)
 			for k in 3:
 				body.pose(0.1, 0.0, 0.0, 0.0, true)

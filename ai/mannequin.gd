@@ -97,6 +97,14 @@ func build(profile: EnemyProfile, variant: int = 0) -> void:
 		_imported = _model_parts(profile.body_model, {
 			"cloth": cloth, "gear": legs, "gear_dark": Color(0.04, 0.035, 0.03, 0.0), "skin": skin, "gloves": skin,
 			"boots": sandal, "sole": sandal, "eye": eye})
+	elif profile.body_model != null and profile.outfit == EnemyProfile.Outfit.POLICE:
+		# The police model's classes: cloth = shirt (uniform_color), gear = trousers
+		# (shorts_color), gear_dark = beret, belt, epaulettes, patch (gear_color),
+		# gloves = badge and buckle; hands are skin.
+		_imported = _model_parts(profile.body_model, {
+			"cloth": Color(profile.uniform_color, 0.5), "gear": Color(profile.shorts_color, 0.5), "gear_dark": gear,
+			"skin": skin, "gloves": Color(profile.badge_color, 0.0), "boots": Color(0.03, 0.03, 0.035, 0.0),
+			"sole": Color(0.02, 0.02, 0.02, 0.0), "eye": eye})
 	elif profile.body_model != null:
 		_imported = _model_parts(profile.body_model, {
 			"cloth": cloth, "gear": gear, "gear_dark": gear_dark, "skin": face, "gloves": hands, "boots": boots,

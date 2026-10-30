@@ -22,6 +22,8 @@ var cover_mode := ""
 var dead := false
 ## Seconds of flashbang blindness left: no sight, no shooting, cowering.
 var blind_left := 0.0
+## When this soldier may shout again (AI.shout, seconds since start).
+var next_shout_at := 0.0
 ## Times this soldier had to give up on a path because it stopped moving.
 var stuck_events := 0
 
@@ -79,6 +81,9 @@ var _cover_compromised := false
 var _weave_phase := 0.0
 var _strafe_side := 1.0
 var _strafe_timer := 0.0
+var _voice: AudioStreamPlayer3D
+var _speech := Label3D.new()
+var _speech_left := 0.0
 
 ## A path corner counts as reached within this flat distance (m).
 const PATH_CORNER_RADIUS := 0.4
@@ -126,6 +131,16 @@ func _ready() -> void:
 	_debug_label.pixel_size = 0.0006
 	_debug_label.no_depth_test = true
 	add_child(_debug_label)
+	_speech.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_speech.position = Vector3(0, 2.05, 0)
+	_speech.fixed_size = true
+	_speech.pixel_size = 0.0009
+	_speech.font = GrivetStyle.heavy()
+	_speech.font_size = 30
+	_speech.outline_size = 10
+	_speech.modulate = Color(1.0, 0.85, 0.3)
+	_speech.visible = false
+	add_child(_speech)
 	_progress_anchor = global_position
 	AI.register(self)
 
@@ -170,6 +185,7 @@ func _physics_process(delta: float) -> void:
 		_think_timer += 1.0 / _settings.think_hz
 		_update_facts()
 		_action = brain.decide(_facts, profile, _think_delta)
+		_maybe_threaten(target)
 		_fire_mode = 0
 		_advancing_low = false
 		_act(_action, _think_delta, target)
@@ -182,6 +198,9 @@ func _physics_process(delta: float) -> void:
 ## Posing and the hit boxes that follow it run once per drawn frame, not per
 ## physics tick (2-3 times a frame at 120 Hz); far soldiers every other frame.
 func _process(delta: float) -> void:
+	if _speech_left > 0.0:
+		_speech_left -= delta
+		_speech.visible = _speech_left > 0.0
 	if dead or AI.frozen:
 		return
 	var started := Time.get_ticks_usec()
@@ -247,6 +266,17 @@ func _perceive(elapsed: float, target: Player) -> void:
 		_cover_compromised = get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 
 
+## The player close and in view: now and then a threat (a machete man's own).
+func _maybe_threaten(target: Player) -> void:
+	var book := _settings.shouts
+	if book == null or target == null or not target_visible or Time.get_ticks_msec() / 1000.0 < next_shout_at:
+		return
+	if CoverScoring.flat_distance(global_position, target.global_position) > book.threat_range:
+		return
+	if _rng.randf() < book.threat_chance * _think_delta:
+		AI.shout(self, "melee" if _melee else "threat")
+
+
 ## Knifed by `attacker` (MeleeMath.can_take_down allowed it): dies at once,
 ## without a sound the squad can hear.
 func take_down(attacker: Node3D) -> void:
@@ -270,6 +300,7 @@ func flash(seconds: float) -> void:
 		return
 	blind_left = maxf(blind_left, seconds)
 	_alert()
+	AI.shout(self, "blind", true)  # cries out even if someone just shouted
 	target_visible = false
 	_fire_mode = 0
 	_burst_left = 0
@@ -319,7 +350,28 @@ func hear(position: Vector3, radius: float, source: Node) -> void:
 ## shot at or hit all lead here.
 func _alert() -> void:
 	awareness = maxf(awareness, 1.0)
+	if not _alerted:
+		AI.shout(self, "spot")
 	_alerted = true
+
+
+## Shouts `line` (AI.shout picked it): the voice from the head, pitched as
+## this soldier's own, and the words over it for a moment.
+func say(line: ShoutLine, book: ShoutBook) -> void:
+	if line.voice != null:
+		if _voice == null:
+			_voice = AudioStreamPlayer3D.new()
+			_voice.position = Vector3(0, 1.6, 0)
+			add_child(_voice)
+		_voice.stream = line.voice
+		_voice.volume_db = book.volume_db
+		_voice.unit_size = book.unit_size
+		_voice.max_distance = book.max_distance
+		_voice.pitch_scale = lerpf(book.pitch_min, book.pitch_max, float(get_instance_id() % 97) / 96.0)
+		_voice.play()
+	_speech.text = line.text
+	_speech.visible = true
+	_speech_left = book.text_seconds
 
 
 ## Guards against non-finite state (it once flooded the log with "Vector3
@@ -626,6 +678,7 @@ func _throw_grenade() -> void:
 		return
 	_grenades -= 1
 	AI.note_grenade(self)
+	AI.shout(self, "grenade")
 	var definition := AI.grenade_definition
 	var hand: Vector3 = mannequin.pivots.shoulder_r.global_position + Vector3.UP * 0.3
 	var error := Vector3(_rng.randf_range(-1.5, 1.5), 0, _rng.randf_range(-1.5, 1.5))

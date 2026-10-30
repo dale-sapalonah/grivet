@@ -1,9 +1,10 @@
 """Builds an enemy's body parts in Blender and exports them as one glTF for
-Grivet: assets/models/soldier_military.glb (riflemen, rushers) or
-assets/models/soldier_civilian.glb (machete gangs: T-shirt, shorts, sandals).
+Grivet: assets/models/soldier_military.glb (riflemen, rushers),
+assets/models/soldier_civilian.glb (machete gangs: T-shirt, shorts, sandals) or
+assets/models/soldier_police.glb (the player's squadmate: police uniform).
 
 Run headless (no window):
-  "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" -b --factory-startup -P tools/blender/build_soldier.py -- <out.glb> [--outfit civilian]
+  "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" -b --factory-startup -P tools/blender/build_soldier.py -- <out.glb> [--outfit civilian|police]
 
 One object per Mannequin part (pelvis, torso, head, upper_arm_l ...), each in
 its part's own frame (origin at its joint, limbs hanging down), so the game
@@ -316,6 +317,66 @@ def civilian():
                     hard("box", (0, -0.44, -0.12), (0.008, 0.03, 0.05), "sole", rotation=(30, 0, 0), bevel=0.0)])
 
 
+def police():
+    """Police officer (the player's side): light-blue short-sleeved shirt with
+    pockets and dark epaulettes, navy trousers and duty belt, black boots, a
+    navy beret pulled down to the right with a badge, a dark shoulder patch.
+    Classes: cloth = shirt, gear = trousers, gear_dark = beret, belt,
+    epaulettes, patch; gloves = badge and buckle metal; hands are skin."""
+    pelvis = organic("pelvis", [("ellipsoid", (0, 0.05, 0), (0.16, 0.12, 0.12), "gear"),
+                                ("ellipsoid", (0, -0.07, 0.01), (0.154, 0.08, 0.116), "gear")], BUDGET["pelvis"])
+    join(pelvis, [hard("torus", (0, 0.08, 0), (0.163, 0.022, 0.78), "gear_dark"),
+                  hard("box", (0, 0.08, -0.13), (0.055, 0.04, 0.016), "gloves"),
+                  hard("box", (0.15, 0.05, 0.04), (0.05, 0.08, 0.06), "gear_dark"),
+                  hard("box", (-0.15, 0.05, 0.04), (0.05, 0.08, 0.06), "gear_dark")])
+    torso = organic("torso", [
+        ("ellipsoid", (0, 0.05, 0), (0.162, 0.11, 0.112), "cloth"),  # waist, tucked into the belt
+        ("ellipsoid", (0, 0.16, 0), (0.168, 0.12, 0.115), "cloth"),
+        ("ellipsoid", (0, 0.29, 0), (0.182, 0.13, 0.121), "cloth"),
+        ("ellipsoid", (0, 0.41, 0), (0.202, 0.12, 0.128), "cloth"),
+        ("ellipsoid", (-0.162, 0.45, 0), (0.075, 0.065, 0.076), "cloth"),
+        ("ellipsoid", (0.162, 0.45, 0), (0.075, 0.065, 0.076), "cloth"),
+        ("ellipsoid", (-0.084, 0.5, 0), (0.084, 0.045, 0.07), "cloth"),  # trapezius
+        ("ellipsoid", (0.084, 0.5, 0), (0.084, 0.045, 0.07), "cloth"),
+        ("ellipsoid", (0, 0.535, 0), (0.066, 0.05, 0.062), "cloth"),
+    ], BUDGET["torso"])
+    shirt = []
+    for x in (-0.085, 0.085):
+        shirt.append(hard("box", (x, 0.36, -0.13), (0.075, 0.08, 0.012), "cloth", bevel=0.003))  # breast pocket
+        shirt.append(hard("box", (x, 0.405, -0.134), (0.08, 0.022, 0.012), "cloth", bevel=0.003))  # flap
+    for x in (-0.13, 0.13):
+        shirt.append(hard("box", (x, 0.525, 0), (0.05, 0.012, 0.12), "gear_dark", rotation=(0, 0, -12 if x > 0 else 12)))  # epaulette
+    shirt.append(hard("box", (-0.085, 0.43, -0.142), (0.07, 0.016, 0.006), "boots", bevel=0.0))  # name tag
+    join(torso, shirt)
+    head = organic("head", HEAD, BUDGET["head"])
+    join(head, [hard("sphere", (-0.032, 0.147, -0.088), (0.009, 0.009, 0.006), "eye", bevel=0.0),
+                hard("sphere", (0.032, 0.147, -0.088), (0.009, 0.009, 0.006), "eye", bevel=0.0),
+                hard("dome", (0, 0.165, 0.008), (0.092, 0.088, 0.104), "gear_dark"),  # short hair under it
+                hard("torus", (0, 0.19, 0.006), (0.094, 0.012, 1.1), "gear_dark"),  # beret band
+                hard("sphere", (0.025, 0.215, 0.0), (0.118, 0.042, 0.122), "gear_dark", rotation=(0, 0, -14)),  # crown, down to the right
+                hard("box", (-0.04, 0.205, -0.098), (0.026, 0.032, 0.008), "gloves", rotation=(-10, 0, 0))])  # badge
+    for side, suffix in ((-1.0, "_l"), (1.0, "_r")):
+        arm = organic("upper_arm" + suffix, [("ellipsoid", (-side * 0.02, -0.035, 0), (0.08, 0.072, 0.078), "cloth"),  # deltoid, leaning into the torso
+                                             ("ellipsoid", (0, -0.09, 0), (0.074, 0.056, 0.07), "cloth")]
+                      + taper(-0.06, -0.29, 0.062, 0.047, "skin", depth=0.92), BUDGET["upper_arm"],
+                      class_of=lambda p: "cloth" if p.y > -0.14 else "skin", hems=(-0.14,))
+        join(arm, [hard("box", (side * 0.074, -0.065, 0), (0.01, 0.07, 0.058), "gear_dark", bevel=0.003),  # shoulder patch
+                   hard("box", (side * 0.08, -0.068, 0), (0.004, 0.03, 0.032), "gloves", bevel=0.0)])  # its emblem
+        organic("lower_arm" + suffix, [("ellipsoid", (0, 0.0, 0), (0.05, 0.05, 0.047), "skin"),
+                                       ("ellipsoid", (0, -0.08, 0), (0.058, 0.085, 0.054), "skin")]
+                + taper(-0.04, -0.24, 0.053, 0.038, "skin", depth=0.88)
+                + [("ellipsoid", (0, -0.29, -0.005), (0.038, 0.055, 0.031), "skin"),
+                   ("ellipsoid", (0, -0.33, -0.02), (0.032, 0.03, 0.025), "skin")], BUDGET["lower_arm"])
+        organic("thigh" + suffix, taper(0.03, -0.42, 0.1, 0.07, "gear", steps=8, depth=0.96), BUDGET["thigh"])
+        shin = organic("shin" + suffix, [("ellipsoid", (0, 0.0, 0), (0.07, 0.07, 0.068), "gear"),
+                                         ("ellipsoid", (0, -0.13, 0.015), (0.076, 0.11, 0.077), "gear")]
+                       + taper(-0.05, -0.34, 0.072, 0.056, "gear", depth=0.95)
+                       + [("ellipsoid", (0, -0.4, 0), (0.055, 0.06, 0.056), "boots"),
+                          ("ellipsoid", (0, -0.445, -0.06), (0.052, 0.034, 0.1), "boots")], BUDGET["shin"],
+                       class_of=lambda p: "boots" if p.y < -0.35 else "gear", hems=(-0.35,))
+        join(shin, [hard("box", (0, -0.47, -0.045), (0.098, 0.018, 0.24), "sole", bevel=0.004)])
+
+
 # The face and neck, shared by both outfits.
 HEAD = [
     ("ellipsoid", (0, 0.02, 0), (0.05, 0.06, 0.05), "skin"),  # neck
@@ -329,7 +390,7 @@ HEAD = [
 
 
 reset()
-civilian() if OUTFIT == "civilian" else military()
+{"civilian": civilian, "police": police}.get(OUTFIT, military)()
 
 # Leftover metaball data and anything not a part goes before export.
 parts = ["pelvis", "torso", "head"] + [p + s for p in ("upper_arm", "lower_arm", "thigh", "shin") for s in ("_l", "_r")]

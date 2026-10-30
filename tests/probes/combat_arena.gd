@@ -129,8 +129,9 @@ func _run() -> void:
 
 	await _check("a near miss makes a peeking soldier duck", func() -> String:
 		var peeker: Soldier = null
-		# Up to 15 s: behind a row of columns a peek is often still screened by the next one.
-		for second in 30:
+		# Up to 25 s: behind a row of columns a peek is often still screened by the
+		# next one (Gordons' hall: 15 s missed about one run in three).
+		for second in 50:
 			await get_tree().create_timer(0.5).timeout
 			for soldier in AI.soldiers:
 				# Peeking and actually out of cover: a soldier still stepping out

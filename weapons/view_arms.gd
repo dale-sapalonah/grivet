@@ -1,8 +1,9 @@
 class_name ViewArms
 extends Node3D
-## First-person arms: two gloved hands closed around the weapon and forearms
-## running back to elbows below the screen (bare wrist, rolled camouflage
-## sleeve). Procedural like the rest of the view model.
+## First-person arms: two hands closed around the weapon and forearms running
+## back to elbows below the screen (bare forearm, sleeve at the elbow). The
+## player is police: glove colours are skin and the sleeve "camouflage" is
+## one plain blue (ViewModelTuning). Procedural like the rest of the view model.
 ##
 ## Each hand is built around a grip: a cylinder of `radius` along the hand's
 ## local Y axis. The palm sits on the hand's +X side (−X when mirrored),

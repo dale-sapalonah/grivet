@@ -54,6 +54,12 @@ extends Control
 @export var ally_marker_size := 8.0
 @export var ally_font_size := 18
 
+@export_group("Shout subtitles")
+## The enemy's last shout, under the crosshair area (AI.shout calls subtitle()).
+@export var subtitle_from_bottom := 150.0
+@export var subtitle_font_size := 30
+@export var subtitle_color := Color(1.0, 0.85, 0.3, 0.95)
+
 @export_group("Takedown prompt")
 @export var takedown_text := "F  TAKEDOWN"
 @export var takedown_offset := 70.0
@@ -76,6 +82,9 @@ var _shout_left := 0.0
 var _shout_label: Label
 var _shout_subtitle: Label
 var _heavy: SystemFont
+var _subtitle := ""
+var _subtitle_left := 0.0
+var _subtitle_total := 1.0
 
 @onready var _ammo: Label = $Ammo
 @onready var _weapon_name: Label = $WeaponName
@@ -102,6 +111,13 @@ func _exit_tree() -> void:
 func _cmd_announce(args: PackedStringArray) -> String:
 	announce(" ".join(args), Color(1.0, 0.8, 0.1), 30.0, "Subtitle goes here")
 	return "announced"
+
+
+## A shouted line at the bottom of the screen for `seconds` (the newest wins).
+func subtitle(text: String, seconds: float) -> void:
+	_subtitle = text
+	_subtitle_left = seconds
+	_subtitle_total = seconds
 
 
 ## Queues a big centred line (with an optional smaller one under it): stage
@@ -163,6 +179,7 @@ func _process(delta: float) -> void:
 		if _player != null:
 			_player.health.damaged.connect(_on_player_damaged)
 	_hit_left = maxf(_hit_left - delta, 0.0)
+	_subtitle_left = maxf(_subtitle_left - delta, 0.0)
 	for marker in _damage_markers:
 		marker.left -= delta
 	_damage_markers = _damage_markers.filter(func(marker: Dictionary) -> bool: return marker.left > 0.0)
@@ -188,6 +205,7 @@ func _draw() -> void:
 		_draw_vitals()
 		_draw_enemies(center)
 		_draw_allies()
+		_draw_subtitle()
 		if _player.dead:
 			_draw_death_screen(center)
 			return
@@ -217,6 +235,15 @@ func _draw_flash() -> void:
 		return
 	var fade := clampf(_player.blind_left / (_player.blind_total * (1.0 - flash_hold_fraction)), 0.0, 1.0)
 	draw_rect(Rect2(Vector2.ZERO, size), Color(flash_color, fade * fade * (3.0 - 2.0 * fade)))
+
+
+func _draw_subtitle() -> void:
+	if _subtitle_left <= 0.0:
+		return
+	var fade := clampf(_subtitle_left / 0.3, 0.0, 1.0)
+	var at := Vector2(0, size.y - subtitle_from_bottom)
+	draw_string_outline(_heavy, at, _subtitle, HORIZONTAL_ALIGNMENT_CENTER, size.x, subtitle_font_size, 8, Color(0, 0, 0, 0.85 * fade))
+	draw_string(_heavy, at, _subtitle, HORIZONTAL_ALIGNMENT_CENTER, size.x, subtitle_font_size, Color(subtitle_color, subtitle_color.a * fade))
 
 
 func _draw_allies() -> void:

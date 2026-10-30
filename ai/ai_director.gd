@@ -29,6 +29,10 @@ var frame_ms := 0.0
 var _last_contact := 0.0
 var _next_hunt := 0.0
 var grenades_thrown := 0
+## Every line shouted, in order (probes).
+var shout_log: PackedStringArray = []
+var _next_shout_at := 0.0
+var _last_shout: ShoutLine
 
 var _player: Player
 var _flankers: Array[Soldier] = []
@@ -59,6 +63,16 @@ func _ready() -> void:
 	Debug.register("ai.kill", _cmd_kill, "Kill every enemy.")
 	Debug.register("notarget", _cmd_notarget, "Enemies ignore you.")
 	Debug.register("ai.time", _cmd_time, "AI cost per frame.")
+	Debug.register("ai.shout", func(args: PackedStringArray) -> String:
+		var situation := args[0] if not args.is_empty() else "spot"
+		var nearest: Soldier = null
+		for soldier in soldiers:
+			if _player != null and (nearest == null or soldier.global_position.distance_to(_player.global_position) < nearest.global_position.distance_to(_player.global_position)):
+				nearest = soldier
+		if nearest == null:
+			return "nobody to shout"
+		return "shouted: %s" % shout_log[shout_log.size() - 1] if shout(nearest, situation, true) else "no line for %s" % situation,
+			"ai.shout [spot|threat|melee|grenade|blind]: the nearest enemy shouts (listening check).")
 	Debug.register("ai.stragglers", _cmd_stragglers, "Reveal the remaining enemies now (as if the last few had gone quiet).")
 
 
@@ -306,6 +320,37 @@ func share_sighting(spotter: Soldier, position: Vector3) -> void:
 	for soldier in soldiers:
 		if soldier != spotter and soldier.global_position.distance_to(spotter.global_position) <= settings.share_radius:
 			soldier.receive_report(position)
+
+
+## `soldier` shouts a line for `situation` (ShoutLine.situation) unless
+## someone shouted within gap_seconds or it did within soldier_gap_seconds:
+## a voice from its head, the words over it and at the bottom of the screen.
+## `urgent` (a cry of pain) ignores the gaps. True if it shouted.
+func shout(soldier: Soldier, situation: String, urgent: bool = false) -> bool:
+	var book := settings.shouts
+	var now := Time.get_ticks_msec() / 1000.0
+	if book == null or soldier.dead or (not urgent and (now < _next_shout_at or now < soldier.next_shout_at)):
+		return false
+	var choices: Array[ShoutLine] = []
+	for line in book.lines:
+		if line.situation == situation and line != _last_shout:
+			choices.append(line)
+	if choices.is_empty():
+		for line in book.lines:
+			if line.situation == situation:
+				choices.append(line)
+	if choices.is_empty():
+		return false
+	var line: ShoutLine = choices[randi() % choices.size()]
+	_last_shout = line
+	_next_shout_at = now + book.gap_seconds
+	soldier.next_shout_at = now + book.soldier_gap_seconds
+	soldier.say(line, book)
+	shout_log.append(line.text)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud != null and hud.has_method("subtitle"):
+		hud.subtitle(line.text, book.text_seconds)
+	return true
 
 
 ## A sound everyone within `radius` (scaled by their hearing) may notice.

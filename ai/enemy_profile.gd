@@ -13,6 +13,7 @@ enum Role {
 enum Outfit {
 	MILITARY,  ## Camouflage uniform, helmet, plate carrier, boots.
 	CIVILIAN,  ## T-shirt, shorts, sandals, a bilum across the chest.
+	POLICE,  ## Light-blue shirt, navy trousers and beret (needs body_model: soldier_police.glb).
 }
 
 @export var display_name := "Rifleman"
@@ -24,6 +25,8 @@ enum Outfit {
 ## Civilian outfits pick a shirt from these per soldier (uniform_color unused).
 @export var shirt_colors: PackedColorArray = PackedColorArray()
 @export var shorts_color := Color(0.12, 0.13, 0.16)
+## Police: badge and buckle metal.
+@export var badge_color := Color(0.85, 0.62, 0.2)
 @export var gear_color := Color(0.14, 0.15, 0.13)
 ## Second and third camouflage colours (uniform_color is the first).
 @export var camo_b := Color(0.22, 0.24, 0.17)

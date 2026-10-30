@@ -1,0 +1,122 @@
+[gd_resource type="Resource" script_class="ShoutBook" load_steps=29 format=3]
+
+[ext_resource type="Script" path="res://ai/shout_book.gd" id="1_book"]
+[ext_resource type="Script" path="res://ai/shout_line.gd" id="2_line"]
+[ext_resource type="AudioStream" path="res://assets/audio/voice/spot_1.wav" id="v0"]
+[ext_resource type="AudioStream" path="res://assets/audio/voice/spot_2.wav" id="v1"]
+[ext_resource type="AudioStream" path="res://assets/audio/voice/spot_3.wav" id="v2"]
+[ext_resource type="AudioStream" path="res://assets/audio/voice/spot_4.wav" id="v3"]
+[ext_resource type="AudioStream" path="res://assets/audio/voice/threat_1.wav" id="v4"]
+[ext_resource type="AudioStream" path="res://assets/audio/voice/threat_2.wav" id="v5"]
+[ext_resource type="AudioStream" path="res://assets/audio/voice/threat_3.wav" id="v6"]
+[ext_resource type="AudioStream" path="res://assets/audio/voice/threat_4.wav" id="v7"]
+[ext_resource type="AudioStream" path="res://assets/audio/voice/threat_5.wav" id="v8"]
+[ext_resource type="AudioStream" path="res://assets/audio/voice/melee_1.wav" id="v9"]
+[ext_resource type="AudioStream" path="res://assets/audio/voice/melee_2.wav" id="v10"]
+[ext_resource type="AudioStream" path="res://assets/audio/voice/grenade_1.wav" id="v11"]
+[ext_resource type="AudioStream" path="res://assets/audio/voice/blind_1.wav" id="v12"]
+
+[sub_resource type="Resource" id="l0"]
+script = ExtResource("2_line")
+situation = "spot"
+text = "Oi, sanap!"
+meaning = "Hey, stop!"
+voice = ExtResource("v0")
+
+[sub_resource type="Resource" id="l1"]
+script = ExtResource("2_line")
+situation = "spot"
+text = "Em ia!"
+meaning = "There he is!"
+voice = ExtResource("v1")
+
+[sub_resource type="Resource" id="l2"]
+script = ExtResource("2_line")
+situation = "spot"
+text = "Polis i kam!"
+meaning = "The police are coming!"
+voice = ExtResource("v2")
+
+[sub_resource type="Resource" id="l3"]
+script = ExtResource("2_line")
+situation = "spot"
+text = "Lukim, polis!"
+meaning = "Look, police!"
+voice = ExtResource("v3")
+
+[sub_resource type="Resource" id="l4"]
+script = ExtResource("2_line")
+situation = "threat"
+text = "Holim em!"
+meaning = "Grab him!"
+voice = ExtResource("v4")
+
+[sub_resource type="Resource" id="l5"]
+script = ExtResource("2_line")
+situation = "threat"
+text = "Kilim em!"
+meaning = "Kill him!"
+voice = ExtResource("v5")
+
+[sub_resource type="Resource" id="l6"]
+script = ExtResource("2_line")
+situation = "threat"
+text = "Yu no ken ranawe!"
+meaning = "You can't run away!"
+voice = ExtResource("v6")
+
+[sub_resource type="Resource" id="l7"]
+script = ExtResource("2_line")
+situation = "threat"
+text = "Kam autsait!"
+meaning = "Come out!"
+voice = ExtResource("v7")
+
+[sub_resource type="Resource" id="l8"]
+script = ExtResource("2_line")
+situation = "threat"
+text = "Mi bai painim yu!"
+meaning = "I'll find you!"
+voice = ExtResource("v8")
+
+[sub_resource type="Resource" id="l9"]
+script = ExtResource("2_line")
+situation = "melee"
+text = "Mi bai katim yu!"
+meaning = "I'll cut you!"
+voice = ExtResource("v9")
+
+[sub_resource type="Resource" id="l10"]
+script = ExtResource("2_line")
+situation = "melee"
+text = "Kam hia!"
+meaning = "Come here!"
+voice = ExtResource("v10")
+
+[sub_resource type="Resource" id="l11"]
+script = ExtResource("2_line")
+situation = "grenade"
+text = "Lukaut, bom!"
+meaning = "Look out, a grenade!"
+voice = ExtResource("v11")
+
+[sub_resource type="Resource" id="l12"]
+script = ExtResource("2_line")
+situation = "blind"
+text = "Ai bilong mi!"
+meaning = "My eyes!"
+voice = ExtResource("v12")
+
+[resource]
+script = ExtResource("1_book")
+lines = Array[ExtResource("2_line")]([SubResource("l0"), SubResource("l1"), SubResource("l2"), SubResource("l3"), SubResource("l4"), SubResource("l5"), SubResource("l6"), SubResource("l7"), SubResource("l8"), SubResource("l9"), SubResource("l10"), SubResource("l11"), SubResource("l12")])
+gap_seconds = 1.4
+soldier_gap_seconds = 7.0
+threat_range = 18.0
+threat_chance = 0.35
+volume_db = 4.0
+unit_size = 12.0
+max_distance = 70.0
+pitch_min = 0.84
+pitch_max = 1.0
+text_seconds = 2.2

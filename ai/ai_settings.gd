@@ -126,6 +126,10 @@ extends Resource
 ## A cover point someone failed to reach is skipped for this long (s).
 @export var blocked_cover_seconds := 10.0
 
+@export_group("Shouts")
+## What the enemy shouts and how often (Tok Pisin lines with their voices).
+@export var shouts: ShoutBook
+
 @export_group("Squadmate")
 ## Campaign maps field the player's squadmate (the `squad.off` command and
 ## the combat probe turn it off: the enemy AI is tested against the player alone).
