@@ -35,3 +35,7 @@ sleeve_camo_a = Color(0.47, 0.42, 0.33, 1)
 sleeve_camo_b = Color(0.32, 0.3, 0.22, 1)
 sleeve_camo_c = Color(0.58, 0.53, 0.42, 1)
 reload_hand_lead = 0.12
+knife_rest = Vector3(0.25, -0.3, -0.25)
+knife_thrust = Vector3(0.1, -0.15, -0.5)
+knife_gun_drop = 0.45
+knife_reach_share = 0.3

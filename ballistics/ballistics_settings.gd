@@ -43,6 +43,11 @@ extends Resource
 @export var explosion_flash_range := 14.0
 @export var explosion_flash_time := 0.15
 @export var explosion_unit_size := 30.0
+## A flashbang: a brighter, longer white flash and a puff of white smoke.
+@export var flashbang_flash_energy := 40.0
+@export var flashbang_flash_time := 0.3
+@export var flashbang_smoke_scale := 2.5
+@export var flashbang_smoke_color := Color(0.85, 0.85, 0.82, 0.6)
 
 @export_group("Impact sound")
 ## Distant hits are heard later than they are seen (m/s).

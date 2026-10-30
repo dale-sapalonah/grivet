@@ -58,6 +58,8 @@ var _urgent_keys := PackedStringArray()  # guarded
 var _warm_stop := false
 var _flash := OmniLight3D.new()
 var _flash_left := 0.0
+var _flash_energy := 0.0  # of the flash now burning
+var _flash_time := 1.0
 var _visuals_prewarmed := false
 var _prewarm_frames_left := 0
 var _prewarm_holes: Array[MeshInstance3D] = []
@@ -272,19 +274,35 @@ func explosion(center: Vector3, definition: GrenadeDefinition) -> void:
 	_burst(at, facing, _spark_mesh, Color(1.0, 0.75, 0.35), _settings.spark_count * 3, 0.3, 3.0, 80.0, 0.3, false)
 	for i in 3:
 		_puff(at + Vector3.UP * 0.3 * i, facing, concrete.dust_color, _settings.explosion_dust_scale)
-	_flash.global_position = center + Vector3.UP * 0.3
-	_flash.visible = true
-	_flash_left = _settings.explosion_flash_time
+	_light_flash(center, _settings.explosion_flash_energy, _settings.explosion_flash_time)
 	var variant := randi() % maxi(1, _settings.impact_sound_variants)
 	var stream := ProceduralAudio.cached("explosion:%d" % variant,
 			func() -> AudioStreamWAV: return ProceduralAudio.explosion(variant))
 	_schedule(stream, center, definition.volume_db, randf_range(0.95, 1.05), _settings.explosion_unit_size)
 
 
+## A flashbang going off: a white flash, sparks, a puff of white smoke and a crack.
+func flashbang(center: Vector3, definition: GrenadeDefinition) -> void:
+	var facing := _facing(Vector3.UP)
+	_burst(center, facing, _spark_mesh, Color(1.0, 0.97, 0.9), _settings.spark_count * 2, 0.2, 4.0, 90.0, 0.2, false)
+	_puff(center, facing, _settings.flashbang_smoke_color, _settings.flashbang_smoke_scale)
+	_light_flash(center, _settings.flashbang_flash_energy, _settings.flashbang_flash_time)
+	var stream := ProceduralAudio.cached("flashbang", func() -> AudioStreamWAV: return ProceduralAudio.flashbang())
+	_schedule(stream, center, definition.volume_db, randf_range(0.97, 1.03), _settings.explosion_unit_size)
+
+
+func _light_flash(center: Vector3, energy: float, seconds: float) -> void:
+	_flash.global_position = center + Vector3.UP * 0.3
+	_flash.visible = true
+	_flash_energy = energy
+	_flash_time = seconds
+	_flash_left = seconds
+
+
 func _process(delta: float) -> void:
 	if _flash_left > 0.0:
 		_flash_left -= delta
-		_flash.light_energy = _settings.explosion_flash_energy * maxf(_flash_left / _settings.explosion_flash_time, 0.0)
+		_flash.light_energy = _flash_energy * maxf(_flash_left / _flash_time, 0.0)
 		_flash.visible = _flash_left > 0.0
 	if not _visuals_prewarmed:
 		var camera := get_viewport().get_camera_3d()

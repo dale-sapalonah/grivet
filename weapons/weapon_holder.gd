@@ -15,6 +15,11 @@ signal mechanical_sound(sound: String)
 @export var view_tuning: ViewModelTuning
 ## Thrown with the grenade key; player_carry of them.
 @export var grenade: GrenadeDefinition
+## Thrown with the flashbang key; player_carry of them.
+@export var flashbang: GrenadeDefinition
+## Melee key: a slash, or a silent takedown (MeleeMath) from behind or on an
+## unaware or blinded enemy.
+@export var knife: WeaponDefinition
 
 var weapons: Array[WeaponModel] = []
 var current := -1
@@ -24,6 +29,14 @@ var spread_enabled := true
 ## Spread cone (degrees) of the next shot; the HUD draws the crosshair from it.
 var current_spread := 0.0
 var grenades_left := 0
+var flashbangs_left := 0
+## The enemy a knife strike now would take down silently (the HUD prompts), or null.
+var takedown_target: Soldier
+## Seconds into the current knife strike, below zero when not striking.
+var knife_time := -1.0
+
+var _knife_landed := false
+var _knife_victim: Soldier  # a takedown is committed at the key press
 
 var _player: Player
 var _view := WeaponViewModel.new()
@@ -56,12 +69,13 @@ func _ready() -> void:
 		equip(0)
 	_casings.prewarm(loadout)
 	grenades_left = grenade.player_carry if grenade != null else 0
+	flashbangs_left = flashbang.player_carry if flashbang != null else 0
 	add_to_group("player_weapons")
 	_register_debug_commands()
 
 
 func _exit_tree() -> void:
-	for command in ["give", "ammo.infinite", "spread", "recoil.show", "grenades"]:
+	for command in ["give", "ammo.infinite", "spread", "recoil.show", "grenades", "knife"]:
 		Debug.unregister(command)
 
 
@@ -108,11 +122,17 @@ func _physics_process(delta: float) -> void:
 	if weapon == null or _player.model == null:
 		return
 	var can_act := not Debug.console_open and not _player.dead and not _player.is_plating()
+	_update_knife(delta, can_act)
+	can_act = can_act and knife_time < 0.0
 	_controls.trigger = can_act and Input.is_action_pressed("fire")
 	_controls.reload_pressed = can_act and Input.is_action_just_pressed("reload")
 	_controls.inspect_pressed = can_act and Input.is_action_just_pressed("inspect")
 	if can_act and Input.is_action_just_pressed("grenade") and grenades_left > 0 and grenade != null:
-		_throw_grenade()
+		_throw_grenade(grenade)
+		grenades_left -= 1
+	elif can_act and Input.is_action_just_pressed("flashbang") and flashbangs_left > 0 and flashbang != null:
+		_throw_grenade(flashbang)
+		flashbangs_left -= 1
 	if _controls.trigger and _player.model.is_sprinting():
 		_player.model.interrupt_sprint()  # firing drops out of sprint
 	_controls.sprinting = _player.model.is_sprinting()
@@ -131,6 +151,7 @@ func _physics_process(delta: float) -> void:
 func _process(delta: float) -> void:
 	if _player.model == null:
 		return
+	_view.knife_progress = knife_time / (knife.melee_windup + knife.melee_recover) if knife != null and knife_time >= 0.0 else -1.0
 	_view.update_pose(delta, current_weapon(), aim_blend, _player.model.is_sprinting(), _look_delta)
 	_look_delta = Vector2.ZERO
 
@@ -236,15 +257,88 @@ func refill() -> void:
 		weapon.ammo = weapon.definition.magazine_size
 		weapon.reserve = weapon.definition.reserve_ammo
 	grenades_left = grenade.player_carry if grenade != null else 0
+	flashbangs_left = flashbang.player_carry if flashbang != null else 0
 
 
-func _throw_grenade() -> void:
+func _throw_grenade(definition: GrenadeDefinition) -> void:
 	var aim := _player.aim_transform()
 	var forward := -aim.basis.z
-	var velocity := forward * grenade.throw_speed + Vector3.UP * grenade.throw_loft + _player.velocity
-	Grenade.throw(grenade, _player.get_parent(), aim.origin + forward * 0.5, velocity, _player)
-	grenades_left -= 1
+	var velocity := forward * definition.throw_speed + Vector3.UP * definition.throw_loft + _player.velocity
+	Grenade.throw(definition, _player.get_parent(), aim.origin + forward * 0.5, velocity, _player)
 	_view.kick()
+
+
+## The knife: the key starts a strike; at the end of the windup it lands on
+## the closest enemy in reach in front (a takedown if MeleeMath allows,
+## otherwise a cut), or whistles through the air.
+func _update_knife(delta: float, can_act: bool) -> void:
+	if knife == null:
+		return
+	takedown_target = null
+	var target := _knife_target()
+	if target != null and target.takedown_open(_player.global_position, knife):
+		takedown_target = target
+	if knife_time >= 0.0:
+		knife_time += delta
+		if not _knife_landed and knife_time >= knife.melee_windup:
+			_knife_landed = true
+			_land_knife(_knife_target(), _knife_victim)
+		if knife_time >= knife.melee_windup + knife.melee_recover:
+			knife_time = -1.0
+		return
+	if can_act and Input.is_action_just_pressed("melee"):
+		strike()
+
+
+## Starts a knife strike (the melee key; probes call it directly).
+func strike() -> void:
+	if knife == null or knife_time >= 0.0:
+		return
+	knife_time = 0.0
+	_knife_landed = false
+	var target := _knife_target()
+	_knife_victim = target if target != null and target.takedown_open(_player.global_position, knife) else null
+	_player.model.interrupt_sprint()
+	var variant := randi() % 3
+	_play_blade("whoosh:%d" % variant, func() -> AudioStreamWAV: return ProceduralAudio.blade_whoosh(variant), -10.0)
+
+
+func _knife_target() -> Soldier:
+	var soldiers: Array[Soldier] = []
+	var points: Array[Vector3] = []
+	for soldier: Soldier in AI.soldiers:
+		if not soldier.dead:
+			soldiers.append(soldier)
+			points.append(soldier.global_position)
+	var aim := _player.aim_transform()
+	var pick := MeleeMath.pick_target(_player.global_position, -aim.basis.z, points, knife.melee_range, knife.melee_cone_degrees)
+	return soldiers[pick] if pick >= 0 else null
+
+
+func _land_knife(target: Soldier, committed: Soldier) -> void:
+	if is_instance_valid(committed) and not committed.dead and CoverScoring.flat_distance(
+			committed.global_position, _player.global_position) <= knife.melee_range * 1.3:
+		committed.take_down(_player)  # it turned during the windup: too late
+	elif target == null:
+		return
+	elif target.takedown_open(_player.global_position, knife):
+		target.take_down(_player)
+	else:
+		var to := target.aim_point() - _player.aim_transform().origin
+		target.health.take_hit(knife.melee_damage, DamageModel.Zone.TORSO, {"shooter": _player,
+				"direction": to.normalized(), "position": target.aim_point(), "kind": "melee", "energy": 0.3})
+	_play_blade("chop:0", func() -> AudioStreamWAV: return ProceduralAudio.blade_chop(0), -8.0)
+	_view.kick()
+
+
+func _play_blade(key: String, build: Callable, volume_db: float) -> void:
+	var player := AudioStreamPlayer.new()
+	player.stream = ProceduralAudio.cached(key, build)
+	player.volume_db = volume_db
+	player.pitch_scale = randf_range(0.92, 1.08)
+	player.finished.connect(player.queue_free)
+	add_child(player)
+	player.play()
 
 
 ## For probes: casings report where they land.
@@ -293,12 +387,15 @@ func _register_debug_commands() -> void:
 	Debug.register("ammo.infinite", _cmd_infinite_ammo, "Toggle infinite ammo for every carried weapon.")
 	Debug.register("spread", _cmd_spread, "Toggle spread (off = every shot goes dead centre).")
 	Debug.register("recoil.show", _cmd_recoil_show, "Toggle the weapon readout (ammo, recoil index, spread).")
-	Debug.register("grenades", _cmd_grenades, "Refill grenades.")
+	Debug.register("knife", func(_args: PackedStringArray) -> String:
+		strike()
+		return "knife strike%s" % (" (takedown)" if _knife_victim != null else ""), "Strike with the knife (as the melee key).")
+	Debug.register("grenades", _cmd_grenades, "Refill grenades and flashbangs (and ammo).")
 
 
 func _cmd_grenades(_args: PackedStringArray) -> String:
-	grenades_left = grenade.player_carry if grenade != null else 0
-	return "%d grenades" % grenades_left
+	refill()
+	return "%d grenades, %d flashbangs (magazines refilled too)" % [grenades_left, flashbangs_left]
 
 
 func _cmd_give(args: PackedStringArray) -> String:

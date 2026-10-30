@@ -102,6 +102,11 @@ enum ViewStyle { RIFLE, SHOTGUN, PISTOL, MACHETE }
 ## Windup before the blade lands, and recovery after (s).
 @export var melee_windup := 0.32
 @export var melee_recover := 0.7
+## The player's knife: a silent one-hit takedown on a victim that is unaware,
+## blinded, or has the attacker within this many degrees of straight behind it.
+@export var takedown_rear_arc_degrees := 70.0
+## The knife strikes the closest enemy within this cone in front of the player.
+@export var melee_cone_degrees := 40.0
 
 @export_group("Casings")
 @export var casing_ejects := true

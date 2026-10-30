@@ -42,6 +42,17 @@ extends Control
 @export var straggler_marker_size := 9.0
 @export var straggler_edge_margin := 40.0
 
+@export_group("Flashbang")
+## The screen holds pure white for this share of the blindness, then fades.
+@export var flash_hold_fraction := 0.45
+@export var flash_color := Color(1.0, 1.0, 0.97)
+
+@export_group("Takedown prompt")
+@export var takedown_text := "F  TAKEDOWN"
+@export var takedown_offset := 70.0
+@export var takedown_font_size := 30
+@export var takedown_color := Color(1.0, 0.8, 0.1, 0.95)
+
 @export_group("Grenade warning")
 @export var grenade_warning_range := 8.0
 @export var grenade_marker_radius := 95.0
@@ -183,6 +194,21 @@ func _draw() -> void:
 		for diagonal in [Vector2(1, 1), Vector2(-1, 1), Vector2(1, -1), Vector2(-1, -1)]:
 			draw_line(center + diagonal * inner, center + diagonal * (inner + hitmarker_size),
 					color, crosshair_thickness)
+	if _holder != null and is_instance_valid(_holder.takedown_target) and _holder.knife_time < 0.0:
+		var width := float(size.x)
+		draw_string_outline(_heavy, Vector2(0, center.y + takedown_offset), takedown_text, HORIZONTAL_ALIGNMENT_CENTER,
+				width, takedown_font_size, 8, Color(0, 0, 0, 0.9))
+		draw_string(_heavy, Vector2(0, center.y + takedown_offset), takedown_text, HORIZONTAL_ALIGNMENT_CENTER,
+				width, takedown_font_size, takedown_color)
+	_draw_flash()
+
+
+## Flashbang whiteout over everything: solid, then fading as sight returns.
+func _draw_flash() -> void:
+	if _player == null or _player.blind_left <= 0.0 or _player.blind_total <= 0.0:
+		return
+	var fade := clampf(_player.blind_left / (_player.blind_total * (1.0 - flash_hold_fraction)), 0.0, 1.0)
+	draw_rect(Rect2(Vector2.ZERO, size), Color(flash_color, fade * fade * (3.0 - 2.0 * fade)))
 
 
 ## ENEMIES LEFT while a squad is in the field; once the last few have gone
@@ -303,7 +329,8 @@ func _draw_vitals() -> void:
 		draw_rect(Rect2(at, Vector2(segment, health_bar_size.y)), bar_back_color)
 		var fill := clampf(plates - i, 0.0, 1.0)
 		draw_rect(Rect2(at, Vector2(segment * fill, health_bar_size.y)), armor_color)
-	var line := "PLATES +%d    GRENADES %d" % [health.plates_carried, _holder.grenades_left if _holder != null else 0]
+	var line := "PLATES +%d    FRAGS %d (G)    FLASH %d (X)" % [health.plates_carried, _holder.grenades_left if _holder != null else 0,
+			_holder.flashbangs_left if _holder != null else 0]
 	draw_string_outline(_heavy, origin + Vector2(0, health_bar_size.y + 22), line, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, 5, GrivetStyle.INK)
 	draw_string(_heavy, origin + Vector2(0, health_bar_size.y + 22), line, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, GrivetStyle.WHITE)
 	if _player.plate_progress > 0.0:

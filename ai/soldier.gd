@@ -20,6 +20,8 @@ var noise_position := Vector3.INF
 var cover: CoverMap.Point = null
 var cover_mode := ""
 var dead := false
+## Seconds of flashbang blindness left: no sight, no shooting, cowering.
+var blind_left := 0.0
 ## Times this soldier had to give up on a path because it stopped moving.
 var stuck_events := 0
 
@@ -153,6 +155,10 @@ func _physics_process(delta: float) -> void:
 	_reaction_left -= delta
 	_flank_cooldown -= delta
 	suppression = move_toward(suppression, 0.0, _settings.suppression_decay * delta)
+	if blind_left > 0.0:
+		_blinded(delta)
+		AI.add_frame_time(Time.get_ticks_usec() - started)
+		return
 	_perception_timer -= delta
 	if _perception_timer <= 0.0:
 		_perceive(_perception_interval - _perception_timer, target)
@@ -239,6 +245,50 @@ func _perceive(elapsed: float, target: Player) -> void:
 		# us, or the cover is too low): this spot is no good any more.
 		var query := PhysicsRayQueryParameters3D.create(target.head_point(), aim_point(), PhysicsLayers.WORLD)
 		_cover_compromised = get_world_3d().direct_space_state.intersect_ray(query).is_empty()
+
+
+## Knifed by `attacker` (MeleeMath.can_take_down allowed it): dies at once,
+## without a sound the squad can hear.
+func take_down(attacker: Node3D) -> void:
+	if dead:
+		return
+	var direction := (global_position - attacker.global_position).normalized()
+	health.take_hit(INF, DamageModel.Zone.TORSO, {"shooter": attacker, "direction": direction,
+			"position": aim_point(), "kind": "takedown", "energy": 0.2, "on_plate": false})  # in beside the plate
+
+
+## True if this soldier can be taken down by `attacker` with `knife` now.
+func takedown_open(attacker: Vector3, knife: WeaponDefinition) -> bool:
+	return not dead and MeleeMath.can_take_down(attacker, global_position, -global_basis.z, knife.melee_range,
+			knife.takedown_rear_arc_degrees, awareness >= 1.0 or _alerted, blind_left > 0.0)
+
+
+## Blinded by a flashbang for `seconds`: knows something is on (alerted) but
+## sees nothing, holds still and cowers until the eyes clear.
+func flash(seconds: float) -> void:
+	if dead:
+		return
+	blind_left = maxf(blind_left, seconds)
+	_alert()
+	target_visible = false
+	_fire_mode = 0
+	_burst_left = 0
+	_swing = -1.0
+	mannequin.swing = -1.0
+	mannequin.flinch(global_basis.z, 2.5)
+
+
+func _blinded(delta: float) -> void:
+	blind_left = maxf(blind_left - delta, 0.0)
+	target_visible = false
+	_fire_mode = 0
+	velocity = Vector3(move_toward(velocity.x, 0.0, 12.0 * delta), velocity.y, move_toward(velocity.z, 0.0, 12.0 * delta))
+	if not is_on_floor():
+		velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity", 9.8) * delta
+	move_and_slide()
+	if blind_left <= 0.0:
+		_perception_timer = 0.0  # look round at once
+		_think_timer = 0.0
 
 
 ## A sound at `position` that carries `radius` metres, made by `source`.
@@ -833,7 +883,7 @@ func _pose(delta: float, target: Player) -> void:
 	_crouch = move_toward(_crouch, crouch_goal, delta * 4.0)
 	# Hiding at half cover: fold into a hunched kneel so the head is below the top.
 	var hide := _want_crouch and cover != null and _at_cover() and not _peeking
-	_hunker = move_toward(_hunker, 1.0 if hide else 0.0, delta * 5.0)
+	_hunker = move_toward(_hunker, 1.0 if hide or blind_left > 0.0 else 0.0, delta * 5.0)
 	var look_at_point := _aim_target(target) if (_fire_mode != 0 or target_visible) else Vector3.INF
 	var heading := Vector3.ZERO
 	if look_at_point != Vector3.INF:

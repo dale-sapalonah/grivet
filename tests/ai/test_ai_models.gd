@@ -3,6 +3,7 @@ extends "res://tests/framework/suite.gd"
 const SETTINGS := preload("res://data/ai/ai_settings.tres")
 const RIFLEMAN := preload("res://data/ai/rifleman.tres")
 const FRAG := preload("res://data/grenades/frag.tres")
+const FLASH := preload("res://data/grenades/flash.tres")
 const Stance := MovementModel.Stance
 
 
@@ -105,3 +106,13 @@ func test_blast_damage_falls_off_to_zero() -> void:
 	assert_true(ThrowMath.blast_damage(FRAG, 2.0) > ThrowMath.blast_damage(FRAG, 5.0), "falls off")
 	assert_eq(ThrowMath.blast_damage(FRAG, FRAG.blast_radius), 0.0, "edge")
 	assert_true(ThrowMath.blast_damage(FRAG, 2.0) >= 100.0, "lethal-ish up close")
+
+
+func test_flashbang_blinds_by_distance_and_where_you_look() -> void:
+	var facing := ThrowMath.blind_seconds(FLASH, 3.0, 1.0)
+	assert_true(facing > 3.0, "close and facing it: blinded for seconds (%.2f)" % facing)
+	assert_true(ThrowMath.blind_seconds(FLASH, 3.0, -1.0) < facing * 0.5, "looking away dazzles far less")
+	assert_true(ThrowMath.blind_seconds(FLASH, 3.0, -1.0) > 0.0, "but still a little up close")
+	assert_true(ThrowMath.blind_seconds(FLASH, 10.0, 1.0) < facing, "falls off with distance")
+	assert_eq(ThrowMath.blind_seconds(FLASH, FLASH.flash_radius, 1.0), 0.0, "nothing at the edge")
+	assert_eq(ThrowMath.blind_seconds(FLASH, 13.5, -1.0), 0.0, "far and looking away: nothing")

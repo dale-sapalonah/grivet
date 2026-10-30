@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://player/camera_rig.gd" id="2_rig"]
@@ -13,6 +13,8 @@
 [ext_resource type="Resource" path="res://data/damage/player.tres" id="11_profile"]
 [ext_resource type="Script" path="res://damage/hitbox.gd" id="12_hitbox"]
 [ext_resource type="Resource" path="res://data/grenades/frag.tres" id="13_frag"]
+[ext_resource type="Resource" path="res://data/grenades/flash.tres" id="14_flash"]
+[ext_resource type="Resource" path="res://data/weapons/knife.tres" id="15_knife"]
 
 [sub_resource type="SphereShape3D" id="HeadZone"]
 radius = 0.12
@@ -93,6 +95,8 @@ script = ExtResource("5_holder")
 loadout = [ExtResource("6_kestrel"), ExtResource("7_hammerhead"), ExtResource("8_vanta")]
 view_tuning = ExtResource("9_view")
 grenade = ExtResource("13_frag")
+flashbang = ExtResource("14_flash")
+knife = ExtResource("15_knife")
 
 [node name="LegsPlaceholder" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.18)

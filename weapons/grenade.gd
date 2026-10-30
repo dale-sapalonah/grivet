@@ -94,6 +94,9 @@ func _explode() -> void:
 		thrower = null  # killed while the fuse burned
 	var center := global_position + Vector3.UP * 0.1
 	var space := get_world_3d().direct_space_state
+	if definition.flash:
+		_flash(space, center)
+		return
 	_damage_bodies(space, center)
 	_shove_loose_bodies(space, center)
 	if definition.fragment != null:
@@ -110,6 +113,39 @@ func _explode() -> void:
 			(player as Player).camera_rig().add_shake(definition.shake_degrees * (1.0 - distance / definition.shake_radius))
 	exploded.emit(center)
 	queue_free()
+
+
+## A flashbang: a white burst and a crack; everyone with a clear line from the
+## bang to their eyes is blinded for ThrowMath.blind_seconds (by distance and
+## by how squarely they face it); the player close by is deafened too.
+func _flash(space: PhysicsDirectSpaceState3D, center: Vector3) -> void:
+	for player: Node in get_tree().get_nodes_in_group("player"):
+		var eye := (player as Player).head_point()
+		var seconds := _blind_seconds_for(space, center, eye, -(player as Player).aim_transform().basis.z)
+		if seconds > 0.0:
+			(player as Player).flash(seconds)
+		var distance := eye.distance_to(center)
+		if distance < definition.shake_radius:
+			(player as Player).camera_rig().add_shake(definition.shake_degrees * (1.0 - distance / definition.shake_radius))
+	for soldier: Soldier in AI.soldiers:
+		var seconds := _blind_seconds_for(space, center, soldier.eye_point(), -soldier.global_basis.z)
+		if seconds > 0.0:
+			soldier.flash(seconds)
+	Ballistics.effects().flashbang(center, definition)
+	AI.make_noise(center, definition.loudness, thrower)
+	Soundscape.blast(center)
+	exploded.emit(center)
+	queue_free()
+
+
+func _blind_seconds_for(space: PhysicsDirectSpaceState3D, center: Vector3, eye: Vector3, forward: Vector3) -> float:
+	var to_bang := center - eye
+	if to_bang.length() >= definition.flash_radius:
+		return 0.0
+	var query := PhysicsRayQueryParameters3D.create(center, eye, PhysicsLayers.WORLD)
+	if not space.intersect_ray(query).is_empty():
+		return 0.0  # round a corner: the flash never reaches the eyes
+	return ThrowMath.blind_seconds(definition, to_bang.length(), forward.normalized().dot(to_bang.normalized()))
 
 
 ## Everyone with a Health inside the radius and a clear line to the blast.

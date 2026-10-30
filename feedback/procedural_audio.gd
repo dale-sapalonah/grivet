@@ -288,6 +288,18 @@ static func explosion(variant: int) -> AudioStreamWAV:
 	return to_stream(buffer)
 
 
+## A flashbang: a hard, bright crack with a short metallic ring and little body.
+static func flashbang() -> AudioStreamWAV:
+	var rng := _rng("flashbang")
+	var buffer := _buffer(1.2)
+	add_noise(buffer, 0.0, 0.006, 1.0, 14000.0, 300.0, rng)
+	add_thump(buffer, 0.0, 90.0, 0.08, 0.6)
+	add_noise(buffer, 0.0, 0.12, 0.5, 5000.0, 600.0, rng, 0.002)
+	add_ring(buffer, 0.0, PackedFloat32Array([2400.0, 3700.0, 5100.0]), 0.25, 0.12)
+	add_noise(buffer, 0.03, 0.4, 0.15, 1500.0, 0.0, rng)
+	return to_stream(buffer)
+
+
 ## A grenade body knocking on the ground: a dull tock with a little ring.
 static func grenade_bounce() -> AudioStreamWAV:
 	var rng := _rng("grenade_bounce")

@@ -23,6 +23,8 @@ extends Node3D
 const SUPPORT_BASIS := Basis(Vector3(-0.7071, -0.7071, 0), Vector3(0, 0, 1), Vector3(-0.7071, 0.7071, 0))
 
 var tuning: ViewModelTuning
+## 0..1 through a knife strike (the WeaponHolder sets it), below zero otherwise.
+var knife_progress := -1.0
 
 var _definition: WeaponDefinition
 var _gun := Node3D.new()
@@ -48,6 +50,7 @@ var _flash_left := 0.0
 var _prewarm_flash_frames := 0
 
 var _arms := ViewArms.new()
+var _knife := Node3D.new()
 ## Hand holds in the gun's frame (the left one in the pump's when it rides it),
 ## and the support hand's hold on the magazine / at the loading port.
 var _right_hold := Transform3D.IDENTITY
@@ -66,6 +69,25 @@ func _ready() -> void:
 	add_child(_gun)
 	_arms.tuning = tuning
 	add_child(_arms)
+	_build_knife()
+
+
+## A gloved fist round a dark grip, a small guard and the blade forward (-Z).
+func _build_knife() -> void:
+	var glove := _material(tuning.glove_color, 0.0, 0.85)
+	var grip := _material(Color(0.07, 0.07, 0.07), 0.1, 0.7)
+	var steel := _material(Color(0.62, 0.63, 0.64), 0.85, 0.3)
+	_sphere(_knife, 0.032, Vector3(0, -0.004, 0.035), glove).scale = Vector3(1.1, 1.0, 1.5)
+	# Wrist and sleeved forearm running back out of view.
+	var sleeve := _material(tuning.sleeve_camo_a, 0.0, 0.9)
+	_cylinder(_knife, 0.026, 0.06, Vector3(0, -0.006, 0.08), glove, 10)
+	_cylinder(_knife, 0.038, 0.34, Vector3(0, -0.01, 0.27), sleeve, 10)
+	_cylinder(_knife, 0.014, 0.11, Vector3(0, 0, -0.02), grip, 8)
+	_box(_knife, Vector3(0.05, 0.012, 0.008), Vector3(0, 0, -0.08), grip)
+	_box(_knife, Vector3(0.004, 0.026, 0.16), Vector3(0, 0, -0.165), steel)
+	_box(_knife, Vector3(0.004, 0.012, 0.03), Vector3(0, -0.006, -0.255), steel, Vector3(-25, 0, 0))
+	_knife.visible = false
+	add_child(_knife)
 
 
 func build(definition: WeaponDefinition) -> void:
@@ -154,6 +176,15 @@ func update_pose(delta: float, weapon: WeaponModel, aim_blend: float, sprinting:
 	var equip_offset := 0.0
 	if weapon.state == WeaponModel.State.EQUIPPING:
 		equip_offset = -tuning.equip_drop * (1.0 - progress)
+	_knife.visible = knife_progress >= 0.0
+	if _knife.visible:
+		# Out to the thrust over the reach share, then back; the gun ducks away.
+		var share := tuning.knife_reach_share
+		var out := smoothstep(0.0, share, knife_progress) * (1.0 - smoothstep(share, 1.0, knife_progress))
+		_knife.position = tuning.knife_rest.lerp(tuning.knife_thrust, out)
+		# Blade forward and a little in toward the middle, edge turned to the shooter.
+		_knife.rotation = Vector3(deg_to_rad(lerpf(25.0, 4.0, out)), deg_to_rad(lerpf(30.0, 14.0, out)), deg_to_rad(lerpf(-60.0, -80.0, out)))
+		equip_offset -= tuning.knife_gun_drop * smoothstep(0.0, 0.12, knife_progress) * (1.0 - smoothstep(0.8, 1.0, knife_progress))
 	_gun.position = _pose_position + Vector3(_sway.x, -_sway.y + equip_offset, _kick_back)
 	_gun.rotation = _pose_rotation + Vector3(_kick_pitch, _sway.x * 2.0, 0.0)
 

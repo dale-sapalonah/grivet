@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="GrenadeDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://weapons/grenade_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "flash"
+display_name = "Flashbang"
+fuse_time = 1.8
+throw_speed = 16.0
+throw_loft = 3.0
+max_throw_speed = 18.0
+arc_angle_min = 25.0
+arc_angle_max = 60.0
+mass = 0.35
+radius = 0.04
+bounce = 0.3
+friction = 0.7
+player_carry = 2
+blast_radius = 2.0
+max_damage = 0.0
+falloff_power = 1.0
+blast_push_speed = 1.0
+fragment_count = 0
+loudness = 150.0
+volume_db = 4.0
+shake_degrees = 1.5
+shake_radius = 10.0
+flash = true
+flash_radius = 14.0
+blind_seconds = 5.0
+blind_facing_away = 0.3
+blind_threshold = 0.08

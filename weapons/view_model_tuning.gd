@@ -31,6 +31,14 @@ extends Resource
 ## ...and forward between these (locking "CHK" at the end).
 @export var pump_forward_start := 0.55
 @export var pump_forward_end := 0.88
+@export_group("Knife")
+## The knife hand comes up from knife_rest, stabs out to knife_thrust at the
+## end of the windup and goes back; the gun drops out of view meanwhile.
+@export var knife_rest := Vector3(0.25, -0.3, -0.25)
+@export var knife_thrust := Vector3(0.1, -0.15, -0.5)
+@export var knife_gun_drop := 0.45
+## Share of the strike spent reaching out (the rest is the pull back).
+@export var knife_reach_share := 0.3
 @export_group("Muzzle flash")
 @export var flash_time := 0.05
 @export var flash_energy := 4.0

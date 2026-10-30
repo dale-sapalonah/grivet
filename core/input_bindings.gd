@@ -18,6 +18,8 @@ const KEYS := {
 	"inspect": [KEY_T],
 	"plate": [KEY_V],
 	"grenade": [KEY_G],
+	"flashbang": [KEY_X],
+	"melee": [KEY_F],
 	"weapon_1": [KEY_1],
 	"weapon_2": [KEY_2],
 	"weapon_3": [KEY_3],

@@ -15,6 +15,9 @@ var speed_multiplier := 1.0
 var dead := false
 ## 0..1 while holding the plate key; a plate goes in at 1.
 var plate_progress := 0.0
+## Seconds of flashbang blindness left, of blind_total (the HUD whites out).
+var blind_left := 0.0
+var blind_total := 0.0
 
 var _intent := MovementModel.Intent.new()
 var _world := MovementModel.World.new()
@@ -112,6 +115,13 @@ func hitbox() -> Hitbox:
 	return _hitbox
 
 
+## Blinded by a flashbang for `seconds` (a longer blindness replaces a shorter).
+func flash(seconds: float) -> void:
+	if seconds > blind_left:
+		blind_left = seconds
+		blind_total = seconds
+
+
 ## True while inserting a plate (weapons can't fire meanwhile).
 func is_plating() -> bool:
 	return plate_progress > 0.0
@@ -151,6 +161,7 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector3.ZERO
 		respawn()
 		return
+	blind_left = maxf(blind_left - delta, 0.0)
 	if dead:
 		_update_death(delta)
 		return
@@ -227,6 +238,7 @@ func set_spawn(at: Transform3D) -> void:
 
 func respawn() -> void:
 	dead = false
+	blind_left = 0.0
 	# The level may know somewhere safer than the fixed spawn (away from the fight).
 	var picker := get_tree().get_first_node_in_group("spawn_picker")
 	if picker != null and picker.has_method("pick_spawn"):

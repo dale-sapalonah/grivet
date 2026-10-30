@@ -33,3 +33,17 @@ static func blast_damage(definition: GrenadeDefinition, distance: float) -> floa
 	if distance >= definition.blast_radius:
 		return 0.0
 	return definition.max_damage * pow(1.0 - distance / definition.blast_radius, definition.falloff_power)
+
+
+## Seconds a flashbang blinds someone `distance` away whose view direction
+## makes `facing` (cosine: 1 looking straight at it, -1 straight away) with
+## the line to the bang. Close and facing it is the full blind_seconds.
+static func blind_seconds(definition: GrenadeDefinition, distance: float, facing: float) -> float:
+	if distance >= definition.flash_radius:
+		return 0.0
+	var reach := sqrt(1.0 - distance / definition.flash_radius)
+	var look := lerpf(definition.blind_facing_away, 1.0, clampf((facing + 1.0) * 0.5, 0.0, 1.0))
+	var strength := reach * look
+	if strength < definition.blind_threshold:
+		return 0.0
+	return definition.blind_seconds * strength

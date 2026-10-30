@@ -34,3 +34,16 @@ extends Resource
 @export var volume_db := 2.0
 @export var shake_degrees := 3.0
 @export var shake_radius := 15.0
+
+@export_group("Flash")
+## A flashbang: no blast damage or fragments; it blinds whoever has a clear
+## line to it and deafens the player close by.
+@export var flash := false
+@export var flash_radius := 14.0
+## Blindness (s) at the bang, looking straight at it.
+@export var blind_seconds := 5.0
+## Share of the blindness left when looking directly away (the bounce off
+## walls and the inside of the eyelids still dazzles).
+@export var blind_facing_away := 0.3
+## Below this strength nobody is blinded at all.
+@export var blind_threshold := 0.08
