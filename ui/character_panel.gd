@@ -9,11 +9,18 @@ enum Subject { RIFLE_AIM, MACHETE_SWING, SHOTGUN, TAXI, MACHETE_CLOSE, RIFLE_FIR
 
 const COMIC := preload("res://ui/comic_panel.gdshader")
 const PROFILES := {"rifleman": "res://data/ai/rifleman.tres", "rusher": "res://data/ai/rusher.tres",
-		"machete": "res://data/ai/machete.tres"}
+		"machete": "res://data/ai/machete.tres", "police": "res://data/ai/squadmate.tres"}
+
+## Police shirts are drawn in this stronger blue here than in game: the comic
+## shader's hard key light posterises the in-game light blue to white.
+const POLICE_SHIRT := Color(0.16, 0.34, 0.78)
 
 var subject: Subject = Subject.RIFLE_AIM
 var backdrop := Color(0.9, 0.45, 0.1)
 var variant := 0
+## Who poses (a PROFILES key); empty: the subject's usual one (rifleman,
+## rusher with the shotgun, machete man with the machete).
+var kind := ""
 
 var _viewport := SubViewport.new()
 var _mannequin: Mannequin
@@ -81,14 +88,20 @@ func _build_scene() -> void:
 			target = Vector3(0, 1.9, 0)
 			camera.look_at(target)
 		_:
-			var kind := "rifleman"
-			if subject in [Subject.MACHETE_SWING, Subject.MACHETE_CLOSE]:
-				kind = "machete"
-			elif subject == Subject.SHOTGUN:
-				kind = "rusher"
+			var who := kind
+			if who.is_empty():
+				who = "rifleman"
+				if subject in [Subject.MACHETE_SWING, Subject.MACHETE_CLOSE]:
+					who = "machete"
+				elif subject == Subject.SHOTGUN:
+					who = "rusher"
 			_mannequin = Mannequin.new()
 			world.add_child(_mannequin)
-			_mannequin.build(load(PROFILES[kind]), variant)
+			var profile: EnemyProfile = load(PROFILES[who])
+			if profile.outfit == EnemyProfile.Outfit.POLICE:
+				profile = profile.duplicate()
+				profile.uniform_color = POLICE_SHIRT
+			_mannequin.build(profile, variant)
 			_mannequin.rotation_degrees.y = 200.0 if subject != Subject.RIFLE_FIRE else 230.0
 			var close := subject in [Subject.MACHETE_CLOSE, Subject.RIFLE_FIRE]
 			# Close-ups at face height; full figures from low down, filling the frame.

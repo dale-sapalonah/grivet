@@ -19,13 +19,15 @@ const SLIDERS := [["master_volume", "MASTER VOLUME", 0.0, 1.0, 0.05], ["music_vo
 		["fov", "FIELD OF VIEW", 55.0, 95.0, 1.0], ["render_scale", "RENDER SCALE (SHARPER = SLOWER)", 0.5, 1.0, 0.05]]
 const TOGGLES := [["music_on", "MUSIC"], ["sfx_on", "SOUND EFFECTS"], ["voices_on", "ENEMY VOICES (SHOUTS, CRIES)"], ["invert_y", "INVERT MOUSE Y"],
 		["fullscreen", "FULLSCREEN"], ["show_fps", "SHOW FPS"]]
-## The title art: [subject, backdrop, variant] left to right, top to bottom.
-const PANELS := [[CharacterPanel.Subject.RIFLE_AIM, Color(0.95, 0.5, 0.12), 0],
+## The title art: [subject, backdrop, variant, who (CharacterPanel.PROFILES,
+## empty: the subject's own)] left to right, top to bottom. The player's
+## side is police; the gangs are the rusher and the machete men.
+const PANELS := [[CharacterPanel.Subject.RIFLE_AIM, Color(0.95, 0.5, 0.12), 0, "police"],
 		[CharacterPanel.Subject.TAXI, Color(0.95, 0.78, 0.15), 0],
 		[CharacterPanel.Subject.SHOTGUN, Color(0.1, 0.55, 0.55), 0],
 		[CharacterPanel.Subject.MACHETE_SWING, Color(0.5, 0.25, 0.65), 1],
 		[CharacterPanel.Subject.MACHETE_CLOSE, Color(0.8, 0.15, 0.1), 3],
-		[CharacterPanel.Subject.RIFLE_FIRE, Color(0.15, 0.32, 0.7), 0]]
+		[CharacterPanel.Subject.RIFLE_FIRE, Color(0.22, 0.62, 0.32), 0, "police"]]
 
 @export var mode: Mode = Mode.TITLE
 
@@ -87,6 +89,7 @@ func _build_art() -> void:
 		panel.subject = entry[0]
 		panel.backdrop = entry[1]
 		panel.variant = entry[2]
+		panel.kind = entry[3] if entry.size() > 3 else ""
 		panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
