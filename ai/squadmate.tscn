@@ -1,0 +1,32 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://ai/squadmate.gd" id="1_squadmate"]
+[ext_resource type="Script" path="res://damage/health.gd" id="2_health"]
+[ext_resource type="Script" path="res://damage/hitbox.gd" id="3_hitbox"]
+[ext_resource type="Script" path="res://ai/mannequin.gd" id="4_mannequin"]
+[ext_resource type="Resource" path="res://data/ai/squadmate.tres" id="5_profile"]
+
+[sub_resource type="CapsuleShape3D" id="Body"]
+radius = 0.3
+height = 1.8
+
+[node name="Squadmate" type="CharacterBody3D" groups=["allies"]]
+collision_layer = 4
+collision_mask = 39
+floor_snap_length = 0.3
+script = ExtResource("1_squadmate")
+profile = ExtResource("5_profile")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("Body")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2_health")
+
+[node name="Hitbox" type="AnimatableBody3D" parent="." node_paths=PackedStringArray("health")]
+script = ExtResource("3_hitbox")
+health = NodePath("../Health")
+
+[node name="Mannequin" type="Node3D" parent="."]
+script = ExtResource("4_mannequin")

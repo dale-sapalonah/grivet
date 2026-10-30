@@ -47,6 +47,13 @@ extends Control
 @export var flash_hold_fraction := 0.45
 @export var flash_color := Color(1.0, 1.0, 0.97)
 
+@export_group("Squadmate")
+## A chevron and name over the squadmate's head (through walls); red while down.
+@export var ally_color := Color(0.45, 0.95, 0.5, 0.95)
+@export var ally_down_color := Color(1.0, 0.3, 0.2, 0.95)
+@export var ally_marker_size := 8.0
+@export var ally_font_size := 18
+
 @export_group("Takedown prompt")
 @export var takedown_text := "F  TAKEDOWN"
 @export var takedown_offset := 70.0
@@ -180,6 +187,7 @@ func _draw() -> void:
 		_draw_grenade_warnings(center)
 		_draw_vitals()
 		_draw_enemies(center)
+		_draw_allies()
 		if _player.dead:
 			_draw_death_screen(center)
 			return
@@ -209,6 +217,26 @@ func _draw_flash() -> void:
 		return
 	var fade := clampf(_player.blind_left / (_player.blind_total * (1.0 - flash_hold_fraction)), 0.0, 1.0)
 	draw_rect(Rect2(Vector2.ZERO, size), Color(flash_color, fade * fade * (3.0 - 2.0 * fade)))
+
+
+func _draw_allies() -> void:
+	var camera := get_viewport().get_camera_3d()
+	if camera == null:
+		return
+	for node in get_tree().get_nodes_in_group("allies"):
+		var mate := node as Squadmate
+		if mate == null:
+			continue
+		var at := mate.global_position + Vector3.UP * (1.4 if mate.downed else 2.1)
+		if camera.is_position_behind(at):
+			continue
+		var screen := camera.unproject_position(at)
+		var color := ally_down_color if mate.downed else ally_color
+		var s := ally_marker_size
+		draw_colored_polygon(PackedVector2Array([screen + Vector2(-s, -s), screen + Vector2(s, -s), screen + Vector2(0, s * 0.4)]), color)
+		var label := "%s  DOWN %d" % [mate.profile.display_name.to_upper(), ceili(mate.downed_left)] if mate.downed else mate.profile.display_name.to_upper()
+		draw_string_outline(_heavy, screen + Vector2(-100, -s - 4), label, HORIZONTAL_ALIGNMENT_CENTER, 200, ally_font_size, 5, Color(0, 0, 0, 0.85))
+		draw_string(_heavy, screen + Vector2(-100, -s - 4), label, HORIZONTAL_ALIGNMENT_CENTER, 200, ally_font_size, color)
 
 
 ## ENEMIES LEFT while a squad is in the field; once the last few have gone

@@ -11,6 +11,7 @@ const HALO_SHADER := preload("res://levels/port/materials/halo.gdshader")
 const CONCRETE_SHADER := preload("res://levels/port/materials/concrete.gdshader")
 const CRATE_SHADER := preload("res://levels/port/materials/crate.gdshader")
 const NOISE := preload("res://levels/port/materials/noise.tres")
+const SQUADMATE_SCENE := "res://ai/squadmate.tscn"
 
 ## Low-pressure sodium: nearly monochrome orange.
 @export var lamp_color := Color(1.0, 0.6, 0.24)
@@ -30,6 +31,7 @@ const NOISE := preload("res://levels/port/materials/noise.tres")
 
 ## Stages played in order; each clears to "KLIN CHOL!" / "WARAA!".
 @export var campaign: Campaign = preload("res://data/levels/campaign.tres")
+
 var stage := 0
 var _stage_live := false
 ## Where the player may (re)spawn: x, facing (degrees, 0 = north), z. The
@@ -191,6 +193,19 @@ func spawn_squad() -> void:
 		stage = clampi(Settings.requested_stage, 0, campaign.stages.size() - 1)
 		_start_stage(stage, stage > 0)
 
+
+## The player's squadmate, beside the player (once per level).
+func _ensure_squadmate() -> void:
+	var mate := get_tree().get_first_node_in_group("allies") as Squadmate
+	if not AI.settings.squad_enabled:
+		if mate != null:
+			mate.queue_free()
+		return
+	if mate == null or not is_ancestor_of(mate):
+		mate = load(SQUADMATE_SCENE).instantiate()
+		add_child(mate)
+	mate.regroup()
+
 func _process(delta: float) -> void:
 	_lamp_timer -= delta
 	if _lamp_timer <= 0.0:
@@ -215,6 +230,7 @@ func _start_stage(index: int, move_player: bool) -> void:
 		if holder != null:
 			holder.refill()
 	_stage_live = not AI.soldiers.is_empty()
+	_ensure_squadmate()
 	_lay_buai()
 	_announce(definition.title, GrivetStyle.WHITE, 2.6, definition.subtitle)
 

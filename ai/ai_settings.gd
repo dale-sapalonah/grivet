@@ -126,6 +126,26 @@ extends Resource
 ## A cover point someone failed to reach is skipped for this long (s).
 @export var blocked_cover_seconds := 10.0
 
+@export_group("Squadmate")
+## Campaign maps field the player's squadmate (the `squad.off` command and
+## the combat probe turn it off: the enemy AI is tested against the player alone).
+@export var squad_enabled := true
+## The player's squadmate keeps between these distances (m) of the player,
+## off the player's shoulder (follow_side_offset m to the side).
+@export var squad_follow_min := 2.5
+@export var squad_follow_max := 6.0
+@export var squad_follow_side_offset := 2.0
+## Engages enemies it can see within this range (m), sight checked squad_sight_hz times a second.
+@export var squad_engage_range := 55.0
+@export var squad_sight_hz := 5.0
+## Holds fire while the player is within this distance (m) of its line of fire.
+@export var squad_friendly_fire_clearance := 1.2
+## Shot down it stays down this long, then gets back up with this share of its health.
+@export var squad_downed_seconds := 12.0
+@export var squad_revive_health := 0.6
+## Further than this from the player (m) and out of the player's sight, it catches up at once.
+@export var squad_regroup_distance := 40.0
+
 @export_group("Muzzle flash")
 ## Enemy muzzle flashes light up their surroundings: a give-away at dusk.
 @export var flash_energy := 10.0

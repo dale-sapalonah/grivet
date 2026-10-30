@@ -42,6 +42,7 @@ func _ready() -> void:
 		elif arg.begins_with("stage="):
 			Settings.requested_stage = int(arg.trim_prefix("stage=")) - 1  # campaign maps field that stage's squad
 	print("level: %s" % level)
+	AI.settings.squad_enabled = false  # the enemy against the player alone
 	arena = load(level).instantiate()
 	add_child(arena)
 	player = arena.get_node("Player")
