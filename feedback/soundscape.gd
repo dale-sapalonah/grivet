@@ -395,6 +395,14 @@ func _prewarm() -> void:
 	jobs.append(["cue:hit", "hit"])
 	jobs.append(["cue:kill", "kill"])
 	jobs.append(["ear_ring", "ring"])
+	var shouts := AI.settings.shouts
+	if shouts != null:
+		for line in shouts.lines:
+			if line.voice is AudioStreamWAV:
+				jobs.append([shout_key(line), "shout", line.voice, shouts.drive, shouts.edge])
+		for kind in PAIN_KINDS:
+			for variant in shouts.pain_variants:
+				jobs.append(["pain:%s:%d" % [kind, variant], "pain", kind, variant])
 	jobs = jobs.filter(func(job: Array) -> bool: return not ProceduralAudio.has(job[0]))
 	if not jobs.is_empty():
 		_prewarm_task = WorkerThreadPool.add_task(_build.bind(jobs), false, "soundscape sounds")
@@ -423,7 +431,19 @@ static func _build(jobs: Array) -> void:
 				stream = ProceduralAudio.kill_cue()
 			"ring":
 				stream = ProceduralAudio.ear_ring()
+			"shout":
+				stream = ProceduralAudio.shouted(job[2], job[3], job[4])
+			"pain":
+				stream = ProceduralAudio.pain(job[2], job[3])
 		ProceduralAudio.store.call_deferred(job[0], stream)
+
+
+const PAIN_KINDS := ["grunt", "wince", "groan", "death"]
+
+
+## Cache key of a shout line's yelled version (built at start).
+static func shout_key(line: ShoutLine) -> String:
+	return "shout:" + line.voice.resource_path
 
 
 ## True once every prewarmed sound has been handed over (for probes).

@@ -84,6 +84,7 @@ var _strafe_timer := 0.0
 var _voice: AudioStreamPlayer3D
 var _speech := Label3D.new()
 var _speech_left := 0.0
+var _next_pain_at := 0.0
 
 ## A path corner counts as reached within this flat distance (m).
 const PATH_CORNER_RADIUS := 0.4
@@ -361,9 +362,12 @@ func say(line: ShoutLine, book: ShoutBook) -> void:
 	if line.voice != null:
 		if _voice == null:
 			_voice = AudioStreamPlayer3D.new()
+			_voice.bus = &"Voices"
 			_voice.position = Vector3(0, 1.6, 0)
 			add_child(_voice)
-		_voice.stream = line.voice
+		# The yelled version (built at start); the plain recording until it is ready.
+		var yelled := ProceduralAudio.fetch(Soundscape.shout_key(line))
+		_voice.stream = yelled if yelled != null else line.voice
 		_voice.volume_db = book.volume_db
 		_voice.unit_size = book.unit_size
 		_voice.max_distance = book.max_distance
@@ -372,6 +376,29 @@ func say(line: ShoutLine, book: ShoutBook) -> void:
 	_speech.text = line.text
 	_speech.visible = true
 	_speech_left = book.text_seconds
+
+
+## A grunt, wince or groan (badly hurt) when hit; the voice cuts off any shout.
+func _cry_out(kind: String) -> void:
+	var book := _settings.shouts
+	var now := Time.get_ticks_msec() / 1000.0
+	if book == null or now < _next_pain_at:
+		return
+	var stream := ProceduralAudio.fetch("pain:%s:%d" % [kind, _rng.randi() % maxi(book.pain_variants, 1)])
+	if stream == null:
+		return  # not built yet
+	_next_pain_at = now + book.pain_gap_seconds
+	if _voice == null:
+		_voice = AudioStreamPlayer3D.new()
+		_voice.bus = &"Voices"
+		_voice.position = Vector3(0, 1.6, 0)
+		add_child(_voice)
+	_voice.stream = stream
+	_voice.volume_db = book.pain_volume_db
+	_voice.unit_size = book.pain_unit_size
+	_voice.max_distance = book.max_distance
+	_voice.pitch_scale = lerpf(book.pitch_min, book.pitch_max, float(get_instance_id() % 97) / 96.0)
+	_voice.play()
 
 
 ## Guards against non-finite state (it once flooded the log with "Vector3
@@ -967,6 +994,10 @@ func _sync_hitbox() -> void:
 
 
 func _on_damaged(info: Dictionary) -> void:
+	if not health.model.dead and info.get("kind", "") != "takedown":
+		var book := _settings.shouts
+		var hurt := book != null and health.fraction() < book.groan_below
+		_cry_out("groan" if hurt else ("wince" if _rng.randf() < 0.4 else "grunt"))
 	var direction: Vector3 = info.get("direction", Vector3.ZERO)
 	mannequin.flinch(direction, 3.0)
 	suppression = minf(1.0, suppression + _settings.hit_suppression)
@@ -991,10 +1022,33 @@ func _on_died(info: Dictionary) -> void:
 	var energy: float = info.get("energy", 0.5)
 	var push := direction * profile.death_push_speed * (0.5 + energy)
 	var ragdoll := Ragdoll.from_mannequin(mannequin, get_parent(), velocity, part, push)
+	if info.get("kind", "") != "takedown":
+		_death_cry()
 	ragdoll.freeze_after = AI.settings.corpse_freeze_after
 	AI.add_corpse(ragdoll)
 	AI.soldier_died.emit(self)
 	queue_free()
+
+
+## A cry as it falls, from the body (the soldier node is about to go).
+func _death_cry() -> void:
+	var book := _settings.shouts
+	if book == null:
+		return
+	var stream := ProceduralAudio.fetch("pain:death:%d" % (_rng.randi() % maxi(book.pain_variants, 1)))
+	if stream == null:
+		return
+	var cry := AudioStreamPlayer3D.new()
+	cry.bus = &"Voices"
+	cry.stream = stream
+	cry.volume_db = book.pain_volume_db
+	cry.unit_size = book.pain_unit_size
+	cry.max_distance = book.max_distance
+	cry.pitch_scale = lerpf(book.pitch_min, book.pitch_max, float(get_instance_id() % 97) / 96.0)
+	cry.finished.connect(cry.queue_free)
+	get_parent().add_child(cry)
+	cry.global_position = mannequin.parts.head.global_position
+	cry.play()
 
 
 func _update_debug_label(action: SoldierBrain.Action) -> void:

@@ -19,3 +19,20 @@ extends Resource
 @export var pitch_max := 1.0
 ## The words float over the shouter and show at the bottom of the screen this long.
 @export var text_seconds := 2.2
+
+@export_group("Yelled, not read")
+## The recorded (or synthesised) lines are driven into saturation, with the
+## lows cut and an edge added, so they sound yelled (ProceduralAudio.shouted).
+@export var drive := 4.0
+@export var edge := 0.6
+
+@export_group("Pain")
+## Grunts, winces and groans when hit, a cry when killed (ProceduralAudio.pain,
+## a small voice synthesiser): this many takes of each.
+@export var pain_variants := 4
+@export var pain_volume_db := 2.0
+@export var pain_unit_size := 10.0
+## The same soldier makes no second pain sound within this many seconds.
+@export var pain_gap_seconds := 0.6
+## Hits that leave it below this share of its health groan rather than grunt.
+@export var groan_below := 0.45

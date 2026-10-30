@@ -13,6 +13,8 @@ const DEFAULTS := {
 	"music_on": true,
 	"sfx_volume": 0.9,
 	"sfx_on": true,
+	## Enemy shouts and pain sounds (the Voices bus) and the shout text.
+	"voices_on": true,
 	"mouse_sensitivity": 1.0,
 	"invert_y": false,
 	"fov": 65.0,
@@ -96,6 +98,8 @@ func _apply(key: String) -> void:
 				var bus := AudioServer.get_bus_index(bus_name)
 				AudioServer.set_bus_volume_db(bus, linear_to_db(maxf(float(values.sfx_volume), 0.0001)))
 				AudioServer.set_bus_mute(bus, not bool(values.sfx_on))
+		"voices_on":
+			AudioServer.set_bus_mute(AudioServer.get_bus_index("Voices"), not bool(value))
 		"mouse_sensitivity":
 			camera_tuning.mouse_sensitivity = _base_sensitivity * float(value)
 		"invert_y":
@@ -230,3 +234,10 @@ func _ensure_buses() -> void:
 			var bus := AudioServer.bus_count - 1
 			AudioServer.set_bus_name(bus, bus_name)
 			AudioServer.set_bus_send(bus, "Master")
+	# Voices: the enemy's shouts and cries, into SFX (its volume, reverb and a
+	# blast's muffling) but with their own off switch.
+	if AudioServer.get_bus_index("Voices") < 0:
+		AudioServer.add_bus()
+		var voices := AudioServer.bus_count - 1
+		AudioServer.set_bus_name(voices, "Voices")
+		AudioServer.set_bus_send(voices, "SFX")

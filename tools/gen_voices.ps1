@@ -8,19 +8,19 @@
 # comes out close to the Tok Pisin.
 
 $lines = @(
-    @("spot_1", "Oy! Sah nup!"),             # Oi, sanap!
-    @("spot_2", "Em ee ah! Em ee ah!"),       # Em ia!
-    @("spot_3", "Poe lees, ee come!"),        # Polis i kam!
+    @("spot_1", "Oy! Oy! Sah nup!"),             # Oi, sanap!
+    @("spot_2", "Em ee ah! Em ee AH!"),       # Em ia!
+    @("spot_3", "POE LEES! Ee come!"),        # Polis i kam!
     @("spot_4", "Look im! Poe lees!"),        # Lukim, polis!
-    @("threat_1", "Hoe lim em!"),             # Holim em!
-    @("threat_2", "Kill im em!"),             # Kilim em!
+    @("threat_1", "Hoe lim em! Hoe lim EM!"),             # Holim em!
+    @("threat_2", "Kill im em! KILL im!"),             # Kilim em!
     @("threat_3", "You no ken run away!"),    # Yu no ken ranawe!
-    @("threat_4", "Come out side!"),          # Kam autsait!
+    @("threat_4", "Come out side! NOW!"),          # Kam autsait!
     @("threat_5", "Me buy pine im you!"),     # Mi bai painim yu!
-    @("melee_1", "Me buy cut im you!"),       # Mi bai katim yu!
+    @("melee_1", "Me buy CUT im you!"),       # Mi bai katim yu!
     @("melee_2", "Come here! Come here!"),    # Kam hia!
     @("grenade_1", "Look out! Bomb!"),        # Lukaut, bom!
-    @("blind_1", "Eye! Bee long me!")         # Ai bilong mi!
+    @("blind_1", "AAH! Eye bee long me!")         # Ai bilong mi!
 )
 
 Add-Type -AssemblyName System.Speech
@@ -29,14 +29,15 @@ $out = Join-Path $root "assets/audio/voice"
 New-Item -ItemType Directory -Force $out | Out-Null
 $voice = New-Object System.Speech.Synthesis.SpeechSynthesizer
 $voice.SelectVoice("Microsoft David Desktop")
-$voice.Rate = 2
+$voice.Rate = 4
 $voice.Volume = 100
 $format = New-Object System.Speech.AudioFormat.SpeechAudioFormatInfo(22050, [System.Speech.AudioFormat.AudioBitsPerSample]::Sixteen, [System.Speech.AudioFormat.AudioChannel]::Mono)
 foreach ($line in $lines) {
     $path = Join-Path $out ($line[0] + ".wav")
     $voice.SetOutputToWaveFile($path, $format)
-    # Shouted: louder and a little lower than the voice's normal speech.
-    $ssml = '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US"><prosody pitch="-8%" volume="x-loud">' + $line[1] + '</prosody></speak>'
+    # Shouted: raised pitch, fast, full volume, stressed. The game then drives
+    # the result into saturation (ShoutBook.drive) so it sounds yelled, not read.
+    $ssml = '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US"><prosody pitch="+22%" rate="+25%" volume="x-loud"><emphasis level="strong">' + $line[1] + '</emphasis></prosody></speak>'
     $voice.SpeakSsml($ssml)
     $voice.SetOutputToNull()
     Write-Output ("wrote " + $path)

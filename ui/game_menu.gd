@@ -17,7 +17,7 @@ const GUTTER := 8.0
 const SLIDERS := [["master_volume", "MASTER VOLUME", 0.0, 1.0, 0.05], ["music_volume", "MUSIC VOLUME", 0.0, 1.0, 0.05],
 		["sfx_volume", "SOUND EFFECTS VOLUME", 0.0, 1.0, 0.05], ["mouse_sensitivity", "MOUSE SENSITIVITY", 0.25, 3.0, 0.05],
 		["fov", "FIELD OF VIEW", 55.0, 95.0, 1.0], ["render_scale", "RENDER SCALE (SHARPER = SLOWER)", 0.5, 1.0, 0.05]]
-const TOGGLES := [["music_on", "MUSIC"], ["sfx_on", "SOUND EFFECTS"], ["invert_y", "INVERT MOUSE Y"],
+const TOGGLES := [["music_on", "MUSIC"], ["sfx_on", "SOUND EFFECTS"], ["voices_on", "ENEMY VOICES (SHOUTS, CRIES)"], ["invert_y", "INVERT MOUSE Y"],
 		["fullscreen", "FULLSCREEN"], ["show_fps", "SHOW FPS"]]
 ## The title art: [subject, backdrop, variant] left to right, top to bottom.
 const PANELS := [[CharacterPanel.Subject.RIFLE_AIM, Color(0.95, 0.5, 0.12), 0],

@@ -329,6 +329,8 @@ func share_sighting(spotter: Soldier, position: Vector3) -> void:
 func shout(soldier: Soldier, situation: String, urgent: bool = false) -> bool:
 	var book := settings.shouts
 	var now := Time.get_ticks_msec() / 1000.0
+	if not bool(Settings.get_value("voices_on")):
+		return false  # switched off: no voice, no words
 	if book == null or soldier.dead or (not urgent and (now < _next_shout_at or now < soldier.next_shout_at)):
 		return false
 	var choices: Array[ShoutLine] = []

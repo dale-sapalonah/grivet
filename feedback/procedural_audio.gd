@@ -300,6 +300,98 @@ static func flashbang() -> AudioStreamWAV:
 	return to_stream(buffer)
 
 
+## A spoken line made to sound yelled: lows cut (a shout has little chest
+## boom on a speaker), an edge added (the first difference: a rising tilt),
+## then driven into tanh saturation and normalised. 16-bit PCM in and out.
+## Pure (safe on a worker thread).
+static func shouted(source: AudioStreamWAV, drive: float, edge: float) -> AudioStreamWAV:
+	if source == null or source.format != AudioStreamWAV.FORMAT_16_BITS:
+		return source
+	var channels := 2 if source.stereo else 1
+	var count := source.data.size() / (2 * channels)
+	var buffer := PackedFloat32Array()
+	buffer.resize(count)
+	var cut := exp(-TAU * 180.0 / source.mix_rate)
+	var previous := 0.0
+	var high := 0.0
+	var loudest := 0.0
+	for i in count:
+		var x := 0.0
+		for c in channels:
+			x += source.data.decode_s16((i * channels + c) * 2) / 32768.0
+		x /= channels
+		high = cut * (high + x - previous)
+		var bright := high + edge * (high - (buffer[i - 1] if i > 0 else 0.0))
+		previous = x
+		buffer[i] = bright
+		loudest = maxf(loudest, absf(bright))
+	if loudest <= 0.0:
+		return source
+	for i in count:
+		buffer[i] = tanh(buffer[i] / loudest * drive)
+	var stream := to_stream(buffer)
+	stream.mix_rate = source.mix_rate
+	return stream
+
+
+## Pain, from a small voice synthesiser: a jittery glottal buzz (a saw, its
+## pitch falling) through three vowel formants, with breath noise. Kinds:
+##   grunt - short "uh" from the chest      wince - sharp "ah" after a hiss
+##   groan - long "oh" sliding to "uh"      death - a cry falling away to breath
+static func pain(kind: String, variant: int) -> AudioStreamWAV:
+	var rng := _rng("pain:%s:%d" % [kind, variant])
+	# [seconds, start Hz, end Hz, from vowel, to vowel, breath, attack, vibrato Hz]
+	var shapes := {
+		"grunt": [0.26, 150.0, 100.0, "uh", "uh", 0.25, 0.012, 0.0],
+		"wince": [0.4, 230.0, 165.0, "ah", "ah", 0.35, 0.05, 0.0],
+		"groan": [0.95, 125.0, 88.0, "oh", "uh", 0.3, 0.12, 5.0],
+		"death": [0.8, 190.0, 75.0, "ah", "uh", 0.22, 0.02, 3.0],
+	}
+	var shape: Array = shapes.get(kind, shapes.grunt)
+	var seconds: float = shape[0] * rng.randf_range(0.85, 1.15)
+	var pitch := rng.randf_range(0.88, 1.12)
+	var vowels := {"ah": [730.0, 1090.0, 2440.0], "uh": [640.0, 1190.0, 2390.0], "oh": [500.0, 850.0, 2600.0]}
+	var from: Array = vowels[shape[3]]
+	var to: Array = vowels[shape[4]]
+	var buffer := _buffer(seconds + 0.1)
+	var count := int(seconds * MIX_RATE)
+	var phase := 0.0
+	var period_jitter := 1.0
+	var states := [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]
+	var gains := [1.0, 0.55, 0.3]
+	var widths := [90.0, 110.0, 150.0]
+	var start := 0
+	if kind == "wince":
+		start = int(0.07 * MIX_RATE)
+		add_noise(buffer, 0.0, 0.05, 0.25, 6000.0, 2500.0, rng)  # the sharp breath in
+	for n in count:
+		var t := float(n) / count
+		var hz: float = lerpf(shape[1], shape[2], t * t) * pitch * period_jitter
+		if shape[7] > 0.0:
+			hz *= 1.0 + 0.03 * sin(TAU * shape[7] * n / MIX_RATE)
+		phase += hz / MIX_RATE
+		if phase >= 1.0:
+			phase -= 1.0
+			period_jitter = 1.0 + rng.randf_range(-0.04, 0.04)  # a rough, strained voice
+		var source := (1.0 - 2.0 * phase) * 0.6 + rng.randf_range(-1.0, 1.0) * float(shape[5])
+		var voiced := 0.0
+		for f in 3:
+			var formant: float = lerpf(from[f], to[f], t)
+			var r := exp(-PI * widths[f] / MIX_RATE)
+			var a1 := 2.0 * r * cos(TAU * formant / MIX_RATE)
+			var y: float = (1.0 - r) * source + a1 * states[f][0] - r * r * states[f][1]
+			states[f][1] = states[f][0]
+			states[f][0] = y
+			voiced += y * gains[f]
+		var attack: float = minf(float(n) / MIX_RATE / shape[6], 1.0)
+		var envelope := attack * pow(1.0 - t, 0.6 if kind == "groan" else 1.4)
+		if start + n < buffer.size():
+			buffer[start + n] += tanh(voiced * 3.0) * envelope
+	if kind == "death":
+		add_noise(buffer, seconds * 0.7, 0.35, 0.06, 2500.0, 300.0, rng)  # the last breath out
+	return to_stream(buffer)
+
+
 ## A grenade body knocking on the ground: a dull tock with a little ring.
 static func grenade_bounce() -> AudioStreamWAV:
 	var rng := _rng("grenade_bounce")
