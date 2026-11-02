@@ -41,3 +41,5 @@ extends Resource
 @export var pressed_alpha := 0.75
 @export var ring_width := 4.0
 @export var label_size := 24
+## Labels shrink to fit this share of their button's width.
+@export_range(0.3, 1.0) var label_fill := 0.78

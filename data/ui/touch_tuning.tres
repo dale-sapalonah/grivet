@@ -86,3 +86,4 @@ idle_alpha = 0.38
 pressed_alpha = 0.75
 ring_width = 4.0
 label_size = 24
+label_fill = 0.78

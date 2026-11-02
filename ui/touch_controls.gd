@@ -313,7 +313,7 @@ func _draw() -> void:
 		var centre := button_centre(spec)
 		draw_circle(centre, spec.radius, Color(GrivetStyle.INK, (tuning.pressed_alpha if on else tuning.idle_alpha) * 0.5))
 		draw_arc(centre, spec.radius, 0.0, TAU, 40, lit if on else idle, tuning.ring_width, true)
-		_draw_label(centre, spec.label, lit if on else Color(GrivetStyle.WHITE, tuning.pressed_alpha))
+		_draw_label(centre, spec.label, lit if on else Color(GrivetStyle.WHITE, tuning.pressed_alpha), spec.radius)
 	var pause := pause_centre()
 	draw_circle(pause, tuning.pause_button_radius, Color(GrivetStyle.INK, tuning.idle_alpha * 0.5))
 	draw_arc(pause, tuning.pause_button_radius, 0.0, TAU, 32, idle, tuning.ring_width, true)
@@ -323,9 +323,14 @@ func _draw() -> void:
 				Color(GrivetStyle.WHITE, tuning.pressed_alpha))
 
 
-func _draw_label(centre: Vector2, text: String, color: Color) -> void:
+## Centred in the button, shrunk until it fits inside the ring.
+func _draw_label(centre: Vector2, text: String, color: Color, radius: float) -> void:
 	var font_size := tuning.label_size
 	var width := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	var room := radius * 2.0 * tuning.label_fill
+	if width > room:
+		font_size = maxi(int(font_size * room / width), 10)
+		width = _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 	var baseline := centre + Vector2(-width * 0.5, font_size * 0.35)
 	draw_string_outline(_font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 5, GrivetStyle.INK)
 	draw_string(_font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)

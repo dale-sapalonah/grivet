@@ -35,6 +35,12 @@ func _ready() -> void:
 
 func _run() -> void:
 	await _frames(10)
+	if touch != null and touch.size.x < 1000.0:
+		# Headless windows are 64x64 (--resolution is ignored), where every
+		# button overlaps: lay the controls out on the 1600x900 canvas.
+		touch.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		touch.size = Vector2(1600, 900)
+		await _frames(2)
 	_check("controls show", touch != null and touch.visible, "TouchControls missing or hidden")
 	if touch == null:
 		_finish()
