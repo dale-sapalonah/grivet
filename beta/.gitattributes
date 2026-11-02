@@ -1,0 +1,1 @@
+beta/*.apk -filter -diff -merge binary
