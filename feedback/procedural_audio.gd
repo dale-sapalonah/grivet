@@ -8,6 +8,13 @@ extends RefCounted
 ## replace any recipe without changing them.
 
 const MIX_RATE := 22050
+## Frames of padding after every sound's last sample. Godot's WAV mixer reads
+## a little past a loop end before it wraps; on Android the allocator puts a
+## guard page right after large buffers, so a multi-minute music track whose
+## loop ended on its last sample crashed the audio thread (SIGSEGV in
+## AudioStreamPlaybackWAV mixing, Redmi / Android 16). Loops fill the pad with
+## their opening samples (Music._loop), one-shots with silence.
+const TAIL_PAD := 64
 const PEAK := 0.85
 
 static var _cache: Dictionary = {}
@@ -522,7 +529,7 @@ static func to_stream(buffer: PackedFloat32Array) -> AudioStreamWAV:
 		loudest = maxf(loudest, absf(sample))
 	var scale := PEAK / loudest if loudest > 0.0 else 0.0
 	var data := PackedByteArray()
-	data.resize(buffer.size() * 2)
+	data.resize((buffer.size() + TAIL_PAD) * 2)  # resize zero-fills: the pad is silence
 	for i in buffer.size():
 		data.encode_s16(i * 2, int(clampf(buffer[i] * scale, -1.0, 1.0) * 32767.0))
 	var stream := AudioStreamWAV.new()
@@ -535,7 +542,19 @@ static func to_stream(buffer: PackedFloat32Array) -> AudioStreamWAV:
 
 ## Seconds of sound from 16-bit mono data, for tests.
 static func duration(stream: AudioStreamWAV) -> float:
-	return stream.data.size() / 2.0 / stream.mix_rate
+	return (stream.data.size() / 2.0 - TAIL_PAD) / stream.mix_rate
+
+
+## Loops the whole sound (`samples` frames) and fills the tail pad with the
+## loop's opening frames, so any read past the loop end plays what follows.
+static func loop_whole(stream: AudioStreamWAV, samples: int) -> void:
+	var data := stream.data
+	for i in TAIL_PAD * 2:
+		data[samples * 2 + i] = data[i % (samples * 2)]
+	stream.data = data
+	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	stream.loop_begin = 0
+	stream.loop_end = samples
 
 
 ## RMS level of a stream between two times (seconds), for tests.

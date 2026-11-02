@@ -197,3 +197,28 @@ func test_feedback_cues_are_audible() -> void:
 	var ring := ProceduralAudio.ear_ring()
 	assert_true(ProceduralAudio.rms(ring, 0.0, 0.5) > ProceduralAudio.rms(ring, 2.5, 3.5) * 3.0, "ringing dies away")
 	assert_true(crossing_rate(ring, 0.0, 0.5) > 6000.0, "ringing is high: %.0f /s" % crossing_rate(ring, 0.0, 0.5))
+
+
+func test_every_sound_has_a_silent_tail_pad() -> void:
+	# Godot's WAV mixer reads one frame past a loop end; on Android a read off
+	# the end of a large buffer hits a guard page and kills the audio thread.
+	var stream := ProceduralAudio.to_stream(PackedFloat32Array([0.5, -0.5, 0.25]))
+	assert_eq(stream.data.size(), (3 + ProceduralAudio.TAIL_PAD) * 2, "pad frames after the sound")
+	for i in ProceduralAudio.TAIL_PAD:
+		assert_eq(stream.data.decode_s16((3 + i) * 2), 0, "one-shot pad is silent")
+	assert_approx(ProceduralAudio.duration(stream), 3.0 / stream.mix_rate, 1e-7, "duration ignores the pad")
+
+
+func test_loop_end_never_reaches_past_the_data() -> void:
+	var buffer := PackedFloat32Array()
+	for i in 1000:
+		buffer.append(sin(i * 0.1))
+	var stream := ProceduralAudio.to_stream(buffer)
+	ProceduralAudio.loop_whole(stream, buffer.size())
+	assert_eq(stream.loop_mode, AudioStreamWAV.LOOP_FORWARD)
+	# The mixer decodes frames up to and including loop_end: it must exist,
+	# and continue the loop (the opening frames), not drop to silence.
+	assert_true(stream.loop_end < stream.data.size() / 2, "frame at loop_end lies inside the data")
+	for i in ProceduralAudio.TAIL_PAD:
+		assert_eq(stream.data.decode_s16((stream.loop_end + i) * 2), stream.data.decode_s16(i * 2),
+				"pad frame %d repeats the loop start" % i)

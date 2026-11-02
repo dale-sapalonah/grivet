@@ -496,6 +496,4 @@ static func _riser(buffer: PackedFloat32Array, from: float, to: float, rng: Rand
 
 
 static func _loop(stream: AudioStreamWAV, samples: int) -> void:
-	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-	stream.loop_begin = 0
-	stream.loop_end = samples
+	ProceduralAudio.loop_whole(stream, samples)
