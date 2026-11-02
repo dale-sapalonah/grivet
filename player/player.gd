@@ -90,6 +90,18 @@ func set_look(yaw: float, pitch: float) -> void:
 	_head.rotation.x = _pitch
 
 
+## Turns the view by a pointer drag: `motion` in pixels (x right, y down),
+## `sensitivity` in radians per pixel. Mouse look and the touch look use it.
+func look(motion: Vector2, sensitivity: float) -> void:
+	if dead or not motion.is_finite():
+		return
+	rotate_y(-motion.x * sensitivity)
+	var limit := deg_to_rad(camera_tuning.pitch_limit_degrees)
+	var vertical := -motion.y if not camera_tuning.invert_y else motion.y
+	_pitch = clampf(_pitch + vertical * sensitivity, -limit, limit)
+	_head.rotation.x = _pitch
+
+
 func look_pitch() -> float:
 	return _pitch
 
@@ -129,12 +141,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		var sensitivity := camera_tuning.mouse_sensitivity
 		if model.aiming:
 			sensitivity *= camera_tuning.ads_sensitivity_multiplier
-		var motion := (event as InputEventMouseMotion).relative
-		rotate_y(-motion.x * sensitivity)
-		var limit := deg_to_rad(camera_tuning.pitch_limit_degrees)
-		var vertical := -motion.y if not camera_tuning.invert_y else motion.y
-		_pitch = clampf(_pitch + vertical * sensitivity, -limit, limit)
-		_head.rotation.x = _pitch
+		look((event as InputEventMouseMotion).relative, sensitivity)
 	elif event.is_action_pressed("pause"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event is InputEventMouseButton and event.is_pressed() \

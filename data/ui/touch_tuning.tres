@@ -1,0 +1,88 @@
+[gd_resource type="Resource" script_class="TouchTuning" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://ui/touch_tuning.gd" id="1_tuning"]
+[ext_resource type="Script" path="res://ui/touch_button_spec.gd" id="2_button"]
+
+[sub_resource type="Resource" id="button_fire"]
+script = ExtResource("2_button")
+action = "fire"
+label = "FIRE"
+offset = Vector2(-170, -250)
+radius = 80.0
+mode = 0
+
+[sub_resource type="Resource" id="button_aim"]
+script = ExtResource("2_button")
+action = "aim"
+label = "AIM"
+offset = Vector2(-345, -305)
+radius = 58.0
+mode = 2
+
+[sub_resource type="Resource" id="button_reload"]
+script = ExtResource("2_button")
+action = "reload"
+label = "RELOAD"
+offset = Vector2(-345, -150)
+radius = 46.0
+mode = 1
+
+[sub_resource type="Resource" id="button_jump"]
+script = ExtResource("2_button")
+action = "jump"
+label = "JUMP"
+offset = Vector2(-70, -410)
+radius = 52.0
+mode = 0
+
+[sub_resource type="Resource" id="button_crouch"]
+script = ExtResource("2_button")
+action = "crouch"
+label = "CROUCH"
+offset = Vector2(-200, -445)
+radius = 46.0
+mode = 1
+
+[sub_resource type="Resource" id="button_grenade"]
+script = ExtResource("2_button")
+action = "grenade"
+label = "NADE"
+offset = Vector2(-470, -200)
+radius = 42.0
+mode = 1
+
+[sub_resource type="Resource" id="button_next_weapon"]
+script = ExtResource("2_button")
+action = "next_weapon"
+label = "SWAP"
+offset = Vector2(-470, -330)
+radius = 42.0
+mode = 1
+
+[sub_resource type="Resource" id="button_plate"]
+script = ExtResource("2_button")
+action = "plate"
+label = "PLATE"
+offset = Vector2(-70, -545)
+radius = 40.0
+mode = 0
+
+[resource]
+script = ExtResource("1_tuning")
+stick_radius = 110.0
+stick_deadzone = 0.12
+sprint_ring = 0.92
+sprint_forward = 0.75
+stick_follows = true
+stick_rest = Vector2(230, -230)
+look_radians_per_pixel = 0.0042
+ads_multiplier = 0.55
+max_drag_per_event = 220.0
+fire_button_looks = true
+buttons = Array[ExtResource("2_button")]([SubResource("button_fire"), SubResource("button_aim"), SubResource("button_reload"), SubResource("button_jump"), SubResource("button_crouch"), SubResource("button_grenade"), SubResource("button_next_weapon"), SubResource("button_plate")])
+pause_button_offset = Vector2(-70, 70)
+pause_button_radius = 38.0
+idle_alpha = 0.38
+pressed_alpha = 0.75
+ring_width = 4.0
+label_size = 24

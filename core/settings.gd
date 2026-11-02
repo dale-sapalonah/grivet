@@ -25,9 +25,23 @@ const DEFAULTS := {
 	"graphics": 1,
 	"fullscreen": false,
 	"show_fps": true,
+	# On-screen sticks and buttons (TouchControls); on by default on phones.
+	"touch_controls": false,
+	"touch_sensitivity": 1.0,
+}
+## Phones and tablets start from these instead: the Mobile renderer, a
+## 2400x1080-class screen and a phone GPU (about an HD 630 at best).
+const HANDHELD_DEFAULTS := {
+	"render_scale": 0.6,
+	"graphics": 0,
+	"shadows": 1,
+	"fullscreen": true,
+	"show_fps": false,
+	"touch_controls": true,
 }
 
-var values: Dictionary = DEFAULTS.duplicate()
+var defaults: Dictionary = _platform_defaults()
+var values: Dictionary = defaults.duplicate()
 ## Not saved: the stage the menu picked for the next game.
 var requested_stage := 0
 ## The shared camera tuning the player reads (edited in place).
@@ -40,8 +54,8 @@ func _ready() -> void:
 	_ensure_buses()
 	var config := ConfigFile.new()
 	if config.load(PATH) == OK:
-		for key: String in DEFAULTS:
-			values[key] = config.get_value("settings", key, DEFAULTS[key])
+		for key: String in defaults:
+			values[key] = config.get_value("settings", key, defaults[key])
 	Debug.register("setting", _cmd_setting, "setting <key> <value>: change a saved setting (e.g. setting shadows 1).")
 	get_tree().node_added.connect(_on_node_added)
 	# Earlier autoloads (Ballistics, AI) made their sound players before us.
@@ -52,7 +66,7 @@ func _ready() -> void:
 
 
 func get_value(key: String) -> Variant:
-	return values.get(key, DEFAULTS.get(key))
+	return values.get(key, defaults.get(key))
 
 
 func set_value(key: String, value: Variant) -> void:
@@ -64,8 +78,25 @@ func set_value(key: String, value: Variant) -> void:
 
 
 func reset_to_defaults() -> void:
-	for key: String in DEFAULTS:
-		set_value(key, DEFAULTS[key])
+	for key: String in defaults:
+		set_value(key, defaults[key])
+
+
+## A phone or tablet build (Android, iOS, or the web on one).
+static func is_handheld() -> bool:
+	return OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios")
+
+
+static func _platform_defaults() -> Dictionary:
+	var result := DEFAULTS.duplicate()
+	if is_handheld():
+		result.merge(HANDHELD_DEFAULTS, true)
+	return result
+
+
+## True when the on-screen controls should show (TouchControls reads it).
+func touch_enabled() -> bool:
+	return bool(get_value("touch_controls"))
 
 
 func _cmd_setting(args: PackedStringArray) -> String:
@@ -105,6 +136,9 @@ func _apply(key: String) -> void:
 		"render_scale":
 			get_tree().root.scaling_3d_scale = float(value)
 		"graphics":
+			# HIGH leans on SSIL and volumetric fog, which the Mobile renderer lacks.
+			if is_handheld() and int(value) > 1:
+				values[key] = 1
 			_apply_graphics()
 		"shadows":
 			RenderingServer.directional_shadow_atlas_set_size(1024 if int(value) == 1 else 2048, true)

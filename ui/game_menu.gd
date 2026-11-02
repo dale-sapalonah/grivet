@@ -12,13 +12,18 @@ enum Mode { TITLE, PAUSE }
 const MAPS := [["PORT YARD", "res://levels/port/port_yard.tscn", preload("res://data/levels/campaign.tres")],
 		["GORDONS MARKET", "res://levels/gordons/gordons_market.tscn", preload("res://data/levels/gordons_campaign.tres")]]
 const GUTTER := 8.0
+## Largest size of a scrolling page (it shrinks to fit shorter screens).
+const SCROLL_PAGE_SIZE := Vector2(600.0, 760.0)
 
 ## [key, label, min, max, step] sliders and [key, label] toggles on the settings page.
 const SLIDERS := [["master_volume", "MASTER VOLUME", 0.0, 1.0, 0.05], ["music_volume", "MUSIC VOLUME", 0.0, 1.0, 0.05],
 		["sfx_volume", "SOUND EFFECTS VOLUME", 0.0, 1.0, 0.05], ["mouse_sensitivity", "MOUSE SENSITIVITY", 0.25, 3.0, 0.05],
 		["fov", "FIELD OF VIEW", 55.0, 95.0, 1.0], ["render_scale", "RENDER SCALE (SHARPER = SLOWER)", 0.5, 1.0, 0.05]]
 const TOGGLES := [["music_on", "MUSIC"], ["sfx_on", "SOUND EFFECTS"], ["invert_y", "INVERT MOUSE Y"],
-		["fullscreen", "FULLSCREEN"], ["show_fps", "SHOW FPS"]]
+		["fullscreen", "FULLSCREEN"], ["show_fps", "SHOW FPS"], ["touch_controls", "ON-SCREEN CONTROLS"]]
+## Phones: no window to resize, no mouse, and the look slider is the touch one.
+const HANDHELD_HIDDEN := ["fullscreen", "mouse_sensitivity"]
+const TOUCH_SLIDER := ["touch_sensitivity", "TOUCH LOOK SPEED", 0.25, 3.0, 0.05]
 ## The title art: [subject, backdrop, variant] left to right, top to bottom.
 const PANELS := [[CharacterPanel.Subject.RIFLE_AIM, Color(0.95, 0.5, 0.12), 0],
 		[CharacterPanel.Subject.TAXI, Color(0.95, 0.78, 0.15), 0],
@@ -157,9 +162,12 @@ func _build_pages() -> void:
 		page.add_child(_item("BACK", func() -> void: _show("stages")))
 	stages.add_child(_item("BACK", func() -> void: _show("main")))
 
-	var settings := _page("settings", true)
+	var settings := _page("settings", true, true)
 	settings.add_child(GrivetStyle.label("SETTINGS", _heavy, 90, GrivetStyle.WHITE, 14))
+	var handheld := Settings.is_handheld()
 	for toggle: Array in TOGGLES:
+		if handheld and toggle[0] in HANDHELD_HIDDEN:
+			continue
 		var box := CheckBox.new()
 		box.text = toggle[1]
 		box.button_pressed = bool(Settings.get_value(toggle[0]))
@@ -169,12 +177,15 @@ func _build_pages() -> void:
 		box.add_theme_color_override("font_hover_color", GrivetStyle.ORANGE)
 		box.add_theme_color_override("font_pressed_color", GrivetStyle.WHITE)
 		settings.add_child(box)
-	for slider: Array in SLIDERS:
+	for slider: Array in SLIDERS + [TOUCH_SLIDER]:
+		if handheld and slider[0] in HANDHELD_HIDDEN:
+			continue
 		settings.add_child(_slider(slider[0], slider[1], slider[2], slider[3], slider[4]))
 	var graphics := OptionButton.new()
 	for label in ["GRAPHICS: PERFORMANCE", "GRAPHICS: BALANCED", "GRAPHICS: HIGH (SLOW ON THIS PC)"]:
-		graphics.add_item(label)
-	graphics.selected = int(Settings.get_value("graphics"))
+		if not (handheld and label.contains("HIGH")):  # the Mobile renderer has no SSIL or volumetric fog
+			graphics.add_item(label)
+	graphics.selected = mini(int(Settings.get_value("graphics")), graphics.item_count - 1)
 	graphics.item_selected.connect(func(index: int) -> void: Settings.set_value("graphics", index))
 	GrivetStyle.style(graphics, _heavy, 26, GrivetStyle.WHITE, 6)
 	settings.add_child(graphics)
@@ -188,12 +199,20 @@ func _build_pages() -> void:
 	settings.add_child(_item("BACK", func() -> void: _show("main")))
 
 
-## A page: a centred column; `backed` pages sit on a dark panel over the art.
-func _page(page_name: String, backed: bool) -> Control:
+## A page: a centred column; `backed` pages sit on a dark panel over the art;
+## `scrolled` ones scroll when taller than the screen (settings on a phone).
+func _page(page_name: String, backed: bool, scrolled: bool = false) -> Control:
 	var column := VBoxContainer.new()
 	column.alignment = BoxContainer.ALIGNMENT_CENTER
 	column.add_theme_constant_override("separation", 4)
 	var holder: Control = column
+	if scrolled:
+		var scroll := ScrollContainer.new()
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		scroll.custom_minimum_size = Vector2(SCROLL_PAGE_SIZE.x, minf(SCROLL_PAGE_SIZE.y, get_viewport_rect().size.y - 120.0))
+		column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		scroll.add_child(column)
+		holder = scroll
 	if backed:
 		var panel := PanelContainer.new()
 		var box := StyleBoxFlat.new()
@@ -202,7 +221,7 @@ func _page(page_name: String, backed: bool) -> Control:
 		box.set_border_width_all(3)
 		box.set_content_margin_all(26)
 		panel.add_theme_stylebox_override("panel", box)
-		panel.add_child(column)
+		panel.add_child(holder)
 		holder = panel
 	var bottom := mode == Mode.TITLE and not backed
 	holder.set_anchors_preset(Control.PRESET_CENTER_BOTTOM if bottom else Control.PRESET_CENTER)

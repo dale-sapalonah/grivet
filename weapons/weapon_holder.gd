@@ -86,6 +86,11 @@ func equip(slot: int) -> void:
 	_player.camera_rig().ads_fov_multiplier = weapon.definition.ads_fov_multiplier
 
 
+## Pointer look for the gun's sway (TouchControls feeds its drags here).
+func add_look(motion: Vector2) -> void:
+	_look_delta += motion
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if Debug.console_open:
 		return
