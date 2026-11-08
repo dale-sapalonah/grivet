@@ -30,6 +30,8 @@ var spread_enabled := true
 var current_spread := 0.0
 var grenades_left := 0
 var flashbangs_left := 0
+## Trigger pulls that fired (the mission card's accuracy).
+var shots_fired := 0
 ## The enemy a knife strike now would take down silently (the HUD prompts), or null.
 var takedown_target: Soldier
 ## Seconds into the current knife strike, below zero when not striking.
@@ -157,6 +159,7 @@ func _process(delta: float) -> void:
 
 
 func _shoot(weapon: WeaponModel, kick: Vector2) -> void:
+	shots_fired += 1
 	var definition := weapon.definition
 	var aim := _player.aim_transform()
 	var forward := -aim.basis.z

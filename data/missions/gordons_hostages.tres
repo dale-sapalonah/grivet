@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="Mission" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://mission/mission.gd" id="1_mission"]
+[ext_resource type="Script" path="res://mission/mission_objective.gd" id="2_objective"]
+
+[sub_resource type="Resource" id="Interchange"]
+script = ExtResource("2_objective")
+kind = 4
+text = "Free the hostages at the PMV interchange. Don't hit civilians"
+stage = 0
+point = Vector3(0, 0, 50)
+radio = PackedStringArray("DISPATCH: Raskols are holding people at the PMV stop. Hostages in the open. Pick your shots.", "KORI: Two of them are using people as shields. Aim for the head, boss.")
+detained = PackedVector3Array(-6, 90, 55, -4.5, 90, 55.6, -3, 90, 55, -7.5, 90, 56.2, -1.5, 90, 55.8)
+shields = PackedVector3Array(14, -90, 50, 24, -90, 38)
+panicked = PackedVector3Array(6, 0, 38, 16, 0, 44, -8, 0, 40, 28, 0, 52, 2, 0, 56, 20, 0, 30)
+captor_kind = "rifleman"
+
+[sub_resource type="Resource" id="MarketFloor"]
+script = ExtResource("2_objective")
+kind = 4
+text = "Clear the market floor. The vendors are held inside"
+stage = 2
+point = Vector3(8, 0, 0)
+radio = PackedStringArray("DISPATCH: More hostages inside the hall. The vendors are down between the stalls.", "KORI: Careful in there. Too many people running about.")
+detained = PackedVector3Array(-2, 180, -8, 0, 180, -8.6, 2, 180, -8, 4, 180, -8.5, 6, 180, -8)
+shields = PackedVector3Array(12, 180, 2, -6, 180, -14)
+panicked = PackedVector3Array(4, 0, 10, 18, 0, -2, -8, 0, -18, 24, 0, -16, 10, 0, -20, -2, 0, 6)
+captor_kind = "rifleman"
+
+[resource]
+script = ExtResource("1_mission")
+title = "HOSTAGES AT GORDONS"
+subtitle = "Raskols are holding market people. Get them out alive."
+level = "res://levels/gordons/gordons_market.tscn"
+truck_from = Vector3(54, 0, -30)
+truck_at = Vector3(54, 0, 46)
+truck_yaw_degrees = 180.0
+camera_from = Vector3(76, 22, 10)
+camera_to = Vector3(60, 3, 60)
+intro_seconds = 12.0
+outro_camera = Vector3(64, 6, 34)
+briefing = PackedStringArray("DISPATCH: Unit Seven, armed raskols are holding people at Gordons Market.", "DISPATCH: Hostages and bystanders everywhere. Not one civilian gets hurt. Understood?", "KORI: Understood. Let's bring them home.")
+player_start = Vector3(51, 0, 50)
+player_yaw_degrees = 90.0
+objectives = Array[ExtResource("2_objective")]([SubResource("Interchange"), SubResource("MarketFloor")])
+complete_title = "HOSTAGES SAFE"
+complete_subtitle = "Every raskol down, every hostage home."

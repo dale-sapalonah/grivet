@@ -126,8 +126,22 @@ extends Resource
 ## A cover point someone failed to reach is skipped for this long (s).
 @export var blocked_cover_seconds := 10.0
 
+@export_group("Civilians")
+## Panicking civilians run (m/s) to random spots within panic_radius of where
+## they started, a new one on arrival or after civilian_repath_seconds, and
+## scream every civilian_scream_min..max seconds.
+@export var civilian_run_speed := 3.8
+@export var civilian_panic_radius := 12.0
+@export var civilian_repath_seconds := 6.0
+@export var civilian_scream_min := 2.5
+@export var civilian_scream_max := 7.0
+## A human shield stands this far (m) in front of its captor and this far to
+## the captor's left, leaving the captor's head and right shoulder clear.
+@export var shield_forward := 0.42
+@export var shield_side := 0.2
+
 @export_group("Shouts")
-## What the enemy shouts and how often (Tok Pisin lines with their voices).
+## What the enemy shouts and how often (lines with their voices).
 @export var shouts: ShoutBook
 
 @export_group("Squadmate")

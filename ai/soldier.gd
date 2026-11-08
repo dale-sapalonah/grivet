@@ -20,6 +20,9 @@ var noise_position := Vector3.INF
 var cover: CoverMap.Point = null
 var cover_mode := ""
 var dead := false
+## A civilian held as a human shield (Civilian.hold): this soldier plants its
+## feet, keeps the hostage in front and shoots over its shoulder.
+var hostage: Civilian
 ## Seconds of flashbang blindness left: no sight, no shooting, cowering.
 var blind_left := 0.0
 ## When this soldier may shout again (AI.shout, seconds since start).
@@ -190,6 +193,8 @@ func _physics_process(delta: float) -> void:
 		_fire_mode = 0
 		_advancing_low = false
 		_act(_action, _think_delta, target)
+		if is_instance_valid(hostage):
+			_hold_hostage()
 		_think_delta = 0.0
 	_update_weapon(delta, target)
 	_move(delta)
@@ -265,6 +270,16 @@ func _perceive(elapsed: float, target: Player) -> void:
 		# us, or the cover is too low): this spot is no good any more.
 		var query := PhysicsRayQueryParameters3D.create(target.head_point(), aim_point(), PhysicsLayers.WORLD)
 		_cover_compromised = get_world_3d().direct_space_state.intersect_ray(query).is_empty()
+
+
+## With a human shield: no moving, no cover, no crouching; aimed fire at
+## the player whenever it is in view.
+func _hold_hostage() -> void:
+	_move_target = Vector3.INF
+	_peeking = false
+	_want_crouch = false
+	if target_visible:
+		_fire_mode = 1
 
 
 ## The player close and in view: now and then a threat (a machete man's own).
@@ -994,6 +1009,11 @@ func _sync_hitbox() -> void:
 
 
 func _on_damaged(info: Dictionary) -> void:
+	# A well placed shot past a human shield ends it: a head hit is lethal.
+	if is_instance_valid(hostage) and not health.model.dead and info.get("zone") == DamageModel.Zone.HEAD:
+		health.take_hit(INF, DamageModel.Zone.HEAD, {"shooter": info.get("shooter"), "direction": info.get("direction", Vector3.ZERO),
+				"position": info.get("position", aim_point()), "on_plate": false})
+		return
 	if not health.model.dead and info.get("kind", "") != "takedown":
 		var book := _settings.shouts
 		var hurt := book != null and health.fraction() < book.groan_below

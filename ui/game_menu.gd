@@ -4,7 +4,7 @@ extends Control
 ## crime-sandbox box-art collage (original: no borrowed logo, font or art):
 ## a Port Moresby sunset drawn behind everything (sky, sun, hills, a few
 ## towers, the harbour, palm silhouettes), the two officers in front of a
-## Kamfot taxi cut out in the middle, four tilted white-framed comic panels
+## police Land Cruiser cut out in the middle, four tilted white-framed comic panels
 ## of the gangs and the city at the sides, the GRIVET / PORT MORESBY logo
 ## over the top and the menu in a bar along the bottom. PAUSE mode sits over the
 ## game, opened with Esc, and freezes the tree. Both share the settings page,
@@ -16,6 +16,8 @@ enum Mode { TITLE, PAUSE }
 const MAPS := [["PORT YARD", "res://levels/port/port_yard.tscn", preload("res://data/levels/campaign.tres")],
 		["GORDONS MARKET", "res://levels/gordons/gordons_market.tscn", preload("res://data/levels/gordons_campaign.tres")]]
 const LOGO_SHADER := preload("res://ui/logo_gradient.gdshader")
+## Missions offered on the START GAME page, above the free-play maps.
+const MISSIONS := [preload("res://data/missions/port_raid.tres"), preload("res://data/missions/gordons_hostages.tres")]
 
 ## [key, label, min, max, step] sliders and [key, label] toggles on the settings page.
 const SLIDERS := [["master_volume", "MASTER VOLUME", 0.0, 1.0, 0.05], ["music_volume", "MUSIC VOLUME", 0.0, 1.0, 0.05],
@@ -24,11 +26,11 @@ const SLIDERS := [["master_volume", "MASTER VOLUME", 0.0, 1.0, 0.05], ["music_vo
 const TOGGLES := [["music_on", "MUSIC"], ["sfx_on", "SOUND EFFECTS"], ["voices_on", "ENEMY VOICES (SHOUTS, CRIES)"], ["invert_y", "INVERT MOUSE Y"],
 		["fullscreen", "FULLSCREEN"], ["show_fps", "SHOW FPS"]]
 ## The side panels: [subject, backdrop, variant, rect (fractions of the
-## screen: x, y, width, height), tilt degrees]. The gangs (the taxi is in the middle).
+## screen: x, y, width, height), tilt degrees]. The gangs, and the police Land Cruiser.
 const PANELS := [[CharacterPanel.Subject.MACHETE_CLOSE, Color(0.8, 0.15, 0.1), 3, Rect2(0.035, 0.05, 0.27, 0.42), -2.5],
 		[CharacterPanel.Subject.SHOTGUN, Color(0.1, 0.55, 0.55), 0, Rect2(0.045, 0.5, 0.26, 0.38), 1.8],
 		[CharacterPanel.Subject.RIFLE_FIRE, Color(0.15, 0.32, 0.7), 0, Rect2(0.695, 0.05, 0.27, 0.42), 2.2],
-		[CharacterPanel.Subject.MACHETE_SWING, Color(0.5, 0.25, 0.65), 1, Rect2(0.69, 0.5, 0.26, 0.38), -1.6]]
+		[CharacterPanel.Subject.CRUISER, Color(0.95, 0.5, 0.12), 0, Rect2(0.69, 0.5, 0.26, 0.38), -1.6]]
 ## The officers in the middle, on the sunset (fractions of the screen).
 const HEROES := Rect2(0.28, 0.2, 0.44, 0.72)
 ## Sunset, top of the sky to the horizon.
@@ -218,7 +220,9 @@ func _build_pages() -> void:
 	main.add_child(_item("QUIT", func() -> void: get_tree().quit()))
 
 	var maps := _page("maps", true)
-	maps.add_child(GrivetStyle.label("CHOOSE A MAP", _heavy, 90, GrivetStyle.WHITE, 14))
+	maps.add_child(GrivetStyle.label("START GAME", _heavy, 90, GrivetStyle.WHITE, 14))
+	for mission: Mission in MISSIONS:
+		maps.add_child(_item("MISSION: " + mission.title, func() -> void: _start_mission(mission), mission.subtitle))
 	for map: Array in MAPS:
 		var scene: String = map[1]
 		maps.add_child(_item(map[0], func() -> void: _start(0, scene), (map[2] as Campaign).stages[0].subtitle))
@@ -350,7 +354,15 @@ func _slider(key: String, label_text: String, low: float, high: float, step: flo
 
 # --- Actions ---------------------------------------------------------------------
 
+func _start_mission(mission: Mission) -> void:
+	Settings.requested_mission = mission
+	Settings.requested_stage = 0
+	get_tree().paused = false
+	get_tree().change_scene_to_file(mission.level)
+
+
 func _start(stage: int, scene: String) -> void:
+	Settings.requested_mission = null
 	Settings.requested_stage = stage
 	get_tree().paused = false
 	get_tree().change_scene_to_file(scene)

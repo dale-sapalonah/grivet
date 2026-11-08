@@ -7,6 +7,8 @@ extends Node
 
 signal soldier_died(soldier: Soldier)
 signal grenade_thrown(soldier: Soldier)
+## A civilian took damage; info as Health.damaged gives it (info.shooter).
+signal civilian_hurt(civilian: Node, info: Dictionary)
 
 const SETTINGS := preload("res://data/ai/ai_settings.tres")
 const SOLDIER_SCENE := "res://ai/soldier.tscn"
@@ -359,6 +361,7 @@ func shout(soldier: Soldier, situation: String, urgent: bool = false) -> bool:
 func make_noise(position: Vector3, radius: float, source: Node) -> void:
 	for soldier in soldiers.duplicate():
 		soldier.hear(position, radius, source)
+	get_tree().call_group("civilians", "hear", position, radius)
 
 
 func add_corpse(ragdoll: Node) -> void:

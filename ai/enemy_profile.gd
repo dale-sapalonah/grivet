@@ -14,6 +14,7 @@ enum Outfit {
 	MILITARY,  ## Camouflage uniform, helmet, plate carrier, boots.
 	CIVILIAN,  ## T-shirt, shorts, sandals, a bilum across the chest.
 	POLICE,  ## Light-blue shirt, navy trousers and beret (needs body_model: soldier_police.glb).
+	MERI,  ## A woman's meri blouse and long skirt, a bilum (needs body_model: civilian_meri.glb).
 }
 
 @export var display_name := "Rifleman"

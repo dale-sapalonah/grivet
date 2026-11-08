@@ -338,6 +338,7 @@ static func shouted(source: AudioStreamWAV, drive: float, edge: float) -> AudioS
 ## pitch falling) through three vowel formants, with breath noise. Kinds:
 ##   grunt - short "uh" from the chest      wince - sharp "ah" after a hiss
 ##   groan - long "oh" sliding to "uh"      death - a cry falling away to breath
+##   scream - a long high "ah" (civilians)
 static func pain(kind: String, variant: int) -> AudioStreamWAV:
 	var rng := _rng("pain:%s:%d" % [kind, variant])
 	# [seconds, start Hz, end Hz, from vowel, to vowel, breath, attack, vibrato Hz]
@@ -346,6 +347,7 @@ static func pain(kind: String, variant: int) -> AudioStreamWAV:
 		"wince": [0.4, 230.0, 165.0, "ah", "ah", 0.35, 0.05, 0.0],
 		"groan": [0.95, 125.0, 88.0, "oh", "uh", 0.3, 0.12, 5.0],
 		"death": [0.8, 190.0, 75.0, "ah", "uh", 0.22, 0.02, 3.0],
+		"scream": [1.0, 360.0, 290.0, "ah", "ah", 0.28, 0.05, 6.5],  # a civilian, terrified
 	}
 	var shape: Array = shapes.get(kind, shapes.grunt)
 	var seconds: float = shape[0] * rng.randf_range(0.85, 1.15)

@@ -239,18 +239,20 @@ func set_spawn(at: Transform3D) -> void:
 func respawn() -> void:
 	dead = false
 	blind_left = 0.0
-	# The level may know somewhere safer than the fixed spawn (away from the fight).
+	# The level may know somewhere safer than the spawn (away from the fight).
+	# Only for this respawn: the spawn itself (a mission checkpoint) stays.
+	var at := _spawn
 	var picker := get_tree().get_first_node_in_group("spawn_picker")
 	if picker != null and picker.has_method("pick_spawn"):
-		_spawn = picker.pick_spawn(_spawn)
-	global_transform = _spawn
+		at = picker.pick_spawn(_spawn)
+	global_transform = at
 	velocity = Vector3.ZERO
 	model = MovementModel.new(tuning)
 	_body_height = -1.0
 	_set_body_height(tuning.stand_height)
 	_head.position.y = tuning.stand_eye_height
 	_head.rotation.z = 0.0
-	set_look(_spawn.basis.get_euler().y, 0.0)
+	set_look(at.basis.get_euler().y, 0.0)
 	health.revive()
 	health.protect(tuning.spawn_protection_seconds)
 	AI.forget_target()

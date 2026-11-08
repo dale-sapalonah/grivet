@@ -5,7 +5,7 @@ extends SubViewportContainer
 ## coloured rim light) rendered for a few frames, then frozen, and drawn
 ## through comic_panel.gdshader.
 
-enum Subject { RIFLE_AIM, MACHETE_SWING, SHOTGUN, TAXI, MACHETE_CLOSE, RIFLE_FIRE, HEROES }
+enum Subject { RIFLE_AIM, MACHETE_SWING, SHOTGUN, TAXI, MACHETE_CLOSE, RIFLE_FIRE, HEROES, CRUISER }
 
 const COMIC := preload("res://ui/comic_panel.gdshader")
 const PROFILES := {"rifleman": "res://data/ai/rifleman.tres", "rusher": "res://data/ai/rusher.tres",
@@ -85,6 +85,15 @@ func _build_scene() -> void:
 		Subject.HEROES:
 			_build_heroes(world, camera, key, rim)
 			return
+		Subject.CRUISER:
+			# The police Land Cruiser from low at its front corner, light bar lit.
+			var truck := PoliceTruck.new()
+			world.add_child(truck)
+			truck.rotation_degrees.y = 128.0
+			camera.fov = 36.0
+			camera.position = Vector3(-3.4, 0.4, 5.0)
+			target = Vector3(-0.1, 1.1, 0)
+			camera.look_at(target)
 		Subject.TAXI:
 			var taxi := KamfotTaxi.new()
 			world.add_child(taxi)
@@ -130,7 +139,8 @@ func _build_scene() -> void:
 	burst.look_at(camera.position)
 
 
-## The two officers, the player and Kori, in front of a Kamfot taxi at sunset:
+## The two officers, the player and Kori, in front of their police Land
+## Cruiser at sunset, its nose angled at the camera and its light bar lit:
 ## warm sun from the right, a magenta sky rim from the left, seen from low down.
 func _build_heroes(world: Node3D, camera: Camera3D, key: DirectionalLight3D, rim: DirectionalLight3D) -> void:
 	key.light_color = Color(1.0, 0.72, 0.45)
@@ -139,22 +149,21 @@ func _build_heroes(world: Node3D, camera: Camera3D, key: DirectionalLight3D, rim
 	rim.light_color = Color(0.95, 0.45, 0.85)
 	rim.light_energy = 1.4
 	rim.rotation_degrees = Vector3(-12, 205, 0)  # sky glow from behind left
-	var taxi := KamfotTaxi.new()
-	world.add_child(taxi)
-	taxi.build("T 9925")
-	taxi.position = Vector3(0.3, 0, -2.1)
-	taxi.rotation_degrees.y = 72.0
+	var truck := PoliceTruck.new()
+	world.add_child(truck)
+	truck.position = Vector3(0.15, 0, -3.9)
+	truck.rotation_degrees.y = 160.0  # nose-on between them, a little to the left
 	var profile: EnemyProfile = (load(PROFILES.police) as EnemyProfile).duplicate()
 	profile.uniform_color = POLICE_SHIRT
 	_mannequin = Mannequin.new()
 	world.add_child(_mannequin)
 	_mannequin.build(profile, 0)
-	_mannequin.position = Vector3(-0.42, 0, 0)
+	_mannequin.position = Vector3(-0.8, 0, 0)
 	_mannequin.rotation_degrees.y = 192.0
 	_partner = Mannequin.new()
 	world.add_child(_partner)
 	_partner.build(profile, 7)
-	_partner.position = Vector3(0.5, 0, -0.45)
+	_partner.position = Vector3(0.85, 0, -0.35)
 	_partner.rotation_degrees.y = 160.0
 	camera.fov = 34.0
 	camera.position = Vector3(0.0, 0.85, 3.15)

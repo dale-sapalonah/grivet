@@ -4,7 +4,7 @@ assets/models/soldier_civilian.glb (machete gangs: T-shirt, shorts, sandals) or
 assets/models/soldier_police.glb (the player's squadmate: police uniform).
 
 Run headless (no window):
-  "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" -b --factory-startup -P tools/blender/build_soldier.py -- <out.glb> [--outfit civilian|police]
+  "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" -b --factory-startup -P tools/blender/build_soldier.py -- <out.glb> [--outfit civilian|police|meri]
 
 One object per Mannequin part (pelvis, torso, head, upper_arm_l ...), each in
 its part's own frame (origin at its joint, limbs hanging down), so the game
@@ -377,7 +377,57 @@ def police():
         join(shin, [hard("box", (0, -0.47, -0.045), (0.098, 0.018, 0.24), "sole", bevel=0.004)])
 
 
-# The face and neck, shared by both outfits.
+def meri():
+    """A woman in a meri blouse: the loose blouse flaring out over the hips,
+    puffed short sleeves, a contrasting trim at the hem and sleeves, a long
+    skirt to mid-calf, hair up in a bun, rubber sandals. Classes: cloth =
+    blouse, gear = skirt, gloves = the trim, gear_dark = hair, boots/sole =
+    sandals; hands are skin."""
+    # Pelvis: the blouse's flared hem over the top of the skirt.
+    organic("pelvis", [("ellipsoid", (0, 0.06, 0), (0.175, 0.11, 0.13), "cloth"),
+                       ("ellipsoid", (0, -0.07, 0.01), (0.165, 0.09, 0.125), "gear")], BUDGET["pelvis"],
+            class_of=lambda p: "cloth" if p.y > -0.01 else "gear", hems=(-0.01,))
+    torso = organic("torso", [
+        ("ellipsoid", (0, 0.05, 0), (0.175, 0.11, 0.125), "cloth"),  # loose over the waist
+        ("ellipsoid", (0, 0.17, 0), (0.168, 0.12, 0.12), "cloth"),
+        ("ellipsoid", (0, 0.3, 0), (0.168, 0.12, 0.122), "cloth"),
+        ("ellipsoid", (0, 0.4, -0.02), (0.18, 0.1, 0.13), "cloth"),  # bust
+        ("ellipsoid", (-0.15, 0.45, 0), (0.07, 0.06, 0.07), "cloth"),
+        ("ellipsoid", (0.15, 0.45, 0), (0.07, 0.06, 0.07), "cloth"),
+        ("ellipsoid", (-0.078, 0.5, 0), (0.078, 0.042, 0.064), "cloth"),
+        ("ellipsoid", (0.078, 0.5, 0), (0.078, 0.042, 0.064), "cloth"),
+        ("ellipsoid", (0, 0.535, 0), (0.06, 0.048, 0.056), "cloth"),
+    ], BUDGET["torso"])
+    join(torso, [hard("torus", (0, 0.535, -0.01), (0.075, 0.012, 0.9), "gloves", rotation=(-10, 0, 0))])  # trimmed neckline
+    head = organic("head", HEAD, BUDGET["head"])
+    join(head, [hard("sphere", (-0.032, 0.147, -0.088), (0.009, 0.009, 0.006), "eye", bevel=0.0),
+                hard("sphere", (0.032, 0.147, -0.088), (0.009, 0.009, 0.006), "eye", bevel=0.0),
+                hard("dome", (0, 0.165, 0.012), (0.096, 0.095, 0.108), "gear_dark"),  # hair
+                hard("sphere", (0, 0.21, 0.085), (0.06, 0.055, 0.055), "gear_dark", bevel=0.0)])  # the bun
+    for side, suffix in ((-1.0, "_l"), (1.0, "_r")):
+        # A puffed short sleeve over the shoulder, a trimmed edge, bare arm below.
+        arm = organic("upper_arm" + suffix, [("ellipsoid", (-side * 0.015, -0.04, 0), (0.08, 0.075, 0.078), "cloth"),
+                                             ("ellipsoid", (0, -0.11, 0), (0.078, 0.05, 0.075), "cloth")]
+                      + taper(-0.08, -0.29, 0.056, 0.043, "skin", depth=0.92), BUDGET["upper_arm"],
+                      class_of=lambda p: "cloth" if p.y > -0.15 else "skin", hems=(-0.15,))
+        join(arm, [hard("torus", (0, -0.148, 0), (0.07, 0.01, 1.0), "gloves", bevel=0.0)])
+        organic("lower_arm" + suffix, [("ellipsoid", (0, 0.0, 0), (0.046, 0.046, 0.044), "skin"),
+                                       ("ellipsoid", (0, -0.08, 0), (0.052, 0.08, 0.05), "skin")]
+                + taper(-0.04, -0.24, 0.048, 0.034, "skin", depth=0.88)
+                + [("ellipsoid", (0, -0.29, -0.005), (0.034, 0.05, 0.028), "skin"),
+                   ("ellipsoid", (0, -0.33, -0.02), (0.029, 0.028, 0.023), "skin")], BUDGET["lower_arm"])
+        # The skirt: wide down each leg (it reads as one skirt from a few metres).
+        organic("thigh" + suffix, taper(0.03, -0.42, 0.12, 0.105, "gear", steps=8, depth=1.0), BUDGET["thigh"])
+        shin = organic("shin" + suffix, [("ellipsoid", (0, -0.02, 0), (0.1, 0.08, 0.1), "gear")]
+                       + taper(-0.06, -0.2, 0.095, 0.09, "gear", steps=4, depth=1.0)
+                       + taper(-0.22, -0.36, 0.06, 0.045, "skin", steps=4, depth=0.93)
+                       + [("ellipsoid", (0, -0.425, -0.05), (0.042, 0.028, 0.095), "skin")], BUDGET["shin"],
+                       class_of=lambda p: "gear" if p.y > -0.21 else "skin", hems=(-0.21,))
+        join(shin, [hard("box", (0, -0.455, -0.045), (0.09, 0.014, 0.24), "boots", bevel=0.004),
+                    hard("box", (0, -0.44, -0.12), (0.008, 0.03, 0.05), "sole", rotation=(30, 0, 0), bevel=0.0)])
+
+
+# The face and neck, shared by every outfit.
 HEAD = [
     ("ellipsoid", (0, 0.02, 0), (0.05, 0.06, 0.05), "skin"),  # neck
     ("ellipsoid", (0, 0.15, 0.004), (0.083, 0.098, 0.098), "skin"),  # skull
@@ -390,7 +440,7 @@ HEAD = [
 
 
 reset()
-{"civilian": civilian, "police": police}.get(OUTFIT, military)()
+{"civilian": civilian, "police": police, "meri": meri}.get(OUTFIT, military)()
 
 # Leftover metaball data and anything not a part goes before export.
 parts = ["pelvis", "torso", "head"] + [p + s for p in ("upper_arm", "lower_arm", "thigh", "shin") for s in ("_l", "_r")]

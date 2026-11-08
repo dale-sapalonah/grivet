@@ -54,6 +54,17 @@ extends Control
 @export var ally_marker_size := 8.0
 @export var ally_font_size := 18
 
+@export_group("Mission")
+## The current objective under the FPS counter, a waypoint over its place
+## (with the distance; pinned to the screen edge when off screen) and the
+## search progress under the crosshair.
+@export var objective_at := Vector2(24, 64)
+@export var objective_color := Color(0.98, 0.97, 0.94, 0.95)
+@export var objective_new_color := Color(1.0, 0.8, 0.15, 1.0)
+@export var waypoint_color := Color(1.0, 0.8, 0.15, 0.95)
+@export var waypoint_size := 10.0
+@export var waypoint_margin := 50.0
+
 @export_group("Shout subtitles")
 ## The enemy's last shout, under the crosshair area (AI.shout calls subtitle()).
 @export var subtitle_from_bottom := 150.0
@@ -172,6 +183,16 @@ func _update_shouts(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	_update_shouts(delta)
+	var runner := get_tree().get_first_node_in_group("mission") as MissionRunner
+	var cutscene := runner != null and runner.cinematic
+	for readout: Label in [_ammo, _weapon_name, _status]:
+		readout.visible = not cutscene
+	if cutscene:
+		# The cutscene has the screen: drop queued shouts (a stage title) too.
+		_shouts.clear()
+		_shout_left = 0.0
+		_shout_label.visible = false
+		_shout_subtitle.visible = false
 	if not is_instance_valid(_holder):
 		_holder = get_tree().get_first_node_in_group("player_weapons") as WeaponHolder
 	if not is_instance_valid(_player):
@@ -198,6 +219,11 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	var center := size * 0.5
+	var runner := get_tree().get_first_node_in_group("mission") as MissionRunner
+	if runner != null:
+		if runner.cinematic:
+			return  # the cutscene has the screen
+		_draw_mission(runner, center)
 	if _player != null:
 		_draw_vignette()
 		_draw_damage_markers(center)
@@ -235,6 +261,50 @@ func _draw_flash() -> void:
 		return
 	var fade := clampf(_player.blind_left / (_player.blind_total * (1.0 - flash_hold_fraction)), 0.0, 1.0)
 	draw_rect(Rect2(Vector2.ZERO, size), Color(flash_color, fade * fade * (3.0 - 2.0 * fade)))
+
+
+func _draw_mission(runner: MissionRunner, center: Vector2) -> void:
+	var text := runner.objective_text()
+	if text.is_empty():
+		return
+	var fresh := runner.objective_age < 3.0 and fmod(runner.objective_age, 0.5) < 0.3
+	draw_string_outline(_heavy, objective_at, "OBJECTIVE", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, 5, Color(0, 0, 0, 0.85))
+	draw_string(_heavy, objective_at, "OBJECTIVE", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, GrivetStyle.ORANGE)
+	var line := objective_at + Vector2(0, 30)
+	draw_string_outline(_heavy, line, text.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 26, 7, Color(0, 0, 0, 0.85))
+	draw_string(_heavy, line, text.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 26, objective_new_color if fresh else objective_color)
+	if runner.civilians_total > 0:
+		var safe := "CIVILIANS  %d / %d" % [runner.civilians_alive(), runner.civilians_total]
+		draw_string_outline(_heavy, line + Vector2(0, 26), safe, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, 5, Color(0, 0, 0, 0.85))
+		draw_string(_heavy, line + Vector2(0, 26), safe, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(0.55, 0.9, 1.0, 0.95))
+	var point := runner.waypoint()
+	var camera := get_viewport().get_camera_3d()
+	if point != Vector3.INF and camera != null and _player != null:
+		var at := point + Vector3.UP * 1.6
+		var screen := camera.unproject_position(at)
+		var behind := camera.is_position_behind(at)
+		var area := Rect2(Vector2.ZERO, size).grow(-waypoint_margin)
+		if behind or not area.has_point(screen):
+			# Off screen: pin it to the edge on the side it lies.
+			var direction := (screen - center) * (-1.0 if behind else 1.0)
+			if direction.length() < 1.0:
+				direction = Vector2.DOWN
+			var scale := minf(area.size.x * 0.5 / maxf(absf(direction.x), 0.001), area.size.y * 0.5 / maxf(absf(direction.y), 0.001))
+			screen = center + direction * scale
+		var s := waypoint_size
+		var diamond := PackedVector2Array([screen + Vector2(0, -s), screen + Vector2(s, 0), screen + Vector2(0, s), screen + Vector2(-s, 0)])
+		draw_colored_polygon(diamond, waypoint_color)
+		draw_polyline(diamond + PackedVector2Array([diamond[0]]), Color(0, 0, 0, 0.9), 2.0)
+		var metres := "%d M" % roundi(_player.global_position.distance_to(point))
+		draw_string_outline(_heavy, screen + Vector2(-60, s + 22), metres, HORIZONTAL_ALIGNMENT_CENTER, 120, 18, 5, Color(0, 0, 0, 0.85))
+		draw_string(_heavy, screen + Vector2(-60, s + 22), metres, HORIZONTAL_ALIGNMENT_CENTER, 120, 18, waypoint_color)
+	var searched := runner.search_fraction()
+	if searched > 0.0:
+		var bar := Rect2(center + Vector2(-110, 60), Vector2(220, 10))
+		draw_rect(bar, Color(0, 0, 0, 0.6))
+		draw_rect(Rect2(bar.position, Vector2(bar.size.x * searched, bar.size.y)), waypoint_color)
+		draw_string_outline(_heavy, bar.position + Vector2(0, -8), "SEARCHING", HORIZONTAL_ALIGNMENT_CENTER, bar.size.x, 20, 6, Color(0, 0, 0, 0.85))
+		draw_string(_heavy, bar.position + Vector2(0, -8), "SEARCHING", HORIZONTAL_ALIGNMENT_CENTER, bar.size.x, 20, GrivetStyle.WHITE)
 
 
 func _draw_subtitle() -> void:

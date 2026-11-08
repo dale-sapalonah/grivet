@@ -154,6 +154,8 @@ func _damage_bodies(space: PhysicsDirectSpaceState3D, center: Vector3) -> void:
 	victims.append_array(get_tree().get_nodes_in_group("player"))
 	for soldier in AI.soldiers:
 		victims.append(soldier)
+	for civilian in get_tree().get_nodes_in_group("civilians"):
+		victims.append(civilian as Node3D)
 	for victim in victims:
 		var torso: Vector3 = victim.aim_point() if victim.has_method("aim_point") else victim.global_position
 		var distance := center.distance_to(torso)

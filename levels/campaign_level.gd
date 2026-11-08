@@ -32,7 +32,13 @@ const SQUADMATE_SCENE := "res://ai/squadmate.tscn"
 ## Stages played in order; each clears to "KLIN CHOL!" / "WARAA!".
 @export var campaign: Campaign = preload("res://data/levels/campaign.tres")
 
+## A stage's squad is down (mission mode reports it instead of moving on).
+signal stage_finished(index: int)
+
 var stage := 0
+## Campaign: a cleared stage leads to the next. Off while a MissionRunner
+## decides what comes next.
+var auto_advance := true
 var _stage_live := false
 ## Where the player may (re)spawn: x, facing (degrees, 0 = north), z. The
 ## picker takes the one furthest from the enemy that no enemy can see.
@@ -189,6 +195,14 @@ func _spot_safety(at: Vector3) -> float:
 
 ## Called once the navmesh and cover map are ready: the current stage's squad.
 func spawn_squad() -> void:
+	var mission := Settings.requested_mission
+	if mission != null and mission.level == scene_file_path and not _stage_live:
+		auto_advance = false
+		_ensure_squadmate()
+		var runner := MissionRunner.new()
+		runner.mission = mission
+		add_child(runner)
+		return
 	if not _stage_live:  # a `stage` jump may already have fielded one
 		stage = clampi(Settings.requested_stage, 0, campaign.stages.size() - 1)
 		_start_stage(stage, stage > 0)
@@ -214,6 +228,11 @@ func _process(delta: float) -> void:
 	if _stage_live and AI.soldiers.is_empty():
 		_stage_live = false
 		_stage_cleared()
+
+## Brings in stage `index`'s squad (a MissionRunner calls this).
+func start_stage(index: int, move_player: bool) -> void:
+	_start_stage(index, move_player)
+
 
 func _start_stage(index: int, move_player: bool) -> void:
 	stage = index
@@ -249,6 +268,9 @@ func _lay_buai() -> void:
 func _stage_cleared() -> void:
 	for i in campaign.cleared_shouts.size():
 		_announce(campaign.cleared_shouts[i], campaign.cleared_colors[i % campaign.cleared_colors.size()], 1.4)
+	if not auto_advance:
+		stage_finished.emit(stage)
+		return
 	var last := stage + 1 >= campaign.stages.size()
 	if last:
 		_announce(campaign.final_shout, GrivetStyle.GOLD, 5.0, campaign.final_subtitle)

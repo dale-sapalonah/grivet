@@ -1,26 +1,25 @@
-# Generates the enemies' placeholder shouts (Tok Pisin) as WAVs with the
+# Generates the enemies' placeholder shouts (English) as WAVs with the
 # Windows built-in voice (System.Speech, "Microsoft David"), into
 # assets/audio/voice/<id>.wav. The game reads the lines from
 # data/ai/shouts.tres; a recording of a real speaker saved under the same
 # name replaces a line.
 #   powershell -ExecutionPolicy Bypass -File tools/gen_voices.ps1
-# The second column is how the line is spelled for an English voice so it
-# comes out close to the Tok Pisin.
+# The second column is what is said (capitals stress a word).
 
 $lines = @(
-    @("spot_1", "Oy! Oy! Sah nup!"),             # Oi, sanap!
-    @("spot_2", "Em ee ah! Em ee AH!"),       # Em ia!
-    @("spot_3", "POE LEES! Ee come!"),        # Polis i kam!
-    @("spot_4", "Look im! Poe lees!"),        # Lukim, polis!
-    @("threat_1", "Hoe lim em! Hoe lim EM!"),             # Holim em!
-    @("threat_2", "Kill im em! KILL im!"),             # Kilim em!
-    @("threat_3", "You no ken run away!"),    # Yu no ken ranawe!
-    @("threat_4", "Come out side! NOW!"),          # Kam autsait!
-    @("threat_5", "Me buy pine im you!"),     # Mi bai painim yu!
-    @("melee_1", "Me buy CUT im you!"),       # Mi bai katim yu!
-    @("melee_2", "Come here! Come here!"),    # Kam hia!
-    @("grenade_1", "Look out! Bomb!"),        # Lukaut, bom!
-    @("blind_1", "AAH! Eye bee long me!")         # Ai bilong mi!
+    @("spot_1", "Hey! Stop right there!"),
+    @("spot_2", "There he is! THERE!"),
+    @("spot_3", "POLICE! Police are here!"),
+    @("spot_4", "Look out! It's the COPS!"),
+    @("threat_1", "Grab him! GRAB HIM!"),
+    @("threat_2", "Kill him! KILL HIM!"),
+    @("threat_3", "You can't run from us!"),
+    @("threat_4", "Come out of there! NOW!"),
+    @("threat_5", "I'll find you, cop!"),
+    @("melee_1", "I'll CUT you!"),
+    @("melee_2", "Come here! Come HERE!"),
+    @("grenade_1", "Grenade! Look out!"),
+    @("blind_1", "AAH! My eyes!")
 )
 
 Add-Type -AssemblyName System.Speech

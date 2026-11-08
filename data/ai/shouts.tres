@@ -19,92 +19,79 @@
 [sub_resource type="Resource" id="l0"]
 script = ExtResource("2_line")
 situation = "spot"
-text = "Oi, sanap!"
-meaning = "Hey, stop!"
+text = "Hey! Stop right there!"
 voice = ExtResource("v0")
 
 [sub_resource type="Resource" id="l1"]
 script = ExtResource("2_line")
 situation = "spot"
-text = "Em ia!"
-meaning = "There he is!"
+text = "There he is!"
 voice = ExtResource("v1")
 
 [sub_resource type="Resource" id="l2"]
 script = ExtResource("2_line")
 situation = "spot"
-text = "Polis i kam!"
-meaning = "The police are coming!"
+text = "Police! Police are here!"
 voice = ExtResource("v2")
 
 [sub_resource type="Resource" id="l3"]
 script = ExtResource("2_line")
 situation = "spot"
-text = "Lukim, polis!"
-meaning = "Look, police!"
+text = "It's the cops!"
 voice = ExtResource("v3")
 
 [sub_resource type="Resource" id="l4"]
 script = ExtResource("2_line")
 situation = "threat"
-text = "Holim em!"
-meaning = "Grab him!"
+text = "Grab him!"
 voice = ExtResource("v4")
 
 [sub_resource type="Resource" id="l5"]
 script = ExtResource("2_line")
 situation = "threat"
-text = "Kilim em!"
-meaning = "Kill him!"
+text = "Kill him!"
 voice = ExtResource("v5")
 
 [sub_resource type="Resource" id="l6"]
 script = ExtResource("2_line")
 situation = "threat"
-text = "Yu no ken ranawe!"
-meaning = "You can't run away!"
+text = "You can't run!"
 voice = ExtResource("v6")
 
 [sub_resource type="Resource" id="l7"]
 script = ExtResource("2_line")
 situation = "threat"
-text = "Kam autsait!"
-meaning = "Come out!"
+text = "Come out of there!"
 voice = ExtResource("v7")
 
 [sub_resource type="Resource" id="l8"]
 script = ExtResource("2_line")
 situation = "threat"
-text = "Mi bai painim yu!"
-meaning = "I'll find you!"
+text = "I'll find you!"
 voice = ExtResource("v8")
 
 [sub_resource type="Resource" id="l9"]
 script = ExtResource("2_line")
 situation = "melee"
-text = "Mi bai katim yu!"
-meaning = "I'll cut you!"
+text = "I'll cut you!"
 voice = ExtResource("v9")
 
 [sub_resource type="Resource" id="l10"]
 script = ExtResource("2_line")
 situation = "melee"
-text = "Kam hia!"
-meaning = "Come here!"
+text = "Come here!"
 voice = ExtResource("v10")
 
 [sub_resource type="Resource" id="l11"]
 script = ExtResource("2_line")
 situation = "grenade"
-text = "Lukaut, bom!"
-meaning = "Look out, a grenade!"
+text = "Grenade!"
 voice = ExtResource("v11")
 
 [sub_resource type="Resource" id="l12"]
 script = ExtResource("2_line")
 situation = "blind"
-text = "Ai bilong mi!"
-meaning = "My eyes!"
+text = "My eyes!"
 voice = ExtResource("v12")
 
 [resource]

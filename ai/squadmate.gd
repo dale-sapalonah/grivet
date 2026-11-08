@@ -220,10 +220,16 @@ func _update_weapon(delta: float, player: Player) -> void:
 
 ## No shot with the player within squad_friendly_fire_clearance of the line.
 func _clear_of(player: Player, aim_at: Vector3) -> bool:
-	if player == null:
+	if player == null and get_tree().get_nodes_in_group("civilians").is_empty():
 		return true
 	var muzzle := mannequin.muzzle.global_position
-	for point in [player.aim_point(), player.head_point()]:
+	var points: Array[Vector3] = []
+	if player != null:
+		points.append(player.aim_point())
+		points.append(player.head_point())
+	for civilian in get_tree().get_nodes_in_group("civilians"):
+		points.append((civilian as Node3D).global_position + Vector3.UP * 1.1)  # nor a civilian
+	for point in points:
 		var closest := Geometry3D.get_closest_point_to_segment(point, muzzle, aim_at)
 		if closest.distance_to(point) < _settings.squad_friendly_fire_clearance:
 			return false

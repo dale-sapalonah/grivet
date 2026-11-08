@@ -438,7 +438,7 @@ static func _build(jobs: Array) -> void:
 		ProceduralAudio.store.call_deferred(job[0], stream)
 
 
-const PAIN_KINDS := ["grunt", "wince", "groan", "death"]
+const PAIN_KINDS := ["grunt", "wince", "groan", "death", "scream"]
 
 
 ## Cache key of a shout line's yelled version (built at start).

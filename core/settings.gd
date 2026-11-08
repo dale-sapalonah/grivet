@@ -32,6 +32,8 @@ const DEFAULTS := {
 var values: Dictionary = DEFAULTS.duplicate()
 ## Not saved: the stage the menu picked for the next game.
 var requested_stage := 0
+## Not saved: the mission the menu picked (null: plain campaign stages).
+var requested_mission: Mission = null
 ## The shared camera tuning the player reads (edited in place).
 var camera_tuning: CameraTuning = load("res://data/player/camera_tuning.tres")
 var _base_sensitivity := 0.0

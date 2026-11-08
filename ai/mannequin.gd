@@ -50,6 +50,12 @@ var gun: Node3D
 ## Holding a blade, not a gun: no two-handed grip; `swing` (s since the
 ## strike began, below zero when not striking) drives the slash.
 var melee := false
+## No weapon (civilians): the arms take `arms_pose` instead.
+var unarmed := false
+## Unarmed arms: "hands_up" (hands on the head, detained), "cower" (arms over
+## the head), "panic" (hands to the head, running), "held" (a hostage in a
+## captor's grip), "down".
+var arms_pose := "down"
 var swing := -1.0
 var swing_windup := 0.3
 var muzzle: Node3D
@@ -74,8 +80,10 @@ func build(profile: EnemyProfile, variant: int = 0) -> void:
 	_material.set_shader_parameter("camo_a", profile.uniform_color)
 	_material.set_shader_parameter("camo_b", profile.camo_b)
 	_material.set_shader_parameter("camo_c", profile.camo_c)
-	var civilian := profile.outfit == EnemyProfile.Outfit.CIVILIAN
+	var meri := profile.outfit == EnemyProfile.Outfit.MERI
+	var civilian := profile.outfit == EnemyProfile.Outfit.CIVILIAN or meri
 	melee = profile.weapon != null and profile.weapon.melee_damage > 0.0
+	unarmed = profile.weapon == null
 	# Vertex alpha: 1 = camouflage cloth, 0.5 = plain cloth, 0 = everything else.
 	var cloth := Color(1, 1, 1, 1)
 	if civilian:
@@ -91,7 +99,17 @@ func build(profile: EnemyProfile, variant: int = 0) -> void:
 	var hands := skin if civilian else gloves
 	var B := MeshBaker
 	var eye := Color(0.04, 0.03, 0.03, 0.0)
-	if profile.body_model != null and civilian:
+	if profile.body_model != null and meri:
+		# The meri model's classes: cloth = blouse, gear = skirt, gloves = the
+		# blouse's trim, gear_dark = hair, boots/sole = sandals.
+		var shirts := profile.shirt_colors
+		var skirt: Color = shirts[(variant + 3) % shirts.size()] if not shirts.is_empty() else profile.shorts_color
+		var trim := Color(0.97, 0.95, 0.88, 0.0) if variant % 2 == 0 else Color(0.98, 0.8, 0.15, 0.0)
+		var sandal := Color(0.08, 0.08, 0.09, 0.0)
+		_imported = _model_parts(profile.body_model, {
+			"cloth": cloth, "gear": Color(skirt.darkened(0.3), 0.5), "gear_dark": Color(0.04, 0.035, 0.03, 0.0), "skin": skin,
+			"gloves": trim, "boots": sandal, "sole": sandal, "eye": eye})
+	elif profile.body_model != null and civilian:
 		# The civilian model's classes: cloth = T-shirt, gear = shorts, gear_dark = hair, boots/sole = sandals.
 		var sandal := Color(0.08, 0.08, 0.09, 0.0)
 		_imported = _model_parts(profile.body_model, {
@@ -253,7 +271,7 @@ func build(profile: EnemyProfile, variant: int = 0) -> void:
 	gun.add_child(muzzle)
 	if melee:
 		_bake_machete(parts.lower_arm_r)
-	else:
+	elif not unarmed:
 		muzzle.position = Vector3(0, 0.015, _bake_gun(profile))
 
 
@@ -346,6 +364,9 @@ func pose(delta: float, crouch: float, aim_pitch: float, speed: float, aiming: b
 	if melee:
 		_pose_blade(speed)
 		return
+	if unarmed:
+		_pose_unarmed(speed)
+		return
 	gun.rotation.x = 0.0 if aiming else deg_to_rad(-35.0)
 	# Both hands on the weapon: right on the grip, left on the handguard / pump.
 	_reach("_r", gun.transform * _grip, Vector3(0.6, -1.0, 0.4))
@@ -373,6 +394,35 @@ func _pose_blade(speed: float) -> void:
 			bend = lerpf(1.7, 0.25, t)
 	pivots.shoulder_r.rotation = Vector3(raise, 0.0, 0.1)
 	pivots.elbow_r.rotation = Vector3(bend, 0.0, 0.0)
+
+
+## Arms without a weapon (arms_pose): hands up behind the head, hands
+## clutching the head while running, pinned by a captor, or hanging.
+func _pose_unarmed(speed: float) -> void:
+	var run := clampf(speed / 4.0, 0.0, 1.0)
+	var pump := sin(_walk_phase) * 0.6 * run
+	match arms_pose:
+		"hands_up":
+			for side in [["_l", -1.0], ["_r", 1.0]]:
+				pivots["shoulder" + side[0]].rotation = Vector3(2.75, 0.0, side[1] * 0.55)
+				pivots["elbow" + side[0]].rotation = Vector3(1.9, 0.0, 0.0)
+		"cower":
+			# Arms wrapped over the head, face down.
+			for side in [["_l", -1.0], ["_r", 1.0]]:
+				pivots["shoulder" + side[0]].rotation = Vector3(2.45, 0.0, side[1] * 0.2)
+				pivots["elbow" + side[0]].rotation = Vector3(2.4, 0.0, 0.0)
+		"panic":
+			for side in [["_l", -1.0, pump], ["_r", 1.0, -pump]]:
+				pivots["shoulder" + side[0]].rotation = Vector3(2.3 + side[2] * 0.3, 0.0, side[1] * 0.4)
+				pivots["elbow" + side[0]].rotation = Vector3(2.0, 0.0, 0.0)
+		"held":
+			for side in [["_l", -1.0], ["_r", 1.0]]:
+				pivots["shoulder" + side[0]].rotation = Vector3(0.35, 0.0, side[1] * 0.12)
+				pivots["elbow" + side[0]].rotation = Vector3(1.2, 0.0, 0.0)
+		_:
+			for side in [["_l", -1.0, pump], ["_r", 1.0, -pump]]:
+				pivots["shoulder" + side[0]].rotation = Vector3(0.1 + side[2], 0.0, side[1] * 0.1)
+				pivots["elbow" + side[0]].rotation = Vector3(0.3 + 0.9 * run, 0.0, 0.0)
 
 
 ## A basis whose +Y runs along `axis`.

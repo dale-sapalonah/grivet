@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="Mission" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://mission/mission.gd" id="1_mission"]
+[ext_resource type="Script" path="res://mission/mission_objective.gd" id="2_objective"]
+
+[sub_resource type="Resource" id="Yard"]
+script = ExtResource("2_objective")
+kind = 0
+text = "Clear the container yard"
+stage = 0
+radio = PackedStringArray("DISPATCH: Unit Seven, armed men at the wharf. Clear the yard.", "KORI: Ready, boss. Stay low.")
+
+[sub_resource type="Resource" id="Cache"]
+script = ExtResource("2_objective")
+kind = 1
+text = "Search the middle container for the guns"
+point = Vector3(10, 0, 2.6)
+radius = 2.2
+seconds = 4.0
+radio = PackedStringArray("DISPATCH: The tip-off says the middle container. Find those guns.", "KORI: I'll watch the gate. Go.")
+
+[sub_resource type="Resource" id="TaxiRank"]
+script = ExtResource("2_objective")
+kind = 0
+text = "Push through the gate to the taxi rank"
+stage = 1
+point = Vector3(52, 0, 0)
+radio = PackedStringArray("DISPATCH: Guns found. Their crew is moving them out through the taxi rank. Stop them.", "KORI: They're running for the gate! Go!")
+
+[sub_resource type="Resource" id="Market"]
+script = ExtResource("2_objective")
+kind = 0
+text = "Break the gang at the buai market"
+stage = 2
+point = Vector3(80, 0, 0)
+radio = PackedStringArray("DISPATCH: The boss and his machete men are across the road at the market.", "KORI: Watch the machetes. Keep your distance.")
+
+[sub_resource type="Resource" id="Extract"]
+script = ExtResource("2_objective")
+kind = 3
+text = "Get back to the truck"
+stage = 3
+point = Vector3(6, 0, 28.6)
+radius = 4.0
+radio = PackedStringArray("DISPATCH: Unit Seven, every gang in the port is coming for you. Get out of there!", "KORI: Run, boss! Back to the truck!")
+
+[resource]
+script = ExtResource("1_mission")
+title = "OPERATION CLEAN WHARF"
+subtitle = "Stolen guns at the container terminal"
+level = "res://levels/port/port_yard.tscn"
+truck_from = Vector3(-26, 0, 28.6)
+truck_at = Vector3(6, 0, 28.6)
+truck_yaw_degrees = -90.0
+camera_from = Vector3(-22, 24, 4)
+camera_to = Vector3(13, 2.6, 22)
+outro_camera = Vector3(14, 7, 16)
+intro_seconds = 13.0
+briefing = PackedStringArray("DISPATCH: Unit Seven, a gang is moving stolen guns through the container terminal.", "DISPATCH: Clear the yard, find the guns, stop the crew. Backup is thin tonight.", "KORI: All right, boss. Let's go.")
+player_start = Vector3(6, 0, 26.2)
+player_yaw_degrees = 0.0
+objectives = Array[ExtResource("2_objective")]([SubResource("Yard"), SubResource("Cache"), SubResource("TaxiRank"), SubResource("Market"), SubResource("Extract")])
+complete_title = "MISSION COMPLETE"
+complete_subtitle = "The guns are off the street."
