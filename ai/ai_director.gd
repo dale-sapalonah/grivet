@@ -13,7 +13,7 @@ signal civilian_hurt(civilian: Node, info: Dictionary)
 const SETTINGS := preload("res://data/ai/ai_settings.tres")
 const SOLDIER_SCENE := "res://ai/soldier.tscn"
 const PROFILES := {"rifleman": "res://data/ai/rifleman.tres", "rusher": "res://data/ai/rusher.tres",
-		"machete": "res://data/ai/machete.tres"}
+		"machete": "res://data/ai/machete.tres", "leader": "res://data/ai/leader.tres"}
 const GRENADE := "res://data/grenades/frag.tres"
 
 var settings: AiSettings = SETTINGS

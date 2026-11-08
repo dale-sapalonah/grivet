@@ -727,6 +727,7 @@ func _throw_grenade() -> void:
 	var velocity := ThrowMath.launch_velocity(hand, last_known + error, Ballistics.settings.gravity,
 			definition.max_throw_speed, definition.arc_angle_min, definition.arc_angle_max)
 	Grenade.throw(definition, get_parent(), hand, velocity, self)
+	mannequin.act("toss")
 
 
 func _at_cover() -> bool:
@@ -755,8 +756,11 @@ func _update_weapon(delta: float, target: Player) -> void:
 	_trigger_toggle = not _trigger_toggle
 	_controls.trigger = want_fire and _burst_left > 0 and (auto or _trigger_toggle)
 	_controls.sprinting = false
+	var was_reloading := weapon.state == WeaponModel.State.RELOADING
 	var shots := weapon.update(_controls, delta)
 	_controls.reload_pressed = false
+	if not was_reloading and weapon.state == WeaponModel.State.RELOADING:
+		mannequin.act("reload")
 	for i in shots:
 		_shoot(aim_at, target)
 		_burst_left -= 1
@@ -844,6 +848,7 @@ func _shoot(aim_at: Vector3, target: Player) -> void:
 	_muzzle_flash.flash()
 	_eject_casing()
 	mannequin.flinch(-global_basis.z, 0.6)
+	mannequin.act("fire")
 
 
 ## Spent case out of the right side of the receiver; pump guns kick theirs
@@ -998,6 +1003,7 @@ func _pose(delta: float, target: Player) -> void:
 		pitch = atan2(look_at_point.y - from.y, flat)
 	_aim_pitch = rotate_toward(_aim_pitch, pitch, deg_to_rad(profile.aim_turn_degrees_per_second) * delta)
 	var aiming := _fire_mode != 0 or target_visible or brain.action in [SoldierBrain.Action.ENGAGE, SoldierBrain.Action.SUPPRESS]
+	mannequin.move_velocity = velocity
 	mannequin.pose(delta, _crouch, _aim_pitch, Vector2(velocity.x, velocity.z).length(), aiming, _hunker)
 
 
@@ -1020,6 +1026,7 @@ func _on_damaged(info: Dictionary) -> void:
 		_cry_out("groan" if hurt else ("wince" if _rng.randf() < 0.4 else "grunt"))
 	var direction: Vector3 = info.get("direction", Vector3.ZERO)
 	mannequin.flinch(direction, 3.0)
+	mannequin.act("hit")
 	suppression = minf(1.0, suppression + _settings.hit_suppression)
 	_alert()
 	_take_fire()

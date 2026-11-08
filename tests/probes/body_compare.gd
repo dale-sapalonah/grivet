@@ -5,7 +5,7 @@ extends Node3D
 ##
 ##   $GODOT --path . res://tests/probes/body_compare.tscn -- out=<dir>
 
-const PROFILES := [preload("res://data/ai/rifleman.tres"), preload("res://data/ai/rusher.tres"), preload("res://data/ai/machete.tres"), preload("res://data/ai/squadmate.tres")]
+const PROFILES := [preload("res://data/ai/rifleman.tres"), preload("res://data/ai/rusher.tres"), preload("res://data/ai/machete.tres"), preload("res://data/ai/squadmate.tres"), preload("res://data/ai/leader.tres")]
 
 var out := "user://"
 
@@ -41,7 +41,7 @@ func _ready() -> void:
 			var body := Mannequin.new()
 			add_child(body)
 			body.build(profile, 1)
-			body.position = Vector3(-1.65 + i * 1.1, 0, 0)
+			body.position = Vector3(-2.2 + i * 1.1, 0, 0)
 			body.rotation_degrees.y = 180.0  # face the camera (+Z)
 			for k in 3:
 				body.pose(0.1, 0.0, 0.0, 0.0, true)

@@ -13,7 +13,7 @@ radio = PackedStringArray("DISPATCH: Raskols are holding people at the PMV stop.
 detained = PackedVector3Array(-6, 90, 55, -4.5, 90, 55.6, -3, 90, 55, -7.5, 90, 56.2, -1.5, 90, 55.8)
 shields = PackedVector3Array(14, -90, 50, 24, -90, 38)
 panicked = PackedVector3Array(6, 0, 38, 16, 0, 44, -8, 0, 40, 28, 0, 52, 2, 0, 56, 20, 0, 30)
-captor_kind = "rifleman"
+captor_kind = "leader"
 
 [sub_resource type="Resource" id="MarketFloor"]
 script = ExtResource("2_objective")
@@ -25,7 +25,7 @@ radio = PackedStringArray("DISPATCH: More hostages inside the hall. The vendors 
 detained = PackedVector3Array(-2, 180, -8, 0, 180, -8.6, 2, 180, -8, 4, 180, -8.5, 6, 180, -8)
 shields = PackedVector3Array(12, 180, 2, -6, 180, -14)
 panicked = PackedVector3Array(4, 0, 10, 18, 0, -2, -8, 0, -18, 24, 0, -16, 10, 0, -20, -2, 0, 6)
-captor_kind = "rifleman"
+captor_kind = "leader"
 
 [resource]
 script = ExtResource("1_mission")

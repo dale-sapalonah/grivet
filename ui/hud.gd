@@ -279,11 +279,13 @@ func _draw_mission(runner: MissionRunner, center: Vector2) -> void:
 		draw_string(_heavy, line + Vector2(0, 26), safe, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(0.55, 0.9, 1.0, 0.95))
 	var point := runner.waypoint()
 	var camera := get_viewport().get_camera_3d()
-	if point != Vector3.INF and camera != null and _player != null:
+	var area := Rect2(Vector2.ZERO, size).grow(-waypoint_margin)
+	# No drawable area (a headless run's zero-size viewport): no waypoint.
+	if point != Vector3.INF and camera != null and _player != null and area.size.x > 1.0 and area.size.y > 1.0:
 		var at := point + Vector3.UP * 1.6
-		var screen := camera.unproject_position(at)
 		var behind := camera.is_position_behind(at)
-		var area := Rect2(Vector2.ZERO, size).grow(-waypoint_margin)
+		var depth := (camera.global_transform.affine_inverse() * at).z
+		var screen := camera.unproject_position(at) if absf(depth) > 0.001 else center
 		if behind or not area.has_point(screen):
 			# Off screen: pin it to the edge on the side it lies.
 			var direction := (screen - center) * (-1.0 if behind else 1.0)
@@ -328,6 +330,9 @@ func _draw_allies() -> void:
 		if camera.is_position_behind(at):
 			continue
 		var screen := camera.unproject_position(at)
+		# Right beside the camera's plane the projection blows up (a broken triangle).
+		if not screen.is_finite() or not Rect2(Vector2.ZERO, size).grow(size.x).has_point(screen):
+			continue
 		var color := ally_down_color if mate.downed else ally_color
 		var s := ally_marker_size
 		draw_colored_polygon(PackedVector2Array([screen + Vector2(-s, -s), screen + Vector2(s, -s), screen + Vector2(0, s * 0.4)]), color)

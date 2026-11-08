@@ -85,6 +85,8 @@ static func from_mannequin(mannequin: Mannequin, parent: Node, velocity: Vector3
 	gun_body.add_child(gun_shape)
 	mannequin.gun.reparent(gun_body)
 	gun_body.linear_velocity = velocity
+	if mannequin.skin != null:
+		mannequin.skin.follow(ragdoll)  # the rigged character falls with the bodies
 	return ragdoll
 
 

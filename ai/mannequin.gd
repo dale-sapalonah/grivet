@@ -56,6 +56,11 @@ var unarmed := false
 ## the head), "panic" (hands to the head, running), "held" (a hostage in a
 ## captor's grip), "down".
 var arms_pose := "down"
+## The rigged character worn over this body (EnemyProfile.skinned_model), or null.
+var skin: SkinnedRig
+## The body's velocity (world, m/s): picks the walk / run / strafe clips of an
+## animated skin.
+var move_velocity := Vector3.ZERO
 var swing := -1.0
 var swing_windup := 0.3
 var muzzle: Node3D
@@ -273,6 +278,36 @@ func build(profile: EnemyProfile, variant: int = 0) -> void:
 		_bake_machete(parts.lower_arm_r)
 	elif not unarmed:
 		muzzle.position = Vector3(0, 0.015, _bake_gun(profile))
+	if profile.skinned_model != null:
+		_wear(profile.skinned_model)
+
+
+## Wears a rigged character: the body's own part meshes hide (the parts stay
+## for hit shapes and the ragdoll; the gun stays seen) and SkinnedRig fits the
+## skeleton to the pivots, which are still in their neutral pose here.
+func _wear(model: PackedScene) -> void:
+	for part: Node3D in parts.values():
+		for child in part.get_children():
+			if child is MeshInstance3D:
+				(child as MeshInstance3D).visible = false
+	skin = SkinnedRig.new()
+	add_child(skin)
+	skin.setup(model, pivots)
+	if animated():
+		skin.hold_gun(_grip, global_basis)
+	else:
+		skin.update()
+
+
+## True when the worn skin plays its own clips (the pivots follow it).
+func animated() -> bool:
+	return skin != null and skin.tree != null and not melee and not unarmed
+
+
+## An upper-body action on an animated skin: "fire", "reload", "toss", "hit".
+func act(action: String) -> void:
+	if animated():
+		skin.act(action)
 
 
 ## A bush knife held in a hand at the end of `forearm` (its part frame: the
@@ -339,11 +374,23 @@ func _bake_gun(profile: EnemyProfile) -> float:
 ## aiming = weapon up (else low ready). hunker 0..1 folds a crouch into a
 ## hunched kneel (head ~1 m up) for hiding behind waist-high cover.
 func pose(delta: float, crouch: float, aim_pitch: float, speed: float, aiming: bool, hunker: float = 0.0) -> void:
+	_pose_body(delta, crouch, aim_pitch, speed, aiming, hunker)
+	if animated():
+		var local := global_basis.inverse() * move_velocity
+		var bend := Vector2(aim_pitch * (1.0 - hunker) - deg_to_rad(40.0) * hunker + _flinch.x, _flinch.y)
+		skin.animate(delta, Vector2(local.x, -local.z), maxf(crouch, hunker), bend, gun)
+	elif skin != null:
+		skin.update()
+
+
+func _pose_body(delta: float, crouch: float, aim_pitch: float, speed: float, aiming: bool, hunker: float = 0.0) -> void:
 	pivots.hips.position.y = lerpf(lerpf(HIP_HEIGHT, CROUCH_HIP_HEIGHT, crouch), HUNKER_HIP_HEIGHT, hunker)
 	aim_pitch *= 1.0 - hunker
 	_walk_phase = fmod(_walk_phase + speed * delta / STRIDE * PI, TAU)
 	var swing := deg_to_rad(28.0) * clampf(speed / 3.0, 0.0, 1.0)
-	for side in [["_l", 0.0], ["_r", PI]]:
+	# An animated skin takes only crouched legs and the flinch from here.
+	var clips := animated()
+	for side in ([] if clips and crouch <= 0.001 and hunker <= 0.001 else [["_l", 0.0], ["_r", PI]]):
 		var phase: float = _walk_phase + side[1]
 		var thigh := lerpf(lerpf(0.0, deg_to_rad(75.0), crouch), deg_to_rad(90.0), hunker) + sin(phase) * swing
 		var knee := lerpf(lerpf(0.0, deg_to_rad(-115.0), crouch), deg_to_rad(-145.0), hunker) \
@@ -361,6 +408,8 @@ func pose(delta: float, crouch: float, aim_pitch: float, speed: float, aiming: b
 	pivots.spine.rotation = Vector3(aim_pitch * 0.5 - lean - deg_to_rad(40.0) * hunker + _flinch.x, 0.0, _flinch.y)
 	pivots.neck.rotation.x = aim_pitch * 0.5 - deg_to_rad(15.0) * hunker
 
+	if clips:
+		return
 	if melee:
 		_pose_blade(speed)
 		return
@@ -556,6 +605,8 @@ func cast_shadows(on: bool) -> void:
 	if on == _shadows_on:
 		return
 	_shadows_on = on
+	if skin != null:
+		skin.cast_shadows(on)
 	for instance: MeshInstance3D in _instances:
 		instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if on else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 

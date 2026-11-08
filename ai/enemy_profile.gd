@@ -40,6 +40,9 @@ enum Outfit {
 ## Mannequin part, vertex colours carrying material classes that are painted
 ## from this profile. Unset: the body is built in code.
 @export var body_model: PackedScene
+## A rigged humanoid (Mixamo bone names, tools/blender/prepare_mixamo.py) worn
+## over the body instead of its own meshes: SkinnedRig follows the poses.
+@export var skinned_model: PackedScene
 
 @export_group("Movement (m/s)")
 @export var walk_speed := 2.0

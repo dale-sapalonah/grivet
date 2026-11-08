@@ -1,10 +1,11 @@
-[gd_resource type="Resource" script_class="EnemyProfile" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="EnemyProfile" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://ai/enemy_profile.gd" id="1"]
 [ext_resource type="Resource" path="res://data/weapons/hammerhead.tres" id="2_weapon"]
 [ext_resource type="Resource" path="res://data/damage/rusher.tres" id="3_health"]
 [ext_resource type="PackedScene" path="res://assets/models/soldier_military.glb" id="4_body"]
 
+[ext_resource type="PackedScene" path="res://assets/models/enemy_ch15.glb" id="5_skin"]
 [resource]
 script = ExtResource("1")
 display_name = "Rusher"
@@ -61,3 +62,4 @@ grenade_range_max = 30.0
 cover_search_radius = 22.0
 death_push_speed = 1.5
 body_model = ExtResource("4_body")
+skinned_model = ExtResource("5_skin")
