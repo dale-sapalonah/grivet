@@ -41,6 +41,9 @@ var _player: Player
 var _holder: WeaponHolder
 var _last_hit_soldier := 0
 var _last_hit_time := -INF
+var _server_pid := -1  # a server this game started (the menu's PHONE CONTROLLER page)
+
+const SERVER_DIR := "res://tools/phonepad"
 
 
 func _ready() -> void:
@@ -58,6 +61,38 @@ func _ready() -> void:
 
 func is_connected_to_server() -> bool:
 	return _socket != null and _socket.get_ready_state() == WebSocketPeer.STATE_OPEN
+
+
+## The server's localhost-only list of controller URLs with QR modules.
+func links_url() -> String:
+	return _url.replace("ws://", "http://").get_slice("/ws", 0) + "/api/controller-links"
+
+
+## Starts the PhonePad server (hidden, stopped when Grivet quits) unless one is
+## already up. Returns "" or what is wrong, for the menu to show. Turns the
+## phone controller setting on. Needs Node.js and the packages that
+## `Play Grivet with Phone.bat` installs on its first run.
+func start_server() -> String:
+	if not enabled:
+		Settings.set_value("phone_pad", true)
+	if is_connected_to_server() or (_server_pid > 0 and OS.is_process_running(_server_pid)):
+		return ""
+	var folder := ProjectSettings.globalize_path(SERVER_DIR)
+	if not DirAccess.dir_exists_absolute(folder.path_join("node_modules")):
+		return "PHONEPAD ISN'T INSTALLED YET: RUN Play Grivet with Phone.bat ONCE"
+	# A server launched by the .bat but not yet connected to exits at once (port in use).
+	_server_pid = OS.create_process("node", [folder.path_join("server.js")])
+	if _server_pid <= 0:
+		_server_pid = -1
+		return "NODE.JS NOT FOUND: INSTALL NODE 18 OR NEWER (nodejs.org)"
+	print("PhonePad: started the server (pid %d)" % _server_pid)
+	_retry_left = minf(_retry_left, 0.5)  # connect as soon as it is up
+	return ""
+
+
+func _exit_tree() -> void:
+	if _server_pid > 0 and OS.is_process_running(_server_pid):
+		OS.kill(_server_pid)  # only the server this game started
 
 
 ## Vibrates the phone (pattern in ms: on, off, on...). Quietly does nothing without one.

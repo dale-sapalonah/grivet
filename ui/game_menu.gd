@@ -49,6 +49,7 @@ const HORIZON := 0.7
 var _heavy: SystemFont
 var _script: SystemFont
 var _pages: Dictionary = {}  # name -> Control
+var _phone_panel: PhoneConnectPanel  # the PHONE page: QR codes to connect the phone
 
 
 func _ready() -> void:
@@ -215,6 +216,7 @@ func _build_pages() -> void:
 	else:
 		main.add_child(GrivetStyle.label("PAUSED", _heavy, 120, GrivetStyle.WHITE, 18))
 		main.add_child(_item("RESUME", _resume))
+	main.add_child(_item("PHONE", func() -> void: _show("phone")))
 	main.add_child(_item("SETTINGS", func() -> void: _show("settings")))
 	if mode == Mode.PAUSE:
 		main.add_child(_item("MAIN MENU", _to_title))
@@ -243,6 +245,11 @@ func _build_pages() -> void:
 			page.add_child(_item("%d. %s" % [i + 1, stage.title], func() -> void: _start(i, scene), stage.subtitle))
 		page.add_child(_item("BACK", func() -> void: _show("stages")))
 	stages.add_child(_item("BACK", func() -> void: _show("main")))
+
+	var phone := _page("phone", true)
+	_phone_panel = PhoneConnectPanel.new(_heavy)
+	phone.add_child(_phone_panel)
+	phone.add_child(_item("BACK", func() -> void: _show("main")))
 
 	var settings := _page("settings", true)
 	settings.add_child(GrivetStyle.label("SETTINGS", _heavy, 90, GrivetStyle.WHITE, 14))
@@ -314,6 +321,11 @@ func _page(page_name: String, backed: bool) -> Control:
 func _show(page_name: String) -> void:
 	for key: String in _pages:
 		_pages[key].visible = key == page_name
+	if _phone_panel != null:
+		if page_name == "phone":
+			_phone_panel.open()
+		else:
+			_phone_panel.close()
 
 
 ## A menu line: outlined capitals that turn orange under the mouse, with an

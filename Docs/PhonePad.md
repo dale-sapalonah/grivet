@@ -7,6 +7,16 @@ walks forward-right.
 
 ## Launch
 
+**From the game menu (any launcher):** pick **PHONE** on the title screen or
+the pause menu. Grivet starts the PhonePad server itself if it isn't running
+(hidden, stopped when Grivet quits) and shows a QR code per network, USB
+tether first. Scan it with the phone camera, accept the certificate warning
+once, tap **FPS**. The page turns green (PHONE CONNECTED) when the phone is
+in; go BACK and play. Picking PHONE also turns the PHONE CONTROLLER setting on.
+The packages must be installed once (step 2 below does it), and Node.js 18+.
+
+**With the launcher:**
+
 1. Plug the phone in and turn on USB tethering (or put both on the same Wi-Fi).
 2. Run `Play Grivet with Phone.bat`. The first run installs PhonePad's locked
    packages (`npm ci --ignore-scripts`: ws 8.23.0, selfsigned 5.5.0,
@@ -129,6 +139,9 @@ Decoding, the stale-packet check, latching and the timeout live in
 ## Testing
 
 - Unit tests: the normal headless test run.
+- Menu (windowed): `$GODOT --path . res://tests/probes/phone_menu.tscn [-- shot=<abs path>.png]`
+  boots the title, picks PHONE, checks the game starts the server, shows QR
+  codes, connects, and says PHONE CONNECTED when the sim phone joins.
 - End to end (windowed, needs Node and the installed packages):
   `$GODOT --path . res://tests/probes/phone_pad.tscn`. It starts the server and
   `tools/phonepad/sim/phone_sim.js`, a simulated phone over WSS
