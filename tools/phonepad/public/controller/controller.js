@@ -27,7 +27,8 @@
   const TOUCH_DEG_PER_PX = 0.22; // right-thumb drag, degrees per CSS px
   const GYRO_DEADBAND = 0.8;     // deg/s: below this the gyro is sensor noise, faded in up to 2x
   const GYRO_YAW_SIGN = 1;       // see fpsMotion: flips the gyro's left/right turn
-  const BUILD = 5;               // shown on the start screen: proves the phone loaded this version
+  const PITCH_BAND = 0.25;       // degrees of phone tilt ignored as jitter before up/down moves
+  const BUILD = 6;              // shown on the start screen: proves the phone loaded this version
   const SPRINT_ON = 0.93, SPRINT_OFF = 0.8; // stick magnitude, with hysteresis
   const LEAN_ON = 18, LEAN_OFF = 10;        // degrees of steering-wheel roll, with hysteresis
   const FB = {
@@ -313,6 +314,7 @@
     centre = grav.slice();
     state.tiltX = state.tiltY = 0;
     fps.lean = 0;
+    aimPitch = null; // new grip: up/down follows from here, no jump
   }
   const root = document.documentElement;
 
@@ -338,27 +340,52 @@
     if (type) fireGesture(type, now);
   }
 
-  // FPS gyro aim, "player space": yaw is the turn about world-up (from gravity), so it
-  // works held upright or flat; pitch is the turn about the screen's right edge. Rates
-  // are integrated here at sensor rate, so look never depends on the packet rate.
+  // FPS motion aim. Left/right: the gyro's turn rate about world-up (from gravity), so
+  // it works held upright or flat, integrated here at sensor rate. Up/down: the change
+  // in the phone's angle against gravity, not the gyro rate. Gravity is a fixed
+  // reference, so pitch never drifts (gyro bias made the view creep down) and putting
+  // the phone back at an angle puts the view back where it was (slow tilts used to
+  // vanish under the gyro deadband, so tilting back didn't undo tilting forward).
   let lastMotionT = 0;
+  let aimPitch = null;   // phone angle the view's pitch is following, degrees
+
+  // The phone's forward/back tilt against gravity in degrees (0 flat, 90 upright),
+  // unaffected by steering-wheel roll; null when stood on a side edge.
+  function phonePitch(g) {
+    const { R, U } = axes();
+    const r = dot(g, R), u = dot(g, U), z = g[2];
+    const pz = Math.hypot(u, z);
+    return pz > 0.35 * Math.hypot(r, pz) ? Math.atan2(u, z) * DEG : null;
+  }
   function fpsMotion(e) {
     const t = e.timeStamp || performance.now();
     const dt = lastMotionT ? Math.min(0.05, Math.max(0, (t - lastMotionT) / 1000)) : 0;
     lastMotionT = t;
+    if (!fps.gyro) { aimPitch = null; }
     const rr = e.rotationRate;
     if (fps.gyro && rr && rr.alpha != null && grav && dt > 0) {
       const w = [rr.beta || 0, rr.gamma || 0, rr.alpha || 0]; // deg/s about device X, Y, Z
       const gl = Math.hypot(grav[0], grav[1], grav[2]) || 1;
       const yaw = dot(w, grav) / gl;            // + = counter-clockwise from above = turn left
-      const pitch = dot(w, axes().R);           // + = top edge toward you / nose up = look up
-      const mag = Math.hypot(yaw, pitch);
-      const fade = Math.max(0, Math.min(1, (mag - GYRO_DEADBAND) / GYRO_DEADBAND));
+      const fade = Math.max(0, Math.min(1, (Math.abs(yaw) - GYRO_DEADBAND) / GYRO_DEADBAND));
       // Mouse convention: +x turns right. On the Redmi Note 14 (Chrome, HyperOS) the
       // yaw rate comes out the other way round from the maths above (steering the
       // phone left turned right), so GYRO_YAW_SIGN corrects it.
       look.x += GYRO_YAW_SIGN * yaw * fade * dt;
-      look.y -= pitch * fade * dt;              // mouse convention: +y looks down
+    }
+    const pitch = fps.gyro && grav ? phonePitch(grav) : null; // null on its side edge: hold still
+    if (pitch !== null) {
+      if (aimPitch === null) aimPitch = pitch;
+      // Follow the phone's angle, but only once it leaves a small band: sensor jitter
+      // never shakes the view, and every real tilt still comes back exactly.
+      const diff = wrap(pitch - aimPitch);
+      if (Math.abs(diff) > PITCH_BAND) {
+        const step = diff - Math.sign(diff) * PITCH_BAND;
+        aimPitch = wrap(aimPitch + step);
+        // Pitch here: 0 flat, 90 upright. Top edge toward you lowers it = look up,
+        // which is -y in mouse convention: so the change goes straight into look.y.
+        look.y += step;
+      }
     }
     if (fps.leanTilt && grav) {
       if (!centre) recenter();

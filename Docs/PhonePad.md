@@ -61,8 +61,11 @@ Notes:
 | Gyro toggle | gyro aim on or off |
 | Recenter | zero the lean tilt for the current grip |
 
-Gyro aim works held upright or flat: yaw is the turn about world-up (from
-gravity), pitch the turn about the screen's right edge. Sensitivity follows
+Motion aim works held upright or flat. Left/right is the gyro's turn about
+world-up (from gravity). Up/down follows the phone's angle against gravity:
+top edge toward you looks up, away looks down, and putting the phone back
+at an angle puts the view back (no gyro drift; tilts under 0.25 degrees are
+ignored as jitter). Recenter (or a change of grip) starts it afresh. Sensitivity follows
 Grivet's MOUSE SENSITIVITY, ADS multiplier and INVERT MOUSE Y. The base scale is
 `look_pixels_per_degree` in `data/input/phone_pad_tuning.tres` (16: one degree
 of phone turn is two degrees of view at default sensitivity).
