@@ -357,7 +357,9 @@
     }
     if (fps.leanTilt && grav) {
       if (!centre) recenter();
-      const roll = -(angles(grav).roll - angles(centre).roll); // right edge down = lean right
+      // + = lean right. Sign checked on the Redmi Note 14: the pad-mode tilt sign
+      // (-(roll - zero)) leaned the wrong way, so this one is flipped.
+      const roll = angles(grav).roll - angles(centre).roll;
       const held = fps.lean === FB.LEAN_R ? roll > LEAN_OFF : fps.lean === FB.LEAN_L ? roll < -LEAN_OFF : false;
       const lean = held ? fps.lean : roll > LEAN_ON ? FB.LEAN_R : roll < -LEAN_ON ? FB.LEAN_L : 0;
       if (lean !== fps.lean) { fps.lean = lean; if (lean) { fps.latch |= lean; navigator.vibrate?.(10); } }
