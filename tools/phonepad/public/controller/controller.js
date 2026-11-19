@@ -26,6 +26,8 @@
   const LOOK_UNIT = 100;         // packet look units per degree (i16: +-327 degrees per packet)
   const TOUCH_DEG_PER_PX = 0.22; // right-thumb drag, degrees per CSS px
   const GYRO_DEADBAND = 0.8;     // deg/s: below this the gyro is sensor noise, faded in up to 2x
+  const GYRO_YAW_SIGN = 1;       // see fpsMotion: flips the gyro's left/right turn
+  const BUILD = 5;               // shown on the start screen: proves the phone loaded this version
   const SPRINT_ON = 0.93, SPRINT_OFF = 0.8; // stick magnitude, with hysteresis
   const LEAN_ON = 18, LEAN_OFF = 10;        // degrees of steering-wheel roll, with hysteresis
   const FB = {
@@ -352,14 +354,16 @@
       const pitch = dot(w, axes().R);           // + = top edge toward you / nose up = look up
       const mag = Math.hypot(yaw, pitch);
       const fade = Math.max(0, Math.min(1, (mag - GYRO_DEADBAND) / GYRO_DEADBAND));
-      look.x -= yaw * fade * dt;                // mouse convention: +x turns right
+      // Mouse convention: +x turns right. On the Redmi Note 14 (Chrome, HyperOS) the
+      // yaw rate comes out the other way round from the maths above (steering the
+      // phone left turned right), so GYRO_YAW_SIGN corrects it.
+      look.x += GYRO_YAW_SIGN * yaw * fade * dt;
       look.y -= pitch * fade * dt;              // mouse convention: +y looks down
     }
     if (fps.leanTilt && grav) {
       if (!centre) recenter();
-      // + = lean right. Sign checked on the Redmi Note 14: the pad-mode tilt sign
-      // (-(roll - zero)) leaned the wrong way, so this one is flipped.
-      const roll = angles(grav).roll - angles(centre).roll;
+      // + = lean right: right edge down, the same sign as the pad mode's tilt.
+      const roll = -(angles(grav).roll - angles(centre).roll);
       const held = fps.lean === FB.LEAN_R ? roll > LEAN_OFF : fps.lean === FB.LEAN_L ? roll < -LEAN_OFF : false;
       const lean = held ? fps.lean : roll > LEAN_ON ? FB.LEAN_R : roll < -LEAN_ON ? FB.LEAN_L : 0;
       if (lean !== fps.lean) { fps.lean = lean; if (lean) { fps.latch |= lean; navigator.vibrate?.(10); } }
@@ -541,6 +545,7 @@
   portrait.addEventListener('change', checkRotate);
   document.addEventListener('fullscreenchange', checkRotate);
   applyMode();
+  document.querySelector('.hint').textContent += ` (build ${BUILD})`;
 
   // ------------------------------------------------------------ loops
   // One 120 Hz clock: fps sends every tick, pad and remote every other tick (60 Hz).
