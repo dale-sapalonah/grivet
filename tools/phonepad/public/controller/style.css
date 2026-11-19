@@ -211,10 +211,10 @@ body.fps #fpsPanel {
 .fb.aim { transition: translate .12s ease-out; }
 .fb.aim.held { transition: none; }
 .fb.aim.on { background: #4fd1c5; color: #0b0f14; box-shadow: 0 0 18px #4fd1c588; }
-/* the AIM stick's travel ring: AIM's centre, plus AIM_STICK_RADIUS (34px) each way */
+/* the AIM stick's sideways track: AIM's width plus AIM_STICK_RADIUS (34px) each way */
 .aimBase {
-  position: absolute; width: 152px; height: 152px; right: 128px; bottom: 116px;
-  border-radius: 50%; border: 1px dashed #2a3a4b; pointer-events: none;
+  position: absolute; width: 152px; height: 84px; right: 128px; bottom: 150px;
+  border-radius: 42px; border: 1px dashed #2a3a4b; pointer-events: none;
 }
 .fb.reload.down { background: #ecc94b; }
 .fb.melee.down { background: #b794f4; }
@@ -224,6 +224,6 @@ body.fps #fpsPanel {
 @media (max-height: 360px) {
   .fb.fire { width: 110px; height: 110px; bottom: 80px; }
   .fb.aim { width: 74px; height: 74px; right: 146px; bottom: 128px; }
-  .aimBase { width: 142px; height: 142px; right: 112px; bottom: 94px; }
+  .aimBase { width: 142px; height: 74px; right: 112px; bottom: 128px; border-radius: 37px; }
   .fb.pill { height: 34px; }
 }

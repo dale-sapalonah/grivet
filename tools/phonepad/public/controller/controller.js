@@ -28,10 +28,10 @@
   const GYRO_DEADBAND = 0.8;     // deg/s: below this the gyro is sensor noise, faded in up to 2x
   const GYRO_YAW_SIGN = 1;       // see fpsMotion: flips the gyro's left/right turn
   const AIM_STICK_RADIUS = 34;   // px the AIM button can be pushed off its spot
-  const AIM_STICK_DEADZONE = 0.15;
-  const AIM_STICK_DEG_PER_S = 90; // phone-degrees per second at full push (Grivet doubles it)
+  const AIM_STICK_DEADZONE = 0.25;  // a quarter of the travel does nothing: resting thumbs don't turn
+  const AIM_STICK_DEG_PER_S = 22;   // phone-degrees per second at full push (Grivet doubles it)
   const PITCH_BAND = 0.25;       // degrees of phone tilt ignored as jitter before up/down moves
-  const BUILD = 8;             // shown on the start screen: proves the phone loaded this version
+  const BUILD = 9;             // shown on the start screen: proves the phone loaded this version
   const SPRINT_ON = 0.93, SPRINT_OFF = 0.8; // stick magnitude, with hysteresis
   const LEAN_ON = 18, LEAN_OFF = 10;        // degrees of steering-wheel roll, with hysteresis
   const FB = {
@@ -245,7 +245,7 @@
     for (const t of e.changedTouches) {
       const s = fpsTouches.get(t.identifier);
       if (!s) continue;
-      if (s.aim) { moveAimStick(t.clientX - s.ox, t.clientY - s.oy); continue; }
+      if (s.aim) { moveAimStick(t.clientX - s.ox); continue; }
       if (s.look) {
         look.x += (t.clientX - s.x) * TOUCH_DEG_PER_PX;
         look.y += (t.clientY - s.y) * TOUCH_DEG_PER_PX; // drag down = look down
@@ -253,15 +253,13 @@
       s.x = t.clientX; s.y = t.clientY;
     }
   }
-  function moveAimStick(dx, dy) {
-    const len = Math.hypot(dx, dy);
-    if (len > AIM_STICK_RADIUS) { dx *= AIM_STICK_RADIUS / len; dy *= AIM_STICK_RADIUS / len; }
-    aimEl.style.translate = `${dx}px ${dy}px`;
-    let nx = dx / AIM_STICK_RADIUS, ny = dy / AIM_STICK_RADIUS; // +y = down, as on screen
-    const mag = Math.hypot(nx, ny);
-    if (mag < AIM_STICK_DEADZONE) { nx = ny = 0; }
-    else { const k = (mag - AIM_STICK_DEADZONE) / (1 - AIM_STICK_DEADZONE) / mag; nx *= k; ny *= k; }
-    aimStick.x = nx; aimStick.y = ny;
+  // Sideways only: the button slides left/right, up/down stays with tilting the phone.
+  function moveAimStick(dx) {
+    dx = Math.max(-AIM_STICK_RADIUS, Math.min(AIM_STICK_RADIUS, dx));
+    aimEl.style.translate = `${dx}px 0px`;
+    const n = dx / AIM_STICK_RADIUS, a = Math.abs(n);
+    aimStick.x = a < AIM_STICK_DEADZONE ? 0 : Math.sign(n) * (a - AIM_STICK_DEADZONE) / (1 - AIM_STICK_DEADZONE);
+    aimStick.y = 0;
   }
   function releaseAimStick() {
     aimStick.id = null; aimStick.x = aimStick.y = 0;
@@ -276,18 +274,16 @@
     }
     refreshFps();
   }
-  // The AIM stick turns the view at a rate: squared response for fine aim near the
-  // centre, AIM_STICK_DEG_PER_S at full push. Runs on the send clock, real time.
+  // The AIM stick turns the view sideways at a rate: cubic response, so a slight push
+  // barely creeps and only a full push reaches AIM_STICK_DEG_PER_S. Runs on the send
+  // clock, in real time.
   let lastStickT = 0;
   function stepAimStick() {
     const now = performance.now();
     const dt = lastStickT ? Math.min(0.05, (now - lastStickT) / 1000) : 0;
     lastStickT = now;
-    const mag = Math.hypot(aimStick.x, aimStick.y);
-    if (!mag || !dt) return;
-    const rate = AIM_STICK_DEG_PER_S * mag; // vector already carries one factor of mag
-    look.x += aimStick.x * rate * dt;
-    look.y += aimStick.y * rate * dt;
+    if (!aimStick.x || !dt) return;
+    look.x += AIM_STICK_DEG_PER_S * aimStick.x ** 3 * dt; // odd power keeps the sign
   }
   function refreshFps() {
     let mask = 0, lookTouch = 0;

@@ -49,7 +49,7 @@ Notes:
 | Turning the phone (gyro) | look / aim |
 | Dragging on the right panel, or while holding FIRE | look (big turns) |
 | FIRE | fire; also skips mission cinematics and retries after MISSION FAILED |
-| AIM | aim down sights, as a toggle: a press turns it on and it stays on, the next tap turns it off. While your thumb is on it, AIM is also a small thumbstick: push it off its spot to turn the view (faster the further you push, 90 degrees/s of phone turn at full push), so you can move with the left stick and aim with this one |
+| AIM | aim down sights, as a toggle: a press turns it on and it stays on, the next tap turns it off. While your thumb is on it, AIM is also a small sideways thumbstick: slide it left or right to turn the view that way (slow and cubic: a slight push barely creeps, a full 34 px push turns 44 degrees/s on screen; the first quarter of travel does nothing), so you can move one way and aim the other. Up/down stays with tilting the phone |
 | JUMP | jump / mantle; also skips cinematics |
 | CROUCH, PRONE | crouch, prone |
 | RELOAD, KNIFE | reload, melee (takedowns too) |
