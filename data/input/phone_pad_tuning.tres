@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PhonePadTuning" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/phone_pad_tuning.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+url = "ws://127.0.0.1:8080/ws?role=game"
+reconnect_seconds = 2.0
+timeout_ms = 500
+look_pixels_per_degree = 16.0
+state_interval = 0.25
+fire_pattern = PackedInt32Array(14)
+fire_min_interval = 0.06
+damage_pattern = PackedInt32Array(70)
+heavy_damage_pattern = PackedInt32Array(120, 40, 60)
+heavy_damage = 35.0
+kill_pattern = PackedInt32Array(25, 40, 90)
+death_pattern = PackedInt32Array(300)
+kill_credit_seconds = 1.5

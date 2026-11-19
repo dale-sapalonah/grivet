@@ -46,7 +46,7 @@ Changed: the 60 fps target is on this PC (see above).
 ## Code architecture
 | Folder | Responsibility | Godot pieces |
 |---|---|---|
-| core/ | Settings, save, logging, debug commands (`Debug` autoload) | Autoloads, ConfigFile |
+| core/ | Settings, save, logging, debug commands (`Debug` autoload), PhonePad phone controller (Docs/PhonePad.md) | Autoloads, ConfigFile, WebSocketPeer |
 | player/ | CharacterBody3D controller (slide, mantle, lean), FP camera rig | CharacterBody3D, ShapeCast3D |
 | weapons/ | WeaponDefinition Resources, weapon node, recoil, spread, reload state machine | Resource, Curve |
 | ballistics/ | Pooled bullet sim (drop, travel), penetration by surface | PhysicsDirectSpaceState3D raycasts |

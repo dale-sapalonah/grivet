@@ -24,7 +24,8 @@ const SLIDERS := [["master_volume", "MASTER VOLUME", 0.0, 1.0, 0.05], ["music_vo
 		["sfx_volume", "SOUND EFFECTS VOLUME", 0.0, 1.0, 0.05], ["mouse_sensitivity", "MOUSE SENSITIVITY", 0.25, 3.0, 0.05],
 		["fov", "FIELD OF VIEW", 55.0, 95.0, 1.0], ["render_scale", "RENDER SCALE (SHARPER = SLOWER)", 0.5, 1.0, 0.05]]
 const TOGGLES := [["music_on", "MUSIC"], ["sfx_on", "SOUND EFFECTS"], ["voices_on", "ENEMY VOICES (SHOUTS, CRIES)"], ["invert_y", "INVERT MOUSE Y"],
-		["fullscreen", "FULLSCREEN"], ["show_fps", "SHOW FPS"]]
+		["fullscreen", "FULLSCREEN"], ["show_fps", "SHOW FPS"],
+		["phone_pad", "PHONE CONTROLLER (PHONEPAD)"]]
 ## The side panels: [subject, backdrop, variant, rect (fractions of the
 ## screen: x, y, width, height), tilt degrees]. The gangs, and the police Land Cruiser.
 const PANELS := [[CharacterPanel.Subject.MACHETE_CLOSE, Color(0.8, 0.15, 0.1), 3, Rect2(0.035, 0.05, 0.27, 0.42), -2.5],

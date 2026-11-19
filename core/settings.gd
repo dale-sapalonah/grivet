@@ -27,6 +27,8 @@ const DEFAULTS := {
 	"graphics": 1,
 	"fullscreen": false,
 	"show_fps": true,
+	## PhonePad: a phone as an extra controller (core/phone_pad.gd, tools/phonepad).
+	"phone_pad": true,
 }
 
 var values: Dictionary = DEFAULTS.duplicate()

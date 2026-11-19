@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="icon" href="data:,">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0f14">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>PhonePad</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="start" class="overlay">
+    <div class="start-card">
+      <div class="logo">PhonePad</div>
+      <div class="modes">
+        <button class="modeBtn" data-mode="fps"><b>FPS</b><small>Sideways, two thumbs. Stick to move, gyro and right thumb to aim, big FIRE. For Grivet.</small></button>
+        <button class="modeBtn" data-mode="pad"><b>Gamepad</b><small>Sideways, two hands. Stick and buttons, tilt optional.</small></button>
+        <button class="modeBtn" data-mode="remote"><b>Remote</b><small>Upright, one hand. Tilt to move, swing to attack, flick up to jump.</small></button>
+      </div>
+      <p class="hint">Tap a mode to connect. You can switch later.</p>
+      <p id="startErr" class="err"></p>
+    </div>
+  </div>
+
+  <div id="rotate" class="overlay hidden"><div id="rotateText">Rotate to landscape</div></div>
+
+  <header id="bar">
+    <div id="status"><span class="dot"></span><span id="statusText">Offline</span><span id="ping"></span></div>
+    <div id="hud"><div class="meter"><i id="hpFill"></i></div><div class="meter energy"><i id="enFill"></i></div></div>
+    <div class="tools">
+      <button id="pauseBtn" class="sys" aria-label="Pause"><i class="ico pause"></i><span>Pause</span></button>
+      <button id="endBtn" class="sys" aria-label="End run"><i class="ico stop"></i><span>End</span></button>
+      <button id="recenter">Recenter</button>
+      <label class="toggle padOnly"><input type="checkbox" id="motion"><span>Motion</span></label>
+      <label class="toggle fpsOnly"><input type="checkbox" id="gyro"><span>Gyro</span></label>
+      <label class="toggle fpsOnly"><input type="checkbox" id="lean"><span>Lean</span></label>
+      <button id="modeBtn">Mode</button>
+    </div>
+  </header>
+
+  <main id="pad">
+    <section id="stickZone">
+      <div id="stickBase"><div id="stickKnob"></div></div>
+      <div id="tiltDot" class="hidden"></div>
+      <div id="sprintTag">PUSH TO THE EDGE TO SPRINT</div>
+    </section>
+    <section id="remoteView">
+      <div id="bubble"><i></i></div>
+      <p class="remoteHint">Tilt to move. Swing to attack. Flick the top up to jump.</p>
+      <button id="recenter2">Recenter</button>
+    </section>
+    <div id="gestureFlash"></div>
+    <section id="buttons">
+      <button class="btn y" data-b="8"><b>Y</b><small>Boost</small></button>
+      <button class="btn x" data-b="4"><b>X</b><small>Interact</small></button>
+      <button class="btn b" data-b="2"><b>B</b><small>Attack</small></button>
+      <button class="btn a" data-b="1"><b>A</b><small>Jump</small></button>
+    </section>
+    <!-- FPS mode: the panel itself is the look pad; FIRE and AIM also turn while held. -->
+    <section id="fpsPanel">
+      <div class="lookHint">DRAG TO TURN</div>
+      <div class="fbRow">
+        <button class="fb pill" data-fb="PREV">&#9664; WPN</button>
+        <button class="fb pill" data-fb="NEXT">WPN &#9654;</button>
+        <button class="fb pill" data-fb="GRENADE">FRAG</button>
+        <button class="fb pill" data-fb="FLASH">FLASH</button>
+        <button class="fb pill" data-fb="PLATE">PLATE</button>
+        <button class="fb pill" data-fb="PRONE">PRONE</button>
+      </div>
+      <button class="fb round fire" data-fb="FIRE" data-look="1">FIRE</button>
+      <button class="fb round aim" data-fb="AIM" data-look="1">AIM</button>
+      <button class="fb round reload" data-fb="RELOAD">RELOAD</button>
+      <button class="fb round melee" data-fb="MELEE">KNIFE</button>
+      <button class="fb round crouch" data-fb="CROUCH">CROUCH</button>
+      <button class="fb round jump" data-fb="JUMP">JUMP</button>
+    </section>
+  </main>
+
+  <script src="controller.js"></script>
+</body>
+</html>

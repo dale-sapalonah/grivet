@@ -109,7 +109,9 @@ func search_fraction() -> float:
 func _input(event: InputEvent) -> void:
 	if not cinematic or not event.is_pressed() or event.is_echo():
 		return
-	if event is InputEventKey or event is InputEventMouseButton:
+	# ui_accept as an InputEventAction: the phone's FIRE / JUMP (PhonePad).
+	var phone_accept := event is InputEventAction and (event as InputEventAction).action == &"ui_accept"
+	if event is InputEventKey or event is InputEventMouseButton or phone_accept:
 		if (event as InputEventKey) != null and (event as InputEventKey).keycode == KEY_ESCAPE:
 			return  # Esc is the pause menu's
 		_skip = true

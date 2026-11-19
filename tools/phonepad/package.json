@@ -1,0 +1,19 @@
+{
+  "name": "phonepad-grivet",
+  "version": "1.0.0",
+  "description": "PhonePad: a smartphone controller for Grivet over WSS (Wi-Fi or USB tethering)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "qrcode-terminal": "0.12.0",
+    "selfsigned": "5.5.0",
+    "ws": "8.23.0"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}

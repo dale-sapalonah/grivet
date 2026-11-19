@@ -1,0 +1,12 @@
+# Installed from package-lock.json with npm ci
+node_modules/
+
+# Generated at runtime: self-signed cert and its private key. Never commit.
+certs/
+
+# OS and editor noise
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+*.log
