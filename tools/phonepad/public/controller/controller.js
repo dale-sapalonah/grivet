@@ -28,7 +28,7 @@
   const GYRO_DEADBAND = 0.8;     // deg/s: below this the gyro is sensor noise, faded in up to 2x
   const GYRO_YAW_SIGN = 1;       // see fpsMotion: flips the gyro's left/right turn
   const PITCH_BAND = 0.25;       // degrees of phone tilt ignored as jitter before up/down moves
-  const BUILD = 6;              // shown on the start screen: proves the phone loaded this version
+  const BUILD = 7;             // shown on the start screen: proves the phone loaded this version
   const SPRINT_ON = 0.93, SPRINT_OFF = 0.8; // stick magnitude, with hysteresis
   const LEAN_ON = 18, LEAN_OFF = 10;        // degrees of steering-wheel roll, with hysteresis
   const FB = {
@@ -382,9 +382,9 @@
       if (Math.abs(diff) > PITCH_BAND) {
         const step = diff - Math.sign(diff) * PITCH_BAND;
         aimPitch = wrap(aimPitch + step);
-        // Pitch here: 0 flat, 90 upright. Top edge toward you lowers it = look up,
-        // which is -y in mouse convention: so the change goes straight into look.y.
-        look.y += step;
+        // Mouse convention: -y looks up. Checked on the Redmi Note 14: adding the
+        // angle change straight in looked the wrong way, so it is subtracted.
+        look.y -= step;
       }
     }
     if (fps.leanTilt && grav) {
