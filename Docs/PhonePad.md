@@ -47,9 +47,9 @@ Notes:
 | Left stick (appears where the thumb lands) | move, analog |
 | Stick pushed to the edge | sprint |
 | Turning the phone (gyro) | look / aim |
-| Dragging on the right panel, or while holding FIRE / AIM | look (big turns) |
+| Dragging on the right panel, or while holding FIRE | look (big turns) |
 | FIRE | fire; also skips mission cinematics and retries after MISSION FAILED |
-| AIM | aim down sights (hold) |
+| AIM | aim down sights, as a toggle: a press turns it on and it stays on, the next tap turns it off. While your thumb is on it, AIM is also a small thumbstick: push it off its spot to turn the view (faster the further you push, 90 degrees/s of phone turn at full push), so you can move with the left stick and aim with this one |
 | JUMP | jump / mantle; also skips cinematics |
 | CROUCH, PRONE | crouch, prone |
 | RELOAD, KNIFE | reload, melee (takedowns too) |

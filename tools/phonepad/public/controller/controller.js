@@ -27,8 +27,11 @@
   const TOUCH_DEG_PER_PX = 0.22; // right-thumb drag, degrees per CSS px
   const GYRO_DEADBAND = 0.8;     // deg/s: below this the gyro is sensor noise, faded in up to 2x
   const GYRO_YAW_SIGN = 1;       // see fpsMotion: flips the gyro's left/right turn
+  const AIM_STICK_RADIUS = 34;   // px the AIM button can be pushed off its spot
+  const AIM_STICK_DEADZONE = 0.15;
+  const AIM_STICK_DEG_PER_S = 90; // phone-degrees per second at full push (Grivet doubles it)
   const PITCH_BAND = 0.25;       // degrees of phone tilt ignored as jitter before up/down moves
-  const BUILD = 7;             // shown on the start screen: proves the phone loaded this version
+  const BUILD = 8;             // shown on the start screen: proves the phone loaded this version
   const SPRINT_ON = 0.93, SPRINT_OFF = 0.8; // stick magnitude, with hysteresis
   const LEAN_ON = 18, LEAN_OFF = 10;        // degrees of steering-wheel roll, with hysteresis
   const FB = {
@@ -54,7 +57,7 @@
     gestureType: 0, gestureSeq: 0, seq: 0,
   };
   // FPS: held buttons, presses not yet sent (latched), lean and sprint bits, look not yet sent.
-  const fps = { buttons: 0, latch: 0, lean: 0, sprint: false, gyro: true, leanTilt: false, lookTouch: 0 };
+  const fps = { buttons: 0, latch: 0, lean: 0, sprint: false, gyro: true, leanTilt: false, lookTouch: 0, aimOn: false };
   const look = { x: 0, y: 0 };
 
   const $ = (id) => document.getElementById(id);
@@ -117,7 +120,7 @@
     if (ws?.readyState !== 1) return;
     if (ws.bufferedAmount > 1024) return; // link is choking: drop, never queue stale input
     const dx = lookUnits(look.x), dy = lookUnits(look.y);
-    const buttons = fps.buttons | fps.latch | fps.lean | sysPulse | (fps.sprint ? FB.SPRINT : 0);
+    const buttons = fps.buttons | fps.latch | fps.lean | sysPulse | (fps.sprint ? FB.SPRINT : 0) | (fps.aimOn ? FB.AIM : 0);
     state.seq = (state.seq + 1) & 0xffff;
     pkt2.setUint8(0, 2);
     pkt2.setUint16(1, state.seq, true);
@@ -202,15 +205,33 @@
 
   // ------------------------------------------------------------ FPS panel: buttons + look pad
   // Each touch keeps the button it started on (no sliding between: a thumb rolling off
-  // FIRE must not press RELOAD). A touch that starts on the bare panel, or on FIRE or
-  // AIM, also turns the view as it drags.
+  // FIRE must not press RELOAD). A touch that starts on the bare panel, or on FIRE,
+  // also turns the view as it drags.
+  // AIM is a toggle and a small right thumbstick: a press turns aiming on (it stays on
+  // after the thumb lifts), the next tap turns it off. While held, the button follows
+  // the thumb up to AIM_STICK_RADIUS and turns the view at a rate set by how far it is
+  // pushed: move with the left stick, aim with this one.
   const fpsPanel = $('fpsPanel');
   const fbEls = [...fpsPanel.querySelectorAll('.fb')];
-  const fpsTouches = new Map(); // identifier -> { bit, look, x, y }
+  const aimEl = fpsPanel.querySelector('.fb.aim');
+  const fpsTouches = new Map(); // identifier -> { bit, look, aim, x, y, ox, oy }
+  const aimStick = { id: null, x: 0, y: 0 };
   function fpsTouchStart(e) {
     e.preventDefault();
     for (const t of e.changedTouches) {
       const el = t.target.closest?.('.fb');
+      if (el === aimEl) {
+        if (aimStick.id !== null) continue; // one thumb drives the AIM stick
+        fps.aimOn = !fps.aimOn;
+        if (fps.aimOn) fps.latch |= FB.AIM;
+        aimEl.classList.toggle('on', fps.aimOn);
+        navigator.vibrate?.(fps.aimOn ? 18 : [8, 30, 8]);
+        aimStick.id = t.identifier; aimStick.x = aimStick.y = 0;
+        aimEl.classList.add('held');
+        fpsTouches.set(t.identifier, { bit: 0, look: false, aim: true, x: t.clientX, y: t.clientY, ox: t.clientX, oy: t.clientY });
+        sendInput();
+        continue;
+      }
       fpsTouches.set(t.identifier, {
         bit: el ? FB[el.dataset.fb] || 0 : 0,
         look: !el || el.dataset.look === '1',
@@ -224,6 +245,7 @@
     for (const t of e.changedTouches) {
       const s = fpsTouches.get(t.identifier);
       if (!s) continue;
+      if (s.aim) { moveAimStick(t.clientX - s.ox, t.clientY - s.oy); continue; }
       if (s.look) {
         look.x += (t.clientX - s.x) * TOUCH_DEG_PER_PX;
         look.y += (t.clientY - s.y) * TOUCH_DEG_PER_PX; // drag down = look down
@@ -231,18 +253,49 @@
       s.x = t.clientX; s.y = t.clientY;
     }
   }
+  function moveAimStick(dx, dy) {
+    const len = Math.hypot(dx, dy);
+    if (len > AIM_STICK_RADIUS) { dx *= AIM_STICK_RADIUS / len; dy *= AIM_STICK_RADIUS / len; }
+    aimEl.style.translate = `${dx}px ${dy}px`;
+    let nx = dx / AIM_STICK_RADIUS, ny = dy / AIM_STICK_RADIUS; // +y = down, as on screen
+    const mag = Math.hypot(nx, ny);
+    if (mag < AIM_STICK_DEADZONE) { nx = ny = 0; }
+    else { const k = (mag - AIM_STICK_DEADZONE) / (1 - AIM_STICK_DEADZONE) / mag; nx *= k; ny *= k; }
+    aimStick.x = nx; aimStick.y = ny;
+  }
+  function releaseAimStick() {
+    aimStick.id = null; aimStick.x = aimStick.y = 0;
+    aimEl.style.translate = '';
+    aimEl.classList.remove('held');
+  }
   function fpsTouchEnd(e) {
     e.preventDefault();
-    for (const t of e.changedTouches) fpsTouches.delete(t.identifier);
+    for (const t of e.changedTouches) {
+      if (t.identifier === aimStick.id) releaseAimStick();
+      fpsTouches.delete(t.identifier);
+    }
     refreshFps();
+  }
+  // The AIM stick turns the view at a rate: squared response for fine aim near the
+  // centre, AIM_STICK_DEG_PER_S at full push. Runs on the send clock, real time.
+  let lastStickT = 0;
+  function stepAimStick() {
+    const now = performance.now();
+    const dt = lastStickT ? Math.min(0.05, (now - lastStickT) / 1000) : 0;
+    lastStickT = now;
+    const mag = Math.hypot(aimStick.x, aimStick.y);
+    if (!mag || !dt) return;
+    const rate = AIM_STICK_DEG_PER_S * mag; // vector already carries one factor of mag
+    look.x += aimStick.x * rate * dt;
+    look.y += aimStick.y * rate * dt;
   }
   function refreshFps() {
     let mask = 0, lookTouch = 0;
-    for (const s of fpsTouches.values()) { mask |= s.bit; if (s.look) lookTouch++; }
+    for (const s of fpsTouches.values()) { mask |= s.bit; if (s.look || s.aim) lookTouch++; }
     fps.lookTouch = lookTouch;
     const pressed = mask & ~fps.buttons;
     if (pressed) { fps.latch |= pressed; navigator.vibrate?.(12); }
-    for (const el of fbEls) el.classList.toggle('down', !!(mask & FB[el.dataset.fb]));
+    for (const el of fbEls) if (el !== aimEl) el.classList.toggle('down', !!(mask & FB[el.dataset.fb]));
     if (mask !== fps.buttons) { fps.buttons = mask; sendInput(); } // send edges immediately
   }
   fpsPanel.addEventListener('touchstart', fpsTouchStart, { passive: false });
@@ -252,7 +305,8 @@
   function releaseFps() {
     fpsTouches.clear(); fps.buttons = fps.latch = fps.lean = 0; fps.sprint = false;
     look.x = look.y = 0;
-    for (const el of fbEls) el.classList.remove('down');
+    fps.aimOn = false; releaseAimStick();
+    for (const el of fbEls) el.classList.remove('down', 'on');
   }
 
   // ------------------------------------------------------------ screen axes
@@ -579,6 +633,7 @@
   let tick = 0;
   setInterval(() => {
     tick++;
+    if (mode === 'fps') stepAimStick();
     if (mode === 'fps' || tick % (FPS_HZ / SEND_HZ) === 0) sendInput();
   }, 1000 / FPS_HZ);
   setInterval(() => {

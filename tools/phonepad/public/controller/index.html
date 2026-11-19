@@ -58,7 +58,8 @@
       <button class="btn b" data-b="2"><b>B</b><small>Attack</small></button>
       <button class="btn a" data-b="1"><b>A</b><small>Jump</small></button>
     </section>
-    <!-- FPS mode: the panel itself is the look pad; FIRE and AIM also turn while held. -->
+    <!-- FPS mode: the panel itself is the look pad; FIRE also turns while held.
+         AIM toggles aiming and is a small thumbstick for turning (controller.js). -->
     <section id="fpsPanel">
       <div class="lookHint">DRAG TO TURN</div>
       <div class="fbRow">
@@ -70,7 +71,8 @@
         <button class="fb pill" data-fb="PRONE">PRONE</button>
       </div>
       <button class="fb round fire" data-fb="FIRE" data-look="1">FIRE</button>
-      <button class="fb round aim" data-fb="AIM" data-look="1">AIM</button>
+      <div class="aimBase"></div>
+      <button class="fb round aim" data-fb="AIM">AIM</button>
       <button class="fb round reload" data-fb="RELOAD">RELOAD</button>
       <button class="fb round melee" data-fb="MELEE">KNIFE</button>
       <button class="fb round crouch" data-fb="CROUCH">CROUCH</button>
