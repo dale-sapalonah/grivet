@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-url = "ws://127.0.0.1:8080/ws?role=game"
+url = "ws://127.0.0.1:8081/ws?role=game"
 reconnect_seconds = 2.0
 timeout_ms = 500
 look_pixels_per_degree = 16.0

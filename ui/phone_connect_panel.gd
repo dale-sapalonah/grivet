@@ -71,8 +71,12 @@ func _process(delta: float) -> void:
 	if _have_links:
 		return
 	_waiting += delta
-	_set_status("STARTING PHONEPAD..." if _waiting < GIVE_UP_SECONDS else
-			"PHONEPAD DIDN'T START: RUN Play Grivet with Phone.bat", GrivetStyle.WHITE if _waiting < GIVE_UP_SECONDS else GrivetStyle.RED)
+	if _waiting < GIVE_UP_SECONDS:
+		_set_status("STARTING PHONEPAD...", GrivetStyle.WHITE)
+	elif PhonePad.is_connected_to_server():
+		_set_status("ANOTHER APP'S PHONEPAD HOLDS GRIVET'S PORT: CLOSE IT, THEN TRY AGAIN", GrivetStyle.RED)
+	else:
+		_set_status("PHONEPAD DIDN'T START: RUN Play Grivet with Phone.bat", GrivetStyle.RED)
 	_retry_left -= delta
 	if _retry_left <= 0.0 and _request.get_http_client_status() == HTTPClient.STATUS_DISCONNECTED:
 		_retry_left = RETRY_SECONDS
@@ -81,6 +85,9 @@ func _process(delta: float) -> void:
 
 func _on_links(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	if not _active or result != HTTPRequest.RESULT_SUCCESS or code != 200:
+		return
+	# Only Grivet's own server: another PhonePad's links open another game's page.
+	if PhonePad.server_app != "grivet":
 		return
 	var links: Variant = JSON.parse_string(body.get_string_from_utf8())
 	if not links is Array:

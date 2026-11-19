@@ -2,9 +2,10 @@ class_name PhonePadTuning
 extends Resource
 ## PhonePad (phone controller) tuning: data/input/phone_pad_tuning.tres.
 
-## The PhonePad server's localhost game socket. The PHONEPAD_GAME_PORT
-## environment variable replaces the port (tests run a second server).
-@export var url := "ws://127.0.0.1:8080/ws?role=game"
+## The PhonePad server's localhost game socket (8081: Reef Rush's PhonePad uses
+## 8080, so the two never meet). The PHONEPAD_GAME_PORT environment variable
+## replaces the port.
+@export var url := "ws://127.0.0.1:8081/ws?role=game"
 ## Seconds between connection attempts while the server isn't running.
 @export var reconnect_seconds := 2.0
 ## No packet for this long: the phone counts as released (nothing held, no movement).

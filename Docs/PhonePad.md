@@ -27,9 +27,12 @@ The packages must be installed once (step 2 below does it), and Node.js 18+.
    `PhonePad: phone connected` in its log.
 
 Notes:
-- Only one PhonePad server can run at a time: Reef Rush's uses the same ports
-  (8443 and 8080). Close its window first. If Reef Rush's server is the one
-  running, Grivet will still read its phone (Gamepad mode, v1 packets).
+- Grivet's PhonePad has its own ports, 8444 (phone) and 8081 (game), so it
+  runs beside Reef Rush's (8443 and 8080) and the two can't be mixed up. The
+  server says `{"t":"hello","app":"grivet"}` to the game on connect, and the
+  PHONE page only shows QR codes from a server that did. The phone page's title
+  reads "PhonePad for Grivet". A bookmark of the old :8443 address opens Reef
+  Rush's page: scan again.
 - Grivet's copy makes its own self-signed certificate (`tools/phonepad/certs/`,
   never committed), so the phone asks once more than it did for Reef Rush. It
   asks again whenever the PC's addresses change (the USB tether subnet is random).
@@ -76,13 +79,13 @@ arriving. So no phone button is needed beyond moving and fighting.
 ## How it fits together
 
 ```
-phone (Chrome)  --WSS :8443-->  tools/phonepad/server.js  --WS 127.0.0.1:8080-->  PhonePad autoload
+phone (Chrome)  --WSS :8444-->  tools/phonepad/server.js  --WS 127.0.0.1:8081-->  PhonePad autoload
   controller.js     binary packets      relays untouched        (game role only)    core/phone_pad.gd
                 <-- {t:"haptic"}, {t:"state"} ----------------------------------------
 ```
 
-- The server listens on 0.0.0.0:8443 (HTTPS + WSS, phone page and controller
-  socket) and 127.0.0.1:8080 (game socket and `/api/controller-links`, which
+- The server listens on 0.0.0.0:8444 (HTTPS + WSS, phone page and controller
+  socket) and 127.0.0.1:8081 (game socket and `/api/controller-links`, which
   lists the phone URLs with QR modules; localhost only). Controllers can only
   connect over WSS; the game port refuses the controller role. It serves no
   game files.
@@ -130,7 +133,7 @@ it as stick = move, A jump, B fire, X reload, Y sprint, PAUSE pause.
 Game to phone (JSON text, relayed by the server): `{"t":"haptic","pattern":[ms,...]}`
 (on, off, on...) and `{"t":"state","hp":0..1,"energy":0..1,"paused":bool,"over":bool}`
 (every 0.25 s while a phone is connected). Server to game:
-`{"t":"controllers","count":n}`.
+`{"t":"hello","app":"grivet"}` on connect and `{"t":"controllers","count":n}`.
 
 Decoding, the stale-packet check, latching and the timeout live in
 `core/phone_pad_protocol.gd` (PhonePadProtocol, pure, tested by

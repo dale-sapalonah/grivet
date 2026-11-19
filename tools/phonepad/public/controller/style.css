@@ -14,6 +14,7 @@ button { font: inherit; color: inherit; border: 0; background: none; touch-actio
 }
 .start-card { text-align: center; padding: 0 16px; }
 .logo { font-size: 34px; letter-spacing: 2px; color: #4fd1c5; margin-bottom: 22px; }
+.logo .app { color: #ff8f14; font-size: 22px; letter-spacing: 1px; }
 .modes { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 .modeBtn {
   width: 230px; padding: 20px 18px; border-radius: 16px; text-align: left;

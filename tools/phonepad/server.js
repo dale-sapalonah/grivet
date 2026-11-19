@@ -22,8 +22,10 @@ function qrModules(text) {
   return q.modules.map((row) => row.map((dark) => (dark ? 1 : 0)).join(''));
 }
 
-const HTTPS_PORT = Number(process.env.PHONEPAD_HTTPS_PORT || 8443); // phone
-const GAME_PORT = Number(process.env.PHONEPAD_GAME_PORT || 8080);   // PC browser
+// Not Reef Rush's 8443/8080: Grivet's PhonePad has its own ports, so the two can't be mixed up.
+const HTTPS_PORT = Number(process.env.PHONEPAD_HTTPS_PORT || 8444); // phone
+const GAME_PORT = Number(process.env.PHONEPAD_GAME_PORT || 8081);   // Grivet, localhost only
+const APP = 'grivet'; // told to the game on connect, so Grivet knows it found its own server
 const ROOT = __dirname;
 const CERT_DIR = path.join(ROOT, 'certs');
 
@@ -188,6 +190,7 @@ function attachWs(server, allowController) {
       ws.isAlive = true;
       ws.on('pong', () => { ws.isAlive = true; });
       (role === 'controller' ? controllers : games).add(ws);
+      if (role === 'game') ws.send(JSON.stringify({ t: 'hello', app: APP }));
       const who = `${role} ${req.socket.remoteAddress}`;
       console.log(`[+] ${who} connected (controllers: ${controllers.size}, games: ${games.size})`);
       announce();

@@ -8,7 +8,7 @@ extends Node
 ## with it. Exit 0 = pass. Needs Node 18+ and `npm ci --ignore-scripts` in tools/phonepad.
 ##
 ##   $GODOT --path . res://tests/probes/phone_pad.tscn
-## Another PhonePad already on 8080/8443 (Reef Rush)? Set PHONEPAD_GAME_PORT and
+## Ports other than 8444/8081 (one already taken)? Set PHONEPAD_GAME_PORT and
 ## PHONEPAD_HTTPS_PORT first: the server, the sim and the PhonePad autoload all read them.
 
 const LEVEL := "res://levels/greybox/arena.tscn"

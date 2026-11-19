@@ -5,7 +5,7 @@ extends Node
 ## Exit 0 = pass. Needs Node 18+ and the installed packages in tools/phonepad.
 ##
 ##   $GODOT --path . res://tests/probes/phone_menu.tscn [-- shot=<abs path>.png]
-## Another PhonePad on 8080/8443? Set PHONEPAD_GAME_PORT / PHONEPAD_HTTPS_PORT first.
+## Ports other than 8444/8081? Set PHONEPAD_GAME_PORT / PHONEPAD_HTTPS_PORT first.
 
 const MENU := "res://ui/main_menu.tscn"
 
@@ -51,6 +51,10 @@ func _run() -> void:
 			"%d views, status %s" % [views.size(), panel._status.text])
 	await tree.create_timer(2.5).timeout  # PhonePad's own socket connects
 	_check("Grivet connects to the server it started", PhonePad.is_connected_to_server(), "not connected")
+	_check("and it is Grivet's own PhonePad, not another game's", PhonePad.server_app == "grivet", "app '%s'" % PhonePad.server_app)
+	var urls := panel.find_children("*", "Label", true, false).map(func(n: Node) -> String: return (n as Label).text)
+	var own_port := ":%s/" % OS.get_environment("PHONEPAD_HTTPS_PORT") if OS.get_environment("PHONEPAD_HTTPS_PORT") != "" else ":8444/"
+	_check("the QR links point at Grivet's phone port", urls.any(func(t: String) -> bool: return t.contains(own_port + "controller/")), str(urls))
 	if shot != "":
 		await RenderingServer.frame_post_draw
 		get_viewport().get_texture().get_image().save_png(shot)

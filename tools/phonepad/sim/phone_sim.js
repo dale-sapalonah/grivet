@@ -3,7 +3,7 @@
 // waits until Grivet is connected (its first {t:"state"} message), then plays a fixed
 // FPS-mode timeline of v2 packets at 120 Hz. tests/probes/phone_pad.gd checks the result.
 //
-//   node tools/phonepad/sim/phone_sim.js [--port 8443] [--loop]
+//   node tools/phonepad/sim/phone_sim.js [--port 8444] [--loop]
 //
 // Timeline (seconds after the game's first state message):
 //   0.0-1.5  stick forward (full)                1.5-2.3  turn right 30 degrees, every 7th packet dropped
@@ -16,7 +16,7 @@ const path = require('path');
 const WebSocket = require(path.join(__dirname, '..', 'node_modules', 'ws'));
 
 const args = process.argv.slice(2);
-const port = Number(args[args.indexOf('--port') + 1] || process.env.PHONEPAD_HTTPS_PORT || 8443);
+const port = Number(args[args.indexOf('--port') + 1] || process.env.PHONEPAD_HTTPS_PORT || 8444);
 const loop = args.includes('--loop');
 const B = { FIRE: 1, RELOAD: 1 << 6, NEXT: 1 << 10 };
 const HZ = 120;

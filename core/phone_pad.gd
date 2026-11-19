@@ -24,6 +24,8 @@ var tuning: PhonePadTuning = load(TUNING_PATH)
 var protocol := PhonePadProtocol.new()
 ## Phones connected to the server (it announces the count).
 var controllers := 0
+## Which app's PhonePad server this is ("grivet" for ours; Reef Rush's says nothing).
+var server_app := ""
 var enabled := true
 ## Look applied so far in degrees of phone turn (probes check it).
 var look_applied := Vector2.ZERO
@@ -51,7 +53,8 @@ func _ready() -> void:
 	_url = tuning.url
 	var port := OS.get_environment("PHONEPAD_GAME_PORT")
 	if port.is_valid_int():
-		_url = _url.replace(":8080/", ":%s/" % port)
+		var at := RegEx.create_from_string(r":\d+/")
+		_url = at.sub(_url, ":%s/" % port)
 	enabled = bool(Settings.get_value("phone_pad"))
 	Settings.changed.connect(_on_setting_changed)
 	Ballistics.target_hit.connect(_on_target_hit)
@@ -146,13 +149,16 @@ func _poll_socket(delta: float) -> void:
 		WebSocketPeer.STATE_CLOSED:
 			_socket = null  # server gone: try again quietly
 			controllers = 0
+			server_app = ""
 			protocol.reset()
 			_retry_left = tuning.reconnect_seconds
 
 
 func _on_text(text: String) -> void:
 	var message: Variant = JSON.parse_string(text)
-	if message is Dictionary and message.get("t") == "controllers":
+	if message is Dictionary and message.get("t") == "hello":
+		server_app = str(message.get("app", ""))
+	elif message is Dictionary and message.get("t") == "controllers":
 		var count := int(message.get("count", 0))
 		if count > controllers:
 			print("PhonePad: phone connected")
@@ -300,6 +306,7 @@ func _set_enabled(on: bool) -> void:
 		_socket.close()
 		_socket = null
 	controllers = 0
+	server_app = ""
 	protocol.reset()
 	_apply_buttons(0)
 	_apply_move(Vector2.ZERO)
