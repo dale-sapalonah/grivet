@@ -190,10 +190,10 @@ body.fps #fpsPanel {
 }
 .fbRow {
   position: absolute; top: 8px; right: 8px; left: 8px;
-  display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end;
+  display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end;
 }
 .fb { border: 2px solid; background: #121a22cc; color: #d7e1ea; transition: transform .04s, background .04s; }
-.fb.pill { padding: 0 10px; height: 40px; min-width: 64px; border-radius: 10px; font-size: 12px; letter-spacing: 1px; border-color: #2a3a4b; }
+.fb.pill { padding: 0 8px; height: 40px; min-width: 0; border-radius: 10px; font-size: 11px; letter-spacing: .5px; border-color: #2a3a4b; }
 .fb.round {
   position: absolute; border-radius: 50%; font-size: 12px; letter-spacing: 1px;
   display: flex; align-items: center; justify-content: center;
@@ -207,6 +207,8 @@ body.fps #fpsPanel {
 .fb.down { background: currentColor; transform: scale(.93); }
 .fb.down, .fb.pill.down { color: #0b0f14; }
 .fb.pill.down { background: #d7e1ea; }
+.fb.pill.level { border-color: #4fd1c5; color: #4fd1c5; }
+.fb.pill.level.down { background: #4fd1c5; color: #0b0f14; }
 .fb.fire.down { background: #ff6b6b; }
 .fb.aim { transition: translate .12s ease-out; }
 .fb.aim.held { transition: none; }

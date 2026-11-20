@@ -22,6 +22,12 @@ var sim: Dictionary = {}
 var reload_presses := 0
 var saw_reloading := false
 var _watch_reload := false
+var _seen := Vector2.ZERO  # mouse motion the game received (the phone's look arrives as motion)
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion:
+		_seen += (event as InputEventMouseMotion).relative
 
 
 func _ready() -> void:
@@ -80,6 +86,7 @@ func _run() -> void:
 	# Baseline for the turn, taken before it starts (the sim's clock leads ours slightly).
 	var yaw0 := player.rotation.y
 	var look0 := PhonePad.look_applied.x
+	var seen0 := _seen.x
 	var wish := Input.get_vector("move_left", "move_right", "move_back", "move_forward")
 	_check("releasing D leaves the phone's forward held", wish.y > 0.9 and absf(wish.x) < 0.05, "vector %s" % wish)
 	await _until(t, 1.55)
@@ -90,9 +97,14 @@ func _run() -> void:
 	await _until(t, 2.85)
 	var turned := PhonePad.look_applied.x - look0
 	var expected := -30.0 * PhonePad.tuning.look_pixels_per_degree * Settings.camera_tuning.mouse_sensitivity
+	var sent_px := (PhonePad.look_applied.x - look0) * PhonePad.tuning.look_pixels_per_degree
+	var seen_px := _seen.x - seen0
+	_check("the game receives exactly the look the phone sent", absf(seen_px - sent_px) < 0.5,
+			"%.1f px delivered, %.1f sent: other mouse input got in?" % [seen_px, sent_px])
 	var yaw := wrapf(player.rotation.y - yaw0, -PI, PI)
 	_check("every degree of look arrives despite dropped packets", absf(turned - 30.0) < 0.05, "%.2f deg" % turned)
-	_check("look turns the player like a mouse would", absf(yaw - expected) < 0.02, "yaw %.3f rad, expected %.3f" % [yaw, expected])
+	_check("look turns the player like a mouse would", absf(yaw - expected) < 0.02,
+			"yaw %.3f rad, expected %.3f; %.1f px delivered, %.1f sent (moving the real mouse during the run also turns the player)" % [yaw, expected, seen_px, sent_px])
 
 	# Fire.
 	var shots0 := holder.shots_fired
@@ -168,6 +180,13 @@ func _run() -> void:
 	await _tap(PhonePadProtocol.BIT_PAUSE)
 	_check("phone PAUSE again resumes", not tree.paused, "still paused")
 
+	# LEVEL: looking at the sky, one packet levels the view and keeps the heading.
+	player.set_look(player.rotation.y, deg_to_rad(70.0))
+	var heading := player.rotation.y
+	await _tap(0, PhonePadProtocol.FLAG_LEVEL)
+	_check("phone LEVEL snaps the view back to the horizon", absf(player.look_pitch()) < 0.001 and absf(player.rotation.y - heading) < 0.001,
+			"pitch %.1f deg, yaw moved %.3f" % [rad_to_deg(player.look_pitch()), player.rotation.y - heading])
+
 	await tree.create_timer(0.5).timeout
 	var sim_out := _read_sim()
 	print(sim_out.strip_edges())
@@ -180,9 +199,9 @@ func _run() -> void:
 
 
 ## Feeds one packet with `bit` pressed and one released, as the phone's pulse does.
-func _tap(bit: int) -> void:
+func _tap(bit: int, flags: int = 0) -> void:
 	var protocol := PhonePad.protocol
-	protocol.receive(PhonePadProtocol.encode_v2(protocol.last_seq + 1, bit, Vector2.ZERO, Vector2.ZERO), Time.get_ticks_msec())
+	protocol.receive(PhonePadProtocol.encode_v2(protocol.last_seq + 1, bit, Vector2.ZERO, Vector2.ZERO, 1 | flags), Time.get_ticks_msec())
 	protocol.receive(PhonePadProtocol.encode_v2(protocol.last_seq + 1, 0, Vector2.ZERO, Vector2.ZERO), Time.get_ticks_msec())
 	for i in 4:
 		await get_tree().process_frame

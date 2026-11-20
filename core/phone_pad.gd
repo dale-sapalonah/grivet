@@ -177,10 +177,19 @@ func _apply_buttons(buttons: int) -> void:
 			Input.action_press(action)
 		elif released & bit:
 			Input.action_release(action)
+	if pressed & PhonePadProtocol.BIT_LEVEL:
+		_level_view()
 	if pressed & CONTINUE_BITS:
 		_send_action_event(&"ui_accept", true)
 		_send_action_event(&"ui_accept", false)
 	_applied = buttons
+
+
+## The phone's LEVEL button: back to looking along the horizon, facing the same way.
+func _level_view() -> void:
+	_bind_player()
+	if is_instance_valid(_player) and not _player.dead and not get_tree().paused:
+		_player.set_look(_player.rotation.y, 0.0)
 
 
 func _send_action_event(action: StringName, pressed: bool) -> void:

@@ -66,3 +66,12 @@ func test_stale_packets_dropped_and_wrap_handled() -> void:
 	assert_true(not receiver.receive(P.encode_v2(65534, P.BIT_JUMP, Vector2.ZERO, Vector2.ZERO), 1002), "stale")
 	assert_eq(receiver.held, P.BIT_FIRE)
 	assert_true(receiver.receive(P.encode_v2(30000, 0, Vector2.ZERO, Vector2.ZERO), 1003), "reloaded page")
+
+
+func test_level_flag_decodes_and_latches() -> void:
+	var data := P.encode_v2(1, P.BIT_FIRE, Vector2.ZERO, Vector2.ZERO, 1 | P.FLAG_LEVEL)
+	assert_eq(P.decode(data).buttons, P.BIT_FIRE | P.BIT_LEVEL)
+	var receiver := P.new()
+	receiver.receive(data, 1000)
+	receiver.receive(P.encode_v2(2, 0, Vector2.ZERO, Vector2.ZERO, 1), 1004)
+	assert_eq(receiver.take_buttons(1005, 500) & P.BIT_LEVEL, P.BIT_LEVEL, "a one-packet LEVEL tap still counts")

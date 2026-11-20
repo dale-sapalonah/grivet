@@ -7,7 +7,8 @@ extends RefCounted
 ## v2 (FPS mode, 120 Hz), 14 bytes little-endian:
 ##   u8 type=2 | u16 seq | u16 buttons (BIT_*) | i16 move x | i16 move y (+-32767)
 ##   | i16 look dx | i16 look dy (1/100 degree of phone turn, summed on the phone since
-##   the last packet that went out) | u8 flags (bit0 gyro, bit1 lean by tilt, bit2 look touch)
+##   the last packet that went out) | u8 flags (bit0 gyro, bit1 lean by tilt, bit2 look touch,
+##   bit3 LEVEL pressed: the 16 button bits are all taken, so it rides here and decodes as BIT_LEVEL)
 ## v1 (Gamepad / Remote modes, 60 Hz), 15 bytes: u8 type=1 | u16 seq | u8 buttons
 ##   (A 1, B 2, X 4, Y 8, PAUSE 16, END 32) | u8 flags | u8 gesture | u8 gesture seq
 ##   | i16 stick x | i16 stick y | i16 tilt x | i16 tilt y. Mapped onto the same actions.
@@ -33,6 +34,9 @@ const BIT_PAUSE := 1 << 12
 const BIT_LEAN_LEFT := 1 << 13
 const BIT_LEAN_RIGHT := 1 << 14
 const BIT_PLATE := 1 << 15
+## Not a wire button bit: v2 flags bit3, decoded into the buttons so it latches like one.
+const BIT_LEVEL := 1 << 16
+const FLAG_LEVEL := 1 << 3
 
 ## Button bit -> Grivet action (core/input_bindings.gd).
 const ACTIONS := {
@@ -89,6 +93,8 @@ static func decode(data: PackedByteArray) -> Packet:
 		packet.move = Vector2(data.decode_s16(5), data.decode_s16(7)) / AXIS_SCALE
 		packet.look = Vector2(data.decode_s16(9), data.decode_s16(11)) / LOOK_UNITS_PER_DEGREE
 		packet.flags = data[13]
+		if packet.flags & FLAG_LEVEL:
+			packet.buttons |= BIT_LEVEL
 		return packet
 	if packet.version == 1 and data.size() >= V1_SIZE:
 		packet.seq = data.decode_u16(1)

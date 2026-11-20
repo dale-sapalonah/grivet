@@ -31,14 +31,16 @@
   const AIM_STICK_DEADZONE = 0.25;  // a quarter of the travel does nothing: resting thumbs don't turn
   const AIM_STICK_DEG_PER_S = 22;   // phone-degrees per second at full push (Grivet doubles it)
   const PITCH_BAND = 0.25;       // degrees of phone tilt ignored as jitter before up/down moves
-  const BUILD = 9;             // shown on the start screen: proves the phone loaded this version
+  const BUILD = 10;             // shown on the start screen: proves the phone loaded this version
   const SPRINT_ON = 0.93, SPRINT_OFF = 0.8; // stick magnitude, with hysteresis
   const LEAN_ON = 18, LEAN_OFF = 10;        // degrees of steering-wheel roll, with hysteresis
   const FB = {
     FIRE: 1 << 0, AIM: 1 << 1, JUMP: 1 << 2, CROUCH: 1 << 3, PRONE: 1 << 4, SPRINT: 1 << 5,
     RELOAD: 1 << 6, MELEE: 1 << 7, GRENADE: 1 << 8, FLASH: 1 << 9, NEXT: 1 << 10, PREV: 1 << 11,
     PAUSE: 1 << 12, LEAN_L: 1 << 13, LEAN_R: 1 << 14, PLATE: 1 << 15,
+    LEVEL: 1 << 16, // no button bit left: sent as flags bit3 (FLAG_LEVEL)
   };
+  const FLAG_LEVEL = 1 << 3;
 
   // v1 packet (little-endian), 15 bytes:
   // u8 type=1 | u16 seq | u8 buttons | u8 flags(bit0 motion) | u8 gestureType | u8 gestureSeq
@@ -47,7 +49,8 @@
   // v2 packet (little-endian), 14 bytes:
   // u8 type=2 | u16 seq | u16 buttons (FB bits) | i16 moveX | i16 moveY (+-32767)
   // | i16 lookDx | i16 lookDy (1/100 degree, summed since the last packet that went out)
-  // | u8 flags (bit0 gyro on, bit1 lean by tilt on, bit2 thumb on the look pad)
+  // | u8 flags (bit0 gyro on, bit1 lean by tilt on, bit2 thumb on the look pad,
+  //   bit3 LEVEL pressed: snap the view back to the horizon)
   const pkt2 = new DataView(new ArrayBuffer(14));
   let sysPulse = 0; // PAUSE/END bits OR'd into the buttons for a moment (see pulse())
 
@@ -129,7 +132,8 @@
     pkt2.setInt16(7, q(state.stickY), true);
     pkt2.setInt16(9, dx, true);
     pkt2.setInt16(11, dy, true);
-    pkt2.setUint8(13, (fps.gyro ? 1 : 0) | (fps.leanTilt ? 2 : 0) | (fps.lookTouch ? 4 : 0));
+    pkt2.setUint8(13, (fps.gyro ? 1 : 0) | (fps.leanTilt ? 2 : 0) | (fps.lookTouch ? 4 : 0)
+      | (buttons & FB.LEVEL ? FLAG_LEVEL : 0));
     ws.send(pkt2.buffer);
     look.x -= dx / LOOK_UNIT; look.y -= dy / LOOK_UNIT; // keep the remainder for next time
     fps.latch = 0;
@@ -290,7 +294,9 @@
     for (const s of fpsTouches.values()) { mask |= s.bit; if (s.look || s.aim) lookTouch++; }
     fps.lookTouch = lookTouch;
     const pressed = mask & ~fps.buttons;
-    if (pressed) { fps.latch |= pressed; navigator.vibrate?.(12); }
+    if (pressed) { fps.latch |= pressed; navigator.vibrate?.(pressed & FB.LEVEL ? [15, 30, 15] : 12); }
+    // LEVEL: the game levels the view; up/down tilt restarts from the phone's angle now.
+    if (pressed & FB.LEVEL) aimPitch = null;
     for (const el of fbEls) if (el !== aimEl) el.classList.toggle('down', !!(mask & FB[el.dataset.fb]));
     if (mask !== fps.buttons) { fps.buttons = mask; sendInput(); } // send edges immediately
   }

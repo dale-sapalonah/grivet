@@ -56,6 +56,7 @@ Notes:
 | FRAG, FLASH | grenade, flashbang |
 | ◀ WPN, WPN ▶ | previous / next weapon |
 | PLATE | insert armour plate (hold) |
+| LEVEL | snaps the view back to the horizon (not up at the sky or down at the feet), still facing the same way; up/down tilt carries on from the phone's angle at that moment |
 | Pause (top bar) | pause menu; tap again to resume |
 | Lean toggle, then tilting the phone like a steering wheel | lean left / right |
 | Gyro toggle | gyro aim on or off |
@@ -121,7 +122,7 @@ Binary, little-endian. **v2** (FPS mode, 120 Hz), 14 bytes:
 | 7 | i16 | move y (forward +), ±32767 |
 | 9 | i16 | look dx, 1/100 degree of phone turn, mouse convention (+ turns right) |
 | 11 | i16 | look dy, 1/100 degree (+ looks down) |
-| 13 | u8 | flags: bit0 gyro on, bit1 lean by tilt on, bit2 thumb on the look pad |
+| 13 | u8 | flags: bit0 gyro on, bit1 lean by tilt on, bit2 thumb on the look pad, bit3 LEVEL pressed (all 16 button bits are taken; Grivet decodes it as PhonePadProtocol.BIT_LEVEL and latches it like a button) |
 
 Look dx/dy are summed on the phone since the last packet that actually went
 out. Buttons: bit 0 FIRE, 1 AIM, 2 JUMP, 3 CROUCH, 4 PRONE, 5 SPRINT, 6 RELOAD,
