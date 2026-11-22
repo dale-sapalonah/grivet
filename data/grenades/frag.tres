@@ -1,5 +1,6 @@
-[gd_resource type="Resource" script_class="GrenadeDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="GrenadeDefinition" load_steps=4 format=3]
 
+[ext_resource type="PackedScene" path="res://assets/models/weapons/frag_grenade.glb" id="model"]
 [ext_resource type="Script" path="res://weapons/grenade_definition.gd" id="1"]
 [ext_resource type="Resource" path="res://data/weapons/fragment.tres" id="2_fragment"]
 
@@ -28,3 +29,4 @@ loudness = 150.0
 volume_db = 2.0
 shake_degrees = 3.0
 shake_radius = 15.0
+model = ExtResource("model")

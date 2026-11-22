@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="GunModel" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://weapons/gun_model.gd" id="1"]
+[ext_resource type="PackedScene" path="res://assets/models/weapons/ak47.glb" id="2"]
+
+[resource]
+script = ExtResource("1")
+scene = ExtResource("2")
+muzzle = Vector3(0, 0.091, -0.72)
+sight = Vector3(0, 0.15, -0.25)
+port = Vector3(0.03, 0.11, -0.18)
+grip = Vector3(0, -0.03, 0.025)
+grip_tilt_degrees = -18.0
+support = Vector3(0, 0.088, -0.42)
+support_radius = 0.032
+magazine_hold = Vector3(0, -0.1, 0)
+trigger = Vector3(0, 0.02, -0.06)

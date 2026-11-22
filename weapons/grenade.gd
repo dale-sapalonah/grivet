@@ -51,15 +51,8 @@ func _ready() -> void:
 	sphere.radius = definition.radius
 	shape.shape = sphere
 	add_child(shape)
-	var mesh := MeshInstance3D.new()
-	var body := CapsuleMesh.new()
-	body.radius = definition.radius
-	body.height = definition.radius * 2.6
-	mesh.mesh = body
-	var olive := StandardMaterial3D.new()
-	olive.albedo_color = Color(0.25, 0.28, 0.18)
-	mesh.material_override = olive
-	add_child(mesh)
+	if definition.model != null:
+		add_child(definition.model.instantiate())
 	_bounce_audio.unit_size = 4.0
 	add_child(_bounce_audio)
 	body_entered.connect(_on_bounce)

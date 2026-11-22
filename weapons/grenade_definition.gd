@@ -18,6 +18,8 @@ extends Resource
 @export var bounce := 0.3
 @export var friction := 0.7
 @export var player_carry := 2
+## How it looks (assets/models/weapons/*.glb, centred on its middle).
+@export var model: PackedScene
 
 @export_group("Blast")
 @export var blast_radius := 7.0

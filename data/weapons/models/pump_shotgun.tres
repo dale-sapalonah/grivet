@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="GunModel" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://weapons/gun_model.gd" id="1"]
+[ext_resource type="PackedScene" path="res://assets/models/weapons/pump_shotgun.glb" id="2"]
+
+[resource]
+script = ExtResource("1")
+scene = ExtResource("2")
+muzzle = Vector3(0, 0.029, -0.405)
+sight = Vector3(0, 0.088, 0.24)
+port = Vector3(0.02, 0.026, 0.26)
+grip = Vector3(0, -0.062, 0.475)
+grip_tilt_degrees = -25.0
+support = Vector3(0, 0, 0)
+support_radius = 0.028
+loading_port = Vector3(0, -0.045, 0.3)
+trigger = Vector3(0, -0.043, 0.388)

@@ -43,6 +43,9 @@ enum Outfit {
 ## A rigged humanoid (Mixamo bone names, tools/blender/prepare_mixamo.py) worn
 ## over the body instead of its own meshes: SkinnedRig follows the poses.
 @export var skinned_model: PackedScene
+## The gun this body carries, if not its weapon's own model (raskols carry
+## an AK while sharing the rifle's ballistics).
+@export var gun_model: GunModel
 
 @export_group("Movement (m/s)")
 @export var walk_speed := 2.0

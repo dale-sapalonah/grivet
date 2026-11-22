@@ -256,6 +256,7 @@ func _shoot(aim_at: Vector3) -> void:
 	AI.make_noise(muzzle, weapon.definition.shot_loudness, self)
 	_muzzle_flash.flash()
 	mannequin.flinch(-global_basis.z, 0.6)
+	mannequin.act("fire")
 	shots_fired += 1
 
 
@@ -369,6 +370,7 @@ func _pose(delta: float, player: Player) -> void:
 		var aim := target.aim_point()
 		pitch = atan2(aim.y - from.y, Vector2(aim.x - from.x, aim.z - from.z).length())
 	_aim_pitch = rotate_toward(_aim_pitch, pitch, deg_to_rad(profile.aim_turn_degrees_per_second) * delta)
+	mannequin.move_velocity = velocity
 	mannequin.pose(delta, _crouch, _aim_pitch, Vector2(velocity.x, velocity.z).length(), fighting, 1.0 if downed else 0.0)
 
 

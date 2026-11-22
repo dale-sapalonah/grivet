@@ -276,8 +276,9 @@ func build(profile: EnemyProfile, variant: int = 0) -> void:
 	gun.add_child(muzzle)
 	if melee:
 		_bake_machete(parts.lower_arm_r)
+		_instances.back().set_meta("carried", true)  # stays seen on a worn skin
 	elif not unarmed:
-		muzzle.position = Vector3(0, 0.015, _bake_gun(profile))
+		_carry_gun(profile)
 	if profile.skinned_model != null:
 		_wear(profile.skinned_model)
 
@@ -288,7 +289,7 @@ func build(profile: EnemyProfile, variant: int = 0) -> void:
 func _wear(model: PackedScene) -> void:
 	for part: Node3D in parts.values():
 		for child in part.get_children():
-			if child is MeshInstance3D:
+			if child is MeshInstance3D and not child.has_meta("carried"):
 				(child as MeshInstance3D).visible = false
 	skin = SkinnedRig.new()
 	add_child(skin)
@@ -297,6 +298,10 @@ func _wear(model: PackedScene) -> void:
 		skin.hold_gun(_grip, global_basis)
 	else:
 		skin.update()
+		for part: Node3D in parts.values():
+			for child in part.get_children():
+				if child.has_meta("carried"):
+					skin.carry(child as Node3D, MACHETE_GRIP)
 
 
 ## True when the worn skin plays its own clips (the pivots follow it).
@@ -308,6 +313,10 @@ func animated() -> bool:
 func act(action: String) -> void:
 	if animated():
 		skin.act(action)
+
+
+## The machete's handle in its forearm part's frame (where a hand holds it).
+const MACHETE_GRIP := Vector3(0, -0.3, 0.02)
 
 
 ## A bush knife held in a hand at the end of `forearm` (its part frame: the
@@ -336,38 +345,34 @@ func _bilum_bag(baker: MeshBaker, at: Vector3, variant: int) -> void:
 				stripes[(variant + b * 2) % stripes.size()])
 
 
-## Builds the carried weapon (rifle or pump shotgun) as one mesh; returns the
-## muzzle's z.
-func _bake_gun(profile: EnemyProfile) -> float:
-	var B := MeshBaker
-	var metal := Color(0.1, 0.1, 0.11, 0)
-	var polymer := Color(0.16, 0.16, 0.15, 0)
-	var wood := Color(0.42, 0.27, 0.15, 0)
-	var weapon := MeshBaker.new()
-	var muzzle_z: float
-	if profile.weapon != null and profile.weapon.view_style == WeaponDefinition.ViewStyle.SHOTGUN:
-		weapon.add(B.box(Vector3(0.05, 0.065, 0.22)), B.at(Vector3.ZERO), metal)  # receiver
-		weapon.add(B.cylinder(0.013, 0.013, 0.5, 8), B.at(Vector3(0, 0.02, -0.36), Vector3(90, 0, 0)), metal)  # barrel
-		weapon.add(B.cylinder(0.012, 0.012, 0.42, 8), B.at(Vector3(0, -0.012, -0.32), Vector3(90, 0, 0)), metal)  # magazine tube
-		weapon.add(B.cylinder(0.022, 0.022, 0.14, 10), B.at(Vector3(0, -0.012, -0.24), Vector3(90, 0, 0)), wood)  # pump
-		weapon.add(B.box(Vector3(0.04, 0.07, 0.26)), B.at(Vector3(0, -0.03, 0.24), Vector3(-8, 0, 0)), wood)  # stock
-		_grip = Vector3(0, -0.06, 0.1)
-		_support = Vector3(0, -0.02, -0.22)
-		muzzle_z = -0.61
-	else:
-		weapon.add(B.box(Vector3(0.045, 0.07, 0.3)), B.at(Vector3.ZERO), metal)  # receiver
-		weapon.add(B.box(Vector3(0.025, 0.012, 0.28)), B.at(Vector3(0, 0.041, 0)), metal)  # rail
-		weapon.add(B.cylinder(0.027, 0.027, 0.22, 8), B.at(Vector3(0, 0.01, -0.26), Vector3(90, 0, 0)), polymer)  # handguard
-		weapon.add(B.cylinder(0.009, 0.009, 0.2, 8), B.at(Vector3(0, 0.01, -0.45), Vector3(90, 0, 0)), metal)  # barrel
-		weapon.add(B.box(Vector3(0.028, 0.15, 0.06)), B.at(Vector3(0, -0.1, -0.06), Vector3(12, 0, 0)), metal)  # magazine
-		weapon.add(B.box(Vector3(0.03, 0.08, 0.035)), B.at(Vector3(0, -0.07, 0.09), Vector3(-18, 0, 0)), polymer)  # grip
-		weapon.add(B.box(Vector3(0.04, 0.08, 0.2)), B.at(Vector3(0, -0.01, 0.24)), polymer)  # stock
-		weapon.add(B.box(Vector3(0.03, 0.04, 0.09)), B.at(Vector3(0, 0.066, -0.02)), metal)  # optic
-		_grip = Vector3(0, -0.09, 0.1)
-		_support = Vector3(0, -0.01, -0.19)
-		muzzle_z = -0.55
-	_bake(gun, weapon)
-	return muzzle_z
+## Where the shooting hand holds the carried gun, in the gun node's frame
+## (the model is placed so its grip lands here).
+const GRIP_AT := Vector3(0, -0.09, 0.1)
+## Soldiers far away draw the gun's coarser mesh LODs sooner.
+const GUN_LOD_BIAS := 0.5
+
+
+## Puts the carried gun's model (EnemyProfile.gun_model, else the weapon's) on
+## the gun node: its grip at GRIP_AT, the support hand on its handguard or
+## pump, the muzzle node at its muzzle.
+func _carry_gun(profile: EnemyProfile) -> void:
+	var model_data: GunModel = profile.gun_model
+	if model_data == null and profile.weapon != null:
+		model_data = profile.weapon.model
+	if model_data == null:
+		return
+	var model := model_data.scene.instantiate() as Node3D
+	model.position = GRIP_AT - model_data.grip
+	gun.add_child(model)
+	for mesh: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
+		mesh.lod_bias = GUN_LOD_BIAS
+		_instances.append(mesh)
+	_grip = GRIP_AT
+	_support = model.position + model_data.support
+	var pump := model.find_child("Pump", true, false) as Node3D
+	if pump != null:
+		_support += pump.position  # the support point is given in the pump's frame
+	muzzle.position = model.position + model_data.muzzle
 
 
 ## Poses the body. crouch 0..1, aim_pitch radians (+ up), speed m/s,

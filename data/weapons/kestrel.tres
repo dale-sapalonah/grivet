@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="WeaponDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="WeaponDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://weapons/weapon_definition.gd" id="1"]
+[ext_resource type="Resource" path="res://data/weapons/models/m4.tres" id="gun_model"]
 
 [resource]
 script = ExtResource("1")
@@ -43,24 +44,18 @@ spread_max_bloom = 2.0
 spread_recovery_per_second = 6.0
 bloom_ads_multiplier = 0.3
 ads_fov_multiplier = 0.75
-hip_offset = Vector3(0.12, -0.125, -0.42)
+hip_offset = Vector3(0.12, -0.14, -0.22)
+hip_rotation_degrees = Vector3(2, 7, 0)
 left_elbow_offset = Vector3(-0.22, -0.2, 0.18)
 ads_distance = 0.22
 sprint_offset = Vector3(0.08, -0.22, -0.28)
 sprint_rotation_degrees = Vector3(-12, 35, 10)
-receiver_size = Vector3(0.05, 0.08, 0.36)
-barrel_length = 0.3
-barrel_radius = 0.012
-magazine_mesh_size = Vector3(0.03, 0.15, 0.07)
-has_pump = false
-body_color = Color(0.16, 0.17, 0.16, 1)
 sway_amount = 0.0006
 sway_limit = 0.03
 shot_sound_length = 0.25
 shot_thump_hz = 70.0
 shot_volume_db = -6.0
 view_style = 0
-furniture_color = Color(0.09, 0.09, 0.085, 1)
 casing_ejects = true
 casing_eject_on_pump = false
 casing_radius = 0.0048
@@ -74,3 +69,4 @@ mech_click_hz = 3000.0
 mech_volume_db = -10.0
 impact_energy = 0.8
 shot_loudness = 90.0
+model = ExtResource("gun_model")

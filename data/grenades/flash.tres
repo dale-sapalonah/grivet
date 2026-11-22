@@ -1,5 +1,6 @@
-[gd_resource type="Resource" script_class="GrenadeDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="GrenadeDefinition" load_steps=3 format=3]
 
+[ext_resource type="PackedScene" path="res://assets/models/weapons/flashbang.glb" id="model"]
 [ext_resource type="Script" path="res://weapons/grenade_definition.gd" id="1"]
 
 [resource]
@@ -31,3 +32,4 @@ flash_radius = 14.0
 blind_seconds = 5.0
 blind_facing_away = 0.3
 blind_threshold = 0.08
+model = ExtResource("model")

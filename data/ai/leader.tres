@@ -1,5 +1,6 @@
-[gd_resource type="Resource" script_class="EnemyProfile" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="EnemyProfile" load_steps=7 format=3]
 
+[ext_resource type="Resource" path="res://data/weapons/models/ak47.tres" id="gun_ak"]
 [ext_resource type="Script" path="res://ai/enemy_profile.gd" id="1"]
 [ext_resource type="Resource" path="res://data/weapons/kestrel.tres" id="2_weapon"]
 [ext_resource type="Resource" path="res://data/damage/rifleman.tres" id="3_health"]
@@ -11,6 +12,7 @@ script = ExtResource("1")
 display_name = "Gang leader"
 role = 0
 weapon = ExtResource("2_weapon")
+gun_model = ExtResource("gun_ak")
 health = ExtResource("3_health")
 uniform_color = Color(0.33, 0.36, 0.26, 1)
 gear_color = Color(0.14, 0.15, 0.13, 1)

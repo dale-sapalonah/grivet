@@ -51,6 +51,10 @@ var _leg_slot := PackedByteArray()  # 1: crouching blends this slot to the proce
 var _spine_bones := PackedInt32Array()
 var _hand := -1
 var _gun_offset := Transform3D.IDENTITY  # the gun in the right hand's frame
+## A blade carried in the right hand of a body that follows its pivots, and
+## where it sits in the hand bone's frame.
+var _carried: Node3D
+var _carried_offset := Transform3D.IDENTITY
 
 ## Locomotion clips: name -> velocity they were made at (x right, y forward, m/s).
 const MOVES := {"idle": Vector2.ZERO, "walk": Vector2(0, 1.36), "run": Vector2(0, 3.0),
@@ -152,6 +156,8 @@ func update() -> void:
 				local.origin = parent_global.affine_inverse() * (to_skeleton * (placed * _hips_offset))
 				skeleton.set_bone_pose_position(bone, local.origin)
 		_globals[slot] = parent_global * local
+	if _carried != null and is_instance_valid(_carried):
+		_carried.global_transform = skeleton.global_transform * skeleton.get_bone_global_pose(_hand) * _carried_offset
 
 
 ## From now on the bones follow `ragdoll`'s bodies (each sits where its
@@ -266,6 +272,25 @@ func hold_gun(grip: Vector3, facing: Basis) -> void:
 		palm = palm.lerp(to_world * skeleton.get_bone_global_pose(middle).origin, 0.5)
 	var basis := facing.orthonormalized()
 	_gun_offset = hand.affine_inverse() * Transform3D(basis, palm - basis * grip)
+
+
+## Puts `item` (a blade on the forearm part) in the model's right palm from
+## now on: its `grip` point (item frame) in the palm, turned as it is now.
+## Call after setup, with the pose applied.
+func carry(item: Node3D, grip: Vector3) -> void:
+	var hand_bone := skeleton.find_bone("RightHand")
+	if hand_bone < 0:
+		return
+	_hand = hand_bone
+	var to_world := skeleton.global_transform
+	var hand := to_world * skeleton.get_bone_global_pose(_hand)
+	var palm := hand.origin
+	var middle := skeleton.find_bone("RightHandMiddle1")
+	if middle >= 0:
+		palm = palm.lerp(to_world * skeleton.get_bone_global_pose(middle).origin, 0.5)
+	var basis := item.global_basis.orthonormalized()
+	_carried = item
+	_carried_offset = hand.affine_inverse() * Transform3D(basis, palm - basis * grip)
 
 
 ## Starts an upper-body one-shot (fire, reload, toss, hit).

@@ -5,7 +5,7 @@ extends Resource
 
 enum FireMode { AUTO, SEMI, PUMP }
 enum ReloadMode { MAGAZINE, PER_SHELL }
-## Which placeholder shape set the view model builds.
+## How the hands hold it (and, for MACHETE, that it is a blade).
 enum ViewStyle { RIFLE, SHOTGUN, PISTOL, MACHETE }
 
 @export var id := ""
@@ -76,6 +76,9 @@ enum ViewStyle { RIFLE, SHOTGUN, PISTOL, MACHETE }
 @export var view_style: ViewStyle = ViewStyle.RIFLE
 @export var ads_fov_multiplier := 0.8
 @export var hip_offset := Vector3(0.16, -0.17, -0.32)
+## The gun turned at the hip (degrees: x pitch up, y turn left toward the
+## middle of the view, z cant); aiming straightens it.
+@export var hip_rotation_degrees := Vector3.ZERO
 ## How far in front of the eye the rear sight sits when aiming.
 @export var ads_distance := 0.2
 @export var sprint_offset := Vector3(0.08, -0.22, -0.28)
@@ -83,14 +86,8 @@ enum ViewStyle { RIFLE, SHOTGUN, PISTOL, MACHETE }
 @export var right_elbow_offset := Vector3(0.06, -0.2, 0.26)
 @export var left_elbow_offset := Vector3(-0.14, -0.22, 0.22)
 @export var sprint_rotation_degrees := Vector3(-12.0, 35.0, 10.0)
-@export var receiver_size := Vector3(0.05, 0.08, 0.36)
-@export var barrel_length := 0.3
-@export var barrel_radius := 0.012
-@export var magazine_mesh_size := Vector3(0.03, 0.14, 0.06)
-@export var has_pump := false
-@export var body_color := Color(0.16, 0.17, 0.16)
-## Grip, stock and handguard (polymer or wood).
-@export var furniture_color := Color(0.1, 0.1, 0.1)
+## The 3D gun and the points on it (hands, sights, muzzle, port).
+@export var model: GunModel
 @export var sway_amount := 0.0006
 @export var sway_limit := 0.03
 
